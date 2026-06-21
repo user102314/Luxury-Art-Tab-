@@ -1,0 +1,16 @@
+export const queryKeys = {
+  orders: ['orders'] as const,
+  orderChannelStats: ['orderChannelStats'] as const,
+  products: ['products'] as const,
+  categories: ['categories'] as const,
+  bestSellers: ['bestSellers'] as const,
+  dashboardStats: ['dashboardStats'] as const,
+  news: ['news'] as const,
+  reviews: ['reviews'] as const,
+  comments: ['comments'] as const,
+  loyaltyStats: ['loyaltyStats'] as const,
+  loyaltyPrograms: ['loyaltyPrograms'] as const,
+  loyaltyClients: ['loyaltyClients'] as const,
+  loyaltyRewards: ['loyaltyRewards'] as const,
+  productAnalytics: (id: number) => ['productAnalytics', id] as const,
+}

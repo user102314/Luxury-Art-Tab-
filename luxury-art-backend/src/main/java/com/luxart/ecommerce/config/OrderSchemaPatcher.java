@@ -1,0 +1,69 @@
+package com.luxart.ecommerce.config;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+
+@Component
+@Order(0)
+@RequiredArgsConstructor
+@Slf4j
+public class OrderSchemaPatcher implements CommandLineRunner {
+
+    private final JdbcTemplate jdbcTemplate;
+
+    @Override
+    public void run(String... args) {
+        ensureCanal();
+        ensureBooleanColumn("stock_deduit", false);
+        ensureBooleanColumn("fidelite_comptabilisee", false);
+    }
+
+    private void ensureCanal() {
+        if (!columnExists("canal")) {
+            jdbcTemplate.execute("ALTER TABLE orders ADD COLUMN canal varchar(255)");
+            log.info("Colonne orders.canal ajoutée");
+        }
+        int updated = jdbcTemplate.update("UPDATE orders SET canal = 'SITE_WEB' WHERE canal IS NULL");
+        if (updated > 0) {
+            log.info("Commandes mises à jour (canal): {}", updated);
+        }
+        setNotNull("canal");
+    }
+
+    private void ensureBooleanColumn(String column, boolean defaultValue) {
+        if (!columnExists(column)) {
+            jdbcTemplate.execute("ALTER TABLE orders ADD COLUMN " + column + " boolean");
+            log.info("Colonne orders.{} ajoutée", column);
+        }
+        int updated = jdbcTemplate.update(
+                "UPDATE orders SET " + column + " = ? WHERE " + column + " IS NULL",
+                defaultValue);
+        if (updated > 0) {
+            log.info("Commandes mises à jour ({}): {}", column, updated);
+        }
+        setNotNull(column);
+    }
+
+    private void setNotNull(String column) {
+        try {
+            jdbcTemplate.execute("ALTER TABLE orders ALTER COLUMN " + column + " SET NOT NULL");
+        } catch (Exception e) {
+            log.debug("Contrainte NOT NULL sur orders.{} : {}", column, e.getMessage());
+        }
+    }
+
+    private boolean columnExists(String column) {
+        Integer count = jdbcTemplate.queryForObject(
+                """
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = ?
+                """,
+                Integer.class,
+                column);
+        return count != null && count > 0;
+    }
+}
