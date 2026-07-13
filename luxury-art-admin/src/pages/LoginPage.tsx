@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (user) navigate('/dashboard', { replace: true })
+    if (user) navigate('/revenue', { replace: true })
   }, [user, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,7 +22,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await login(email, password)
-      navigate('/dashboard')
+      navigate('/revenue')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Connexion impossible')
     } finally {

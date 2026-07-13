@@ -1,0 +1,12 @@
+# Credentials locaux — ne pas versionner
+luxury-art-backend/src/main/resources/application-local.properties
+
+# Uploads images produits
+luxury-art-backend/uploads/
+
+# Build / deps
+**/target/
+**/node_modules/
+**/dist/
+**/.env
+**/.env.*

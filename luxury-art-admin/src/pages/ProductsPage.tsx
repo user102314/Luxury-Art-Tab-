@@ -50,7 +50,39 @@ type Tab = 'catalogue' | 'stats' | 'detail'
 function resolveImageSrc(url?: string) {
   if (!url) return undefined
   if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url
-  return url.startsWith('/') ? url : `/${url}`
+  const path = url.startsWith('/') ? url : `/${url}`
+  const apiBase = import.meta.env.VITE_API_URL as string | undefined
+  if (apiBase && /^https?:\/\//i.test(apiBase)) {
+    try {
+      return `${new URL(apiBase).origin}${path}`
+    } catch {
+      /* fallthrough */
+    }
+  }
+  return path
+}
+
+function parseStock(raw: string): number | null {
+  const cleaned = String(raw ?? '').trim().replace(/\s/g, '').replace(',', '.')
+  if (!cleaned) return null
+  const n = Number.parseInt(cleaned, 10)
+  if (!Number.isFinite(n) || n < 0) return null
+  return n
+}
+
+function emptyAnalytics(productId: number, nom = ''): ProductAnalytics {
+  return {
+    productId,
+    nom,
+    nombreJaimes: 0,
+    nombreCommentaires: 0,
+    nombreAvis: 0,
+    noteMoyenne: 0,
+    quantiteVendue: 0,
+    chiffreAffaires: 0,
+    jaimes: [],
+    commentaires: [],
+  }
 }
 
 export default function ProductsPage() {
@@ -138,22 +170,41 @@ export default function ProductsPage() {
     e.preventDefault()
     setError('')
     setUploading(true)
+    const stock = parseStock(form.stock)
+    if (stock == null) {
+      setError('Stock invalide — saisissez un entier ≥ 0')
+      setUploading(false)
+      return
+    }
     const payload = {
-      nom: form.nom,
+      nom: form.nom.trim(),
       description: form.description,
-      prix: parseFloat(form.prix),
-      stock: parseInt(form.stock, 10),
+      prix: Number(form.prix),
+      stock,
       categoryId: parseInt(form.categoryId, 10),
       statut: form.statut,
     }
+    if (!Number.isFinite(payload.prix) || payload.prix <= 0) {
+      setError('Prix invalide')
+      setUploading(false)
+      return
+    }
     try {
       let productId: number
+      let saved: Product
       if (editing) {
-        const updated = await api.updateProduct(editing.id, payload)
-        productId = updated.id
+        saved = await api.updateProduct(editing.id, payload)
+        productId = saved.id
       } else {
-        const created = await api.createProduct(payload)
-        productId = created.id
+        saved = await api.createProduct(payload)
+        productId = saved.id
+      }
+
+      // Vérifie que le stock renvoyé par l'API correspond à la saisie
+      if (Number(saved.stock) !== stock) {
+        setError(
+          `Attention: stock enregistré = ${saved.stock} (saisi = ${stock}). Une commande a peut‑être décrémenté le stock.`,
+        )
       }
 
       if (pendingFiles.length > 0) {
@@ -190,13 +241,34 @@ export default function ProductsPage() {
     await refreshProducts()
   }
 
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+
   const openDetail = async (id: number) => {
-    const analytics = await queryClient.fetchQuery({
-      queryKey: queryKeys.productAnalytics(id),
-      queryFn: () => api.getProductAnalytics(id),
-    })
-    setSelected(analytics)
+    const fromList = products.find((p) => p.id === id) ?? null
+    setSelectedProduct(fromList)
+    setSelected(emptyAnalytics(id, fromList?.nom ?? ''))
     setTab('detail')
+    setError('')
+
+    try {
+      const product = await api.getProduct(id)
+      setSelectedProduct(product)
+      setSelected((prev) =>
+        prev ? { ...prev, nom: product.nom || prev.nom, productId: product.id } : emptyAnalytics(product.id, product.nom),
+      )
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Impossible de charger le produit')
+    }
+
+    try {
+      const analytics = await queryClient.fetchQuery({
+        queryKey: queryKeys.productAnalytics(id),
+        queryFn: () => api.getProductAnalytics(id),
+      })
+      setSelected(analytics)
+    } catch {
+      // Détails produit restent visibles même si analytics échoue
+    }
   }
 
   const chartData = bestSellers.slice(0, 8).map((b) => ({
@@ -225,7 +297,7 @@ export default function ProductsPage() {
           <button
             key={t}
             onClick={() => setTab(t)}
-            disabled={t === 'detail' && !selected}
+            disabled={t === 'detail' && !selectedProduct && !selected}
             className={`rounded-xl px-4 py-2 text-sm font-medium capitalize transition ${
               tab === t
                 ? 'bg-gold-500/20 text-gold-300'
@@ -252,8 +324,15 @@ export default function ProductsPage() {
               <Field label="Nom" value={form.nom} onChange={(v) => setForm({ ...form, nom: v })} required />
               <Field label="Description" value={form.description} onChange={(v) => setForm({ ...form, description: v })} textarea />
               <div className="grid grid-cols-2 gap-4">
-                <Field label="Prix (€)" value={form.prix} onChange={(v) => setForm({ ...form, prix: v })} type="number" required />
-                <Field label="Stock" value={form.stock} onChange={(v) => setForm({ ...form, stock: v })} type="number" required />
+                <Field label="Prix (DH)" value={form.prix} onChange={(v) => setForm({ ...form, prix: v })} type="number" step="0.01" required />
+                <Field
+                  label="Stock"
+                  value={form.stock}
+                  onChange={(v) => setForm({ ...form, stock: v.replace(/[^\d]/g, '') })}
+                  type="text"
+                  inputMode="numeric"
+                  required
+                />
               </div>
 
               <div>
@@ -495,22 +574,93 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {tab === 'detail' && selected && (
+      {tab === 'detail' && (selectedProduct || selected) && (
         <div className="space-y-6">
-          <div className="card p-6">
-            <h3 className="font-display text-2xl font-semibold text-white">{selected.nom}</h3>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <MiniStat icon={Heart} label="J'aimes" value={selected.nombreJaimes} color="text-red-400" />
-              <MiniStat icon={MessageCircle} label="Commentaires" value={selected.nombreCommentaires} color="text-blue-400" />
-              <MiniStat icon={Star} label="Note moyenne" value={`${selected.noteMoyenne}/5`} color="text-amber-400" />
-              <MiniStat icon={TrendingUp} label="Vendus" value={selected.quantiteVendue} color="text-emerald-400" />
+          {error && <p className="text-sm text-red-400">{error}</p>}
+          <div className="card overflow-hidden">
+            <div className="grid gap-6 p-6 lg:grid-cols-[240px_1fr]">
+              <div className="space-y-3">
+                {(() => {
+                  const imgs =
+                    selectedProduct?.images && selectedProduct.images.length > 0
+                      ? selectedProduct.images
+                      : selectedProduct?.imageUrl
+                        ? [
+                            {
+                              id: 0,
+                              productId: selectedProduct.id,
+                              url: selectedProduct.imageUrl,
+                              storagePath: '',
+                              ordre: 0,
+                            },
+                          ]
+                        : []
+                  if (imgs.length === 0) {
+                    return (
+                      <div className="flex aspect-square items-center justify-center rounded-xl bg-ink-800">
+                        <ImageIcon className="h-12 w-12 text-zinc-600" />
+                      </div>
+                    )
+                  }
+                  return (
+                    <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+                      {imgs.map((img) => (
+                        <img
+                          key={img.id || img.url}
+                          src={resolveImageSrc(img.url)}
+                          alt={selectedProduct?.nom ?? selected?.nom ?? 'Produit'}
+                          className="aspect-square w-full rounded-xl object-cover ring-1 ring-white/10"
+                          onError={(e) => {
+                            e.currentTarget.src =
+                              'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect fill="%23222" width="200" height="200"/></svg>'
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )
+                })()}
+              </div>
+              <div>
+                <h3 className="font-display text-2xl font-semibold text-white">
+                  {selectedProduct?.nom ?? selected?.nom ?? 'Produit'}
+                </h3>
+                <p className="mt-2 text-sm text-zinc-400 whitespace-pre-wrap">
+                  {selectedProduct?.description || 'Aucune description'}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-4 text-sm">
+                  <span className="text-gold-400 font-semibold">
+                    {formatCurrency(Number(selectedProduct?.prix ?? 0))}
+                  </span>
+                  <span className="text-zinc-300">Stock : {selectedProduct?.stock ?? '—'}</span>
+                  <span className="rounded-lg bg-white/5 px-2 py-0.5 text-xs">
+                    {selectedProduct?.statut ?? '—'}
+                  </span>
+                  <span className="text-zinc-500">
+                    Catégorie #
+                    {selectedProduct?.categoryId ?? '—'}
+                  </span>
+                </div>
+                {selected && (
+                  <>
+                    <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                      <MiniStat icon={Heart} label="J'aimes" value={selected.nombreJaimes} color="text-red-400" />
+                      <MiniStat icon={MessageCircle} label="Commentaires" value={selected.nombreCommentaires} color="text-blue-400" />
+                      <MiniStat icon={Star} label="Note moyenne" value={`${selected.noteMoyenne}/5`} color="text-amber-400" />
+                      <MiniStat icon={TrendingUp} label="Vendus" value={selected.quantiteVendue} color="text-emerald-400" />
+                    </div>
+                    <p className="mt-4 text-sm text-zinc-500">
+                      CA produit :{' '}
+                      <span className="text-gold-400">{formatCurrency(Number(selected.chiffreAffaires))}</span>
+                      {' · '}
+                      {selected.nombreAvis} avis
+                    </p>
+                  </>
+                )}
+              </div>
             </div>
-            <p className="mt-4 text-sm text-zinc-500">
-              CA produit : <span className="text-gold-400">{formatCurrency(Number(selected.chiffreAffaires))}</span>
-              {' · '}{selected.nombreAvis} avis
-            </p>
           </div>
 
+          {selected && (
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="card p-6">
               <h4 className="mb-4 flex items-center gap-2 font-semibold text-white">
@@ -551,6 +701,7 @@ export default function ProductsPage() {
               )}
             </div>
           </div>
+          )}
         </div>
       )}
     </div>
@@ -564,6 +715,8 @@ function Field({
   type = 'text',
   required,
   textarea,
+  step,
+  inputMode,
 }: {
   label: string
   value: string
@@ -571,6 +724,8 @@ function Field({
   type?: string
   required?: boolean
   textarea?: boolean
+  step?: string
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']
 }) {
   return (
     <div>
@@ -578,7 +733,17 @@ function Field({
       {textarea ? (
         <textarea className="input min-h-[80px] resize-y" value={value} onChange={(e) => onChange(e.target.value)} />
       ) : (
-        <input className="input" type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} step={type === 'number' ? '0.01' : undefined} />
+        <input
+          className="input"
+          type={type}
+          inputMode={inputMode}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          required={required}
+          step={step ?? (type === 'number' ? '0.01' : undefined)}
+          min={type === 'number' ? '0' : undefined}
+          onWheel={type === 'number' ? (e) => e.currentTarget.blur() : undefined}
+        />
       )}
     </div>
   )

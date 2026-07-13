@@ -9,6 +9,7 @@ import { api } from '@/lib/api'
 import { queryKeys } from '@/lib/queryKeys'
 import { REFETCH_INTERVAL } from '@/lib/queryClient'
 import { useProduct } from '@/hooks/useStorefrontQueries'
+import { useProductTracking } from '@/hooks/useProductTracking'
 import { getProductImage } from '@/lib/images'
 import {
   dimensionOptions,
@@ -41,6 +42,9 @@ function ProductDetailPage() {
   const [reviewText, setReviewText] = useState('')
 
   const { data: product, isLoading } = useProduct(productId)
+  const { trackClick } = useProductTracking(
+    !Number.isNaN(productId) && productId > 0 ? productId : null,
+  )
 
   const { data: categories = [] } = useQuery({
     queryKey: queryKeys.categories,
@@ -113,6 +117,7 @@ function ProductDetailPage() {
       : null
 
   const handleAddToCart = () => {
+    trackClick('ADD_TO_CART')
     addItem({
       productId: product.id,
       nom: product.nom,

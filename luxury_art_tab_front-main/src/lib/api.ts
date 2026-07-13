@@ -23,6 +23,33 @@ export function getVisitorKey(): string {
   return key
 }
 
+/** Session anonyme pour le tracking analytics (dure le temps de l'onglet). */
+export function getTrackingSessionId(): string {
+  const KEY = 'luxart_tracking_session'
+  let key = sessionStorage.getItem(KEY)
+  if (!key) {
+    key = crypto.randomUUID()
+    sessionStorage.setItem(KEY, key)
+  }
+  return key
+}
+
+async function trackBeacon(path: string, body: unknown): Promise<void> {
+  try {
+    const res = await fetch(`${BASE}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      keepalive: true,
+    })
+    if (!res.ok && res.status !== 202) {
+      // silencieux — tracking best-effort
+    }
+  } catch {
+    // silencieux
+  }
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     headers: { 'Content-Type': 'application/json', ...options?.headers },
@@ -205,6 +232,21 @@ export const api = {
   },
 
   getSiteSettings: () => request<import('@/types/api').SiteSettings>('/site/settings'),
+
+  trackProductView: (productId: number, sessionId: string, userId?: number) =>
+    trackBeacon(`/products/${productId}/track/view`, { sessionId, userId: userId ?? null }),
+
+  trackProductClick: (
+    productId: number,
+    sessionId: string,
+    eventType: 'CLICK' | 'ADD_TO_CART' = 'CLICK',
+    userId?: number,
+  ) =>
+    trackBeacon(`/products/${productId}/track/click`, {
+      sessionId,
+      eventType,
+      userId: userId ?? null,
+    }),
 }
 
 interface Category {

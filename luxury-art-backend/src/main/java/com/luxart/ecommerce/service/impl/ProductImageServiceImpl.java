@@ -6,14 +6,14 @@ import com.luxart.ecommerce.model.entity.Product;
 import com.luxart.ecommerce.model.entity.ProductImage;
 import com.luxart.ecommerce.repository.ProductImageRepository;
 import com.luxart.ecommerce.repository.ProductRepository;
+import com.luxart.ecommerce.service.LocalFileStorageService;
 import com.luxart.ecommerce.service.ProductImageService;
-import com.luxart.ecommerce.service.SupabaseStorageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ public class ProductImageServiceImpl implements ProductImageService {
 
     private final ProductRepository productRepository;
     private final ProductImageRepository productImageRepository;
-    private final SupabaseStorageService supabaseStorageService;
+    private final LocalFileStorageService localFileStorageService;
 
     @Override
     public List<ProductImageDto> findByProductId(Long productId) {
@@ -56,8 +56,8 @@ public class ProductImageServiceImpl implements ProductImageService {
             }
 
             try {
-                String storagePath = supabaseStorageService.buildStoragePath(productId, file.getOriginalFilename());
-                String publicUrl = supabaseStorageService.upload(storagePath, file.getBytes(), contentType);
+                String storagePath = localFileStorageService.buildStoragePath(productId, file.getOriginalFilename());
+                String publicUrl = localFileStorageService.upload(storagePath, file.getBytes(), contentType);
 
                 ProductImage image = ProductImage.builder()
                         .product(product)
@@ -67,6 +67,8 @@ public class ProductImageServiceImpl implements ProductImageService {
                         .build();
 
                 uploaded.add(toDto(productImageRepository.save(image)));
+            } catch (ResponseStatusException ex) {
+                throw ex;
             } catch (Exception ex) {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                         "Erreur upload: " + ex.getMessage());
@@ -85,9 +87,9 @@ public class ProductImageServiceImpl implements ProductImageService {
 
         Product product = image.getProduct();
         try {
-            supabaseStorageService.delete(image.getStoragePath());
+            localFileStorageService.delete(image.getStoragePath());
         } catch (Exception ignored) {
-            // continue DB delete even if storage delete fails
+            // continue DB delete even if file delete fails
         }
         productImageRepository.delete(image);
         syncPrimaryImageUrl(product);

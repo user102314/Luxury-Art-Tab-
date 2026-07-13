@@ -1,10 +1,4 @@
-# Copier ce fichier vers application-local.properties et remplir vos credentials Supabase
-# NE PAS commiter application-local.properties (mot de passe)
-#
-# Supabase → Project Settings → Database → Connection string → URI
-#
-# spring.profiles.active=supabase,local
+# Copier vers application-local.properties (non versionné) et renseigner le mot de passe.
+# spring.profiles.active=local est déjà défini dans application.properties
 
-SUPABASE_DB_URL=jdbc:postgresql://db.VOTRE_PROJECT_REF.supabase.co:5432/postgres?sslmode=require
-SUPABASE_DB_USER=postgres
-SUPABASE_DB_PASSWORD=VOTRE_MOT_DE_PASSE
+spring.datasource.password=VOTRE_MOT_DE_PASSE

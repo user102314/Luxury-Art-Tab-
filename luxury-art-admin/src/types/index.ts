@@ -220,3 +220,32 @@ export interface LoyaltyReward {
   message?: string
   earnedAt: string
 }
+
+export interface ProductStats {
+  productId: number
+  productName: string
+  totalViews: number
+  totalClicks: number
+  totalAddToCart?: number
+  totalSales: number
+  revenue: number
+  conversionRate: number
+}
+
+export interface DashboardSummary {
+  totalRevenue: number
+  totalOrders: number
+  totalActiveProducts: number
+  averageOrderValue: number
+  conversionRate: number
+  topProductsBySales: ProductStats[]
+  topProductsByViews: ProductStats[]
+}
+
+export interface TimeSeriesPoint {
+  date: string
+  value: number
+}
+
+export type TopProductCriteria = 'VIEWS' | 'CLICKS' | 'ADD_TO_CART' | 'SALES'
+export type SalesGranularity = 'DAY' | 'WEEK' | 'MONTH'

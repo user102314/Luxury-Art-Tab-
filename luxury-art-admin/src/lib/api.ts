@@ -1,6 +1,7 @@
 import type {
   Category,
   DashboardStats,
+  DashboardSummary,
   News,
   Order,
   OrderStatut,
@@ -11,7 +12,11 @@ import type {
   ProductAnalytics,
   ProductBestSeller,
   ProductComment,
+  ProductStats,
   Review,
+  SalesGranularity,
+  TimeSeriesPoint,
+  TopProductCriteria,
   User,
   LoyaltyProgram,
   LoyaltyStats,
@@ -60,6 +65,7 @@ export const api = {
     }),
 
   getOrders: () => request<Order[]>('/orders'),
+  getOrder: (id: number) => request<Order>(`/orders/${id}`),
   getOrdersByCanal: (canal: OrderCanal) => request<Order[]>(`/orders?canal=${canal}`),
   getOrderChannelStats: () => request<OrderChannelStats>('/orders/stats/channels'),
   createFacebookOrder: (data: FacebookOrderCreate) =>
@@ -152,6 +158,27 @@ export const api = {
   getLoyaltyStats: () => request<LoyaltyStats>('/loyalty/stats'),
   getLoyaltyClients: () => request<ClientProfile[]>('/loyalty/clients'),
   getLoyaltyRewards: () => request<LoyaltyReward[]>('/loyalty/rewards/recent'),
+
+  getDashboardSummary: (from: string, to: string) =>
+    request<DashboardSummary>(`/admin/dashboard/summary?from=${from}&to=${to}`),
+
+  getSalesOverTime: (from: string, to: string, granularity: SalesGranularity) =>
+    request<TimeSeriesPoint[]>(
+      `/admin/dashboard/sales-over-time?from=${from}&to=${to}&granularity=${granularity}`,
+    ),
+
+  getTopProductsAnalytics: (
+    criteria: TopProductCriteria,
+    limit: number,
+    from: string,
+    to: string,
+  ) =>
+    request<ProductStats[]>(
+      `/admin/dashboard/top-products?criteria=${criteria}&limit=${limit}&from=${from}&to=${to}`,
+    ),
+
+  getAllProductStats: (from: string, to: string) =>
+    request<ProductStats[]>(`/admin/dashboard/product-stats?from=${from}&to=${to}`),
 }
 
 export function computeRevenue(orders: Order[]) {

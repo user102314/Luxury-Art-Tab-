@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Trash2, RefreshCw } from 'lucide-react'
+import { Eye, Trash2, RefreshCw, X } from 'lucide-react'
 import {
   api,
   formatCurrency,
@@ -11,7 +11,7 @@ import {
 } from '../lib/api'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
 import { useInvalidateAdmin, useOrders } from '../hooks/useAdminQueries'
-import type { OrderStatut } from '../types'
+import type { Order, OrderStatut } from '../types'
 
 const STATUTS: OrderStatut[] = [
   'EN_ATTENTE',
@@ -26,6 +26,8 @@ export default function OrdersPage() {
   const invalidate = useInvalidateAdmin()
   const [filter, setFilter] = useState<string>('ALL')
   const [canalFilter, setCanalFilter] = useState<string>('ALL')
+  const [detail, setDetail] = useState<Order | null>(null)
+  const [loadingDetail, setLoadingDetail] = useState(false)
 
   const filtered = orders.filter((o) => {
     if (filter !== 'ALL' && o.statut !== filter) return false
@@ -40,12 +42,28 @@ export default function OrdersPage() {
     await invalidate.orders()
     await invalidate.orderChannelStats()
     if (statut === 'ANNULEE') await invalidate.products()
+    if (detail?.id === id) {
+      setDetail({ ...detail, statut })
+    }
   }
 
   const remove = async (id: number) => {
     if (!confirm('Supprimer cette commande ?')) return
     await api.deleteOrder(id)
+    if (detail?.id === id) setDetail(null)
     await invalidate.orders()
+  }
+
+  const openDetail = async (order: Order) => {
+    setLoadingDetail(true)
+    try {
+      const full = await api.getOrder(order.id)
+      setDetail(full)
+    } catch {
+      setDetail(order)
+    } finally {
+      setLoadingDetail(false)
+    }
   }
 
   if (isLoading && orders.length === 0) {
@@ -54,7 +72,7 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <QueryStatusBar fetching={isFetching} />
+      <QueryStatusBar fetching={isFetching || loadingDetail} />
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -134,12 +152,24 @@ export default function OrdersPage() {
                       {o.adresseLivraison}
                     </td>
                     <td className="px-6 py-4">
-                      <button
-                        onClick={() => remove(o.id)}
-                        className="rounded-lg p-2 text-zinc-500 hover:bg-red-500/10 hover:text-red-400"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openDetail(o)}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-gold-500/15 px-3 py-1.5 text-xs font-medium text-gold-300 transition hover:bg-gold-500/25"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          Voir détail
+                        </button>
+                        <button
+                          type="button"
+                          title="Supprimer"
+                          onClick={() => remove(o.id)}
+                          className="rounded-lg p-2 text-zinc-500 hover:bg-red-500/10 hover:text-red-400"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -148,6 +178,69 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
+
+      {detail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="card max-h-[90vh] w-full max-w-2xl overflow-y-auto p-6">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Commande #{detail.id}</h3>
+                <p className="text-sm text-zinc-500">{formatDate(detail.dateCommande)}</p>
+              </div>
+              <button type="button" onClick={() => setDetail(null)} className="text-zinc-500 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mb-6 grid gap-3 sm:grid-cols-2 text-sm">
+              <Info label="Client" value={detail.clientNom ?? detail.userNom ?? `User #${detail.userId}`} />
+              <Info label="Téléphone" value={detail.clientTelephone || '—'} />
+              <Info label="Canal" value={ORDER_CANAL_LABELS[detail.canal ?? 'SITE_WEB']} />
+              <Info label="Statut" value={ORDER_STATUS_LABELS[detail.statut]} />
+              <Info label="Adresse" value={detail.adresseLivraison} />
+              <Info label="Réf. Facebook" value={detail.referenceFacebook || '—'} />
+              <Info label="Total" value={formatCurrency(Number(detail.total) || 0)} />
+            </div>
+
+            <h4 className="mb-3 font-semibold text-white">Articles</h4>
+            {(detail.items?.length ?? 0) === 0 ? (
+              <p className="text-sm text-zinc-500">Aucun article</p>
+            ) : (
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-white/10 text-xs uppercase text-zinc-500">
+                    <th className="py-2">Produit</th>
+                    <th className="py-2">Qté</th>
+                    <th className="py-2">Prix unit.</th>
+                    <th className="py-2 text-right">Sous-total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {detail.items!.map((item, i) => (
+                    <tr key={item.id ?? i} className="border-b border-white/5">
+                      <td className="py-3 text-white">{item.productNom ?? `Produit #${item.productId}`}</td>
+                      <td className="py-3 text-zinc-300">{item.quantite}</td>
+                      <td className="py-3 text-zinc-300">{formatCurrency(Number(item.prixUnitaire) || 0)}</td>
+                      <td className="py-3 text-right text-gold-400">
+                        {formatCurrency((Number(item.prixUnitaire) || 0) * item.quantite)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-ink-800/50 px-4 py-3">
+      <p className="text-xs text-zinc-500">{label}</p>
+      <p className="mt-0.5 text-zinc-200">{value}</p>
     </div>
   )
 }

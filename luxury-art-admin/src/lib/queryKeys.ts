@@ -13,4 +13,10 @@ export const queryKeys = {
   loyaltyClients: ['loyaltyClients'] as const,
   loyaltyRewards: ['loyaltyRewards'] as const,
   productAnalytics: (id: number) => ['productAnalytics', id] as const,
+  dashboardSummary: (from: string, to: string) => ['dashboardSummary', from, to] as const,
+  salesOverTime: (from: string, to: string, granularity: string) =>
+    ['salesOverTime', from, to, granularity] as const,
+  topProductsAnalytics: (criteria: string, limit: number, from: string, to: string) =>
+    ['topProductsAnalytics', criteria, limit, from, to] as const,
+  allProductStats: (from: string, to: string) => ['allProductStats', from, to] as const,
 }

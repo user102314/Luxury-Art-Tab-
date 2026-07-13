@@ -2,7 +2,6 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import {
-  LayoutDashboard,
   ShoppingBag,
   TrendingUp,
   Newspaper,
@@ -12,15 +11,16 @@ import {
   MessageSquare,
   Gift,
   Facebook,
+  BarChart3,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { prefetchEssentials, prefetchRoute } from '../hooks/useAdminQueries'
 
 const nav = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Vue d\'ensemble' },
+  { to: '/revenue', icon: TrendingUp, label: 'Revenus' },
+  { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/orders', icon: ShoppingBag, label: 'Commandes' },
   { to: '/facebook-orders', icon: Facebook, label: 'Facebook' },
-  { to: '/revenue', icon: TrendingUp, label: 'Revenus' },
   { to: '/products', icon: Package, label: 'Produits' },
   { to: '/moderation', icon: MessageSquare, label: 'Avis & Commentaires' },
   { to: '/loyalty', icon: Gift, label: 'Fidélité' },

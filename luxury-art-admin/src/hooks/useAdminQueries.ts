@@ -7,6 +7,7 @@ import {
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryKeys'
 import { REFETCH_INTERVAL } from '../lib/queryClient'
+import type { TopProductCriteria } from '../types'
 
 export function useOrders() {
   return useQuery({
@@ -127,6 +128,47 @@ export function useProductAnalytics(id: number | null) {
   })
 }
 
+export function useDashboardSummary(from: string, to: string) {
+  return useQuery({
+    queryKey: queryKeys.dashboardSummary(from, to),
+    queryFn: () => api.getDashboardSummary(from, to),
+    enabled: Boolean(from && to),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useSalesOverTime(from: string, to: string, granularity: 'DAY' | 'WEEK' | 'MONTH') {
+  return useQuery({
+    queryKey: queryKeys.salesOverTime(from, to, granularity),
+    queryFn: () => api.getSalesOverTime(from, to, granularity),
+    enabled: Boolean(from && to),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useTopProductsAnalytics(
+  criteria: TopProductCriteria,
+  limit: number,
+  from: string,
+  to: string,
+) {
+  return useQuery({
+    queryKey: queryKeys.topProductsAnalytics(criteria, limit, from, to),
+    queryFn: () => api.getTopProductsAnalytics(criteria, limit, from, to),
+    enabled: Boolean(from && to),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useAllProductStats(from: string, to: string) {
+  return useQuery({
+    queryKey: queryKeys.allProductStats(from, to),
+    queryFn: () => api.getAllProductStats(from, to),
+    enabled: Boolean(from && to),
+    placeholderData: keepPreviousData,
+  })
+}
+
 export function useInvalidateAdmin() {
   const qc = useQueryClient()
   return {
@@ -154,16 +196,27 @@ export function prefetchRoute(qc: QueryClient, path: string) {
   const opts = { staleTime: 2 * 60_000 }
   switch (path) {
     case '/dashboard':
+    case '/revenue':
       qc.prefetchQuery({ queryKey: queryKeys.orders, queryFn: api.getOrders, ...opts })
       qc.prefetchQuery({ queryKey: queryKeys.products, queryFn: api.getProducts, ...opts })
+      qc.prefetchQuery({ queryKey: queryKeys.dashboardStats, queryFn: api.getDashboardStats, ...opts })
+      qc.prefetchQuery({ queryKey: queryKeys.orderChannelStats, queryFn: api.getOrderChannelStats, ...opts })
       break
     case '/orders':
       qc.prefetchQuery({ queryKey: queryKeys.orders, queryFn: api.getOrders, ...opts })
       break
-    case '/revenue':
-      qc.prefetchQuery({ queryKey: queryKeys.orders, queryFn: api.getOrders, ...opts })
-      qc.prefetchQuery({ queryKey: queryKeys.dashboardStats, queryFn: api.getDashboardStats, ...opts })
+    case '/analytics': {
+      const to = new Date().toISOString().slice(0, 10)
+      const fromDate = new Date()
+      fromDate.setDate(fromDate.getDate() - 29)
+      const from = fromDate.toISOString().slice(0, 10)
+      qc.prefetchQuery({
+        queryKey: queryKeys.dashboardSummary(from, to),
+        queryFn: () => api.getDashboardSummary(from, to),
+        ...opts,
+      })
       break
+    }
     case '/products':
       qc.prefetchQuery({ queryKey: queryKeys.products, queryFn: api.getProducts, ...opts })
       qc.prefetchQuery({ queryKey: queryKeys.categories, queryFn: api.getCategories, ...opts })

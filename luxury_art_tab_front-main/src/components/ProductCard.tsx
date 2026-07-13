@@ -3,6 +3,8 @@ import type { Product } from '@/types/api'
 import { getProductImage } from '@/lib/images'
 import { formatPrice } from '@/lib/pricing'
 import { useFavorites } from '@/context/FavoritesContext'
+import { api, getTrackingSessionId } from '@/lib/api'
+import { useAuth } from '@/context/AuthContext'
 import { toast } from 'sonner'
 
 interface ProductCardProps {
@@ -14,9 +16,16 @@ interface ProductCardProps {
 
 export function ProductCard({ product, categoryName, index = 0, onAr }: ProductCardProps) {
   const { isFavorite, toggleFavorite } = useFavorites()
+  const { client } = useAuth()
   const liked = isFavorite(product.id)
   const image = getProductImage(product)
   const outOfStock = product.statut === 'RUPTURE_STOCK' || product.stock <= 0
+
+  const handleProductClick = () => {
+    void api
+      .trackProductClick(product.id, getTrackingSessionId(), 'CLICK', client?.id)
+      .catch(() => {})
+  }
 
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -34,7 +43,12 @@ export function ProductCard({ product, categoryName, index = 0, onAr }: ProductC
       className="group animate-card-rise"
       style={{ animationDelay: `${index * 90}ms` }}
     >
-      <Link to="/products/$id" params={{ id: String(product.id) }} className="block">
+      <Link
+        to="/products/$id"
+        params={{ id: String(product.id) }}
+        className="block"
+        onClick={handleProductClick}
+      >
         <div className="relative overflow-hidden rounded-3xl bg-muted shadow-[0_18px_40px_-25px_rgba(80,30,10,0.45)]">
           <div className="aspect-[4/5] w-full">
             <img

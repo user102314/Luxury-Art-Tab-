@@ -4,6 +4,7 @@ import com.luxart.ecommerce.model.enums.ProductStatut;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -28,7 +29,7 @@ public class ProductDto {
     private BigDecimal prix;
 
     @NotNull
-    @Positive
+    @PositiveOrZero
     private Integer stock;
 
     /** URL de la première image (compatibilité) */
