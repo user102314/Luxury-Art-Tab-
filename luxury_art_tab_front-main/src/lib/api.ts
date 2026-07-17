@@ -160,6 +160,7 @@ export const api = {
     nom?: string
     clientUserId?: number
     adresseLivraison: string
+    telephone?: string
     items: { productId: number; quantite: number; prixUnitaire: number }[]
   }) => {
     try {
@@ -185,6 +186,8 @@ export const api = {
           statut: 'EN_ATTENTE',
           total,
           adresseLivraison: payload.adresseLivraison,
+          clientNom: payload.nom,
+          clientTelephone: payload.telephone,
         }),
       })
       for (const item of payload.items) {

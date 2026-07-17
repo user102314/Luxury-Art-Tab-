@@ -14,7 +14,7 @@ export type OrderStatut =
   | 'LIVREE'
   | 'ANNULEE'
 
-export type OrderCanal = 'SITE_WEB' | 'FACEBOOK'
+export type OrderCanal = 'SITE_WEB' | 'FACEBOOK' | 'INSTAGRAM' | 'WHATSAPP'
 
 export interface OrderItem {
   id?: number
@@ -37,15 +37,24 @@ export interface Order {
   clientNom?: string
   clientTelephone?: string
   referenceFacebook?: string
+  referenceInstagram?: string
+  referenceWhatsapp?: string
+  numeroColis?: string
   items?: OrderItem[]
 }
 
 export interface OrderChannelStats {
   totalFacebook: number
+  totalInstagram: number
+  totalWhatsapp: number
   totalSiteWeb: number
   facebookLivrees: number
+  instagramLivrees: number
+  whatsappLivrees: number
   siteWebLivrees: number
   caFacebook: number
+  caInstagram: number
+  caWhatsapp: number
   caSiteWeb: number
   caTotal: number
 }
@@ -64,6 +73,38 @@ export interface FacebookOrderCreate {
   referenceFacebook?: string
   statut?: OrderStatut
   items: FacebookOrderLine[]
+}
+
+export interface InstagramOrderLine {
+  productId: number
+  quantite: number
+  prixUnitaire?: number
+}
+
+export interface InstagramOrderCreate {
+  clientNom: string
+  clientEmail?: string
+  clientTelephone?: string
+  adresseLivraison: string
+  referenceInstagram?: string
+  statut?: OrderStatut
+  items: InstagramOrderLine[]
+}
+
+export interface WhatsAppOrderLine {
+  productId: number
+  quantite: number
+  prixUnitaire?: number
+}
+
+export interface WhatsAppOrderCreate {
+  clientNom: string
+  clientEmail?: string
+  clientTelephone?: string
+  adresseLivraison: string
+  referenceWhatsapp?: string
+  statut?: OrderStatut
+  items: WhatsAppOrderLine[]
 }
 
 export interface Product {
@@ -249,3 +290,49 @@ export interface TimeSeriesPoint {
 
 export type TopProductCriteria = 'VIEWS' | 'CLICKS' | 'ADD_TO_CART' | 'SALES'
 export type SalesGranularity = 'DAY' | 'WEEK' | 'MONTH'
+
+export interface ClientCrm {
+  userId: number
+  nom: string
+  email: string
+  telephone?: string
+  inscritLe?: string
+  nombreCommandes: number
+  commandesLivrees: number
+  totalDepense: number
+  derniereCommande?: string
+  canaux: string[]
+}
+
+export interface StockAlert {
+  productId: number
+  nom: string
+  stock: number
+  statut: string
+  imageUrl?: string
+}
+
+export interface SiteSettings {
+  boutiqueNom?: string
+  slogan?: string
+  emailContact?: string
+  telephoneContact?: string
+  adresse?: string
+  ville?: string
+  pays?: string
+  whatsappNumber?: string
+  termsVersion?: number
+  termsContent?: string
+  supportFaq?: { question: string; answer: string }[]
+}
+
+export interface AdminNotification {
+  type: string
+  title: string
+  message: string
+  orderId?: number
+  canal?: string
+  clientNom?: string
+  total?: number
+  createdAt?: string
+}

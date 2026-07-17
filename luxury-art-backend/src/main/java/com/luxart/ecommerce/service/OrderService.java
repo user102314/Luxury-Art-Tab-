@@ -13,5 +13,7 @@ public interface OrderService {
     OrderDto update(Long id, OrderDto dto);
     void delete(Long id);
     OrderDto createFacebookOrder(FacebookOrderCreateDto dto);
+    OrderDto createInstagramOrder(InstagramOrderCreateDto dto);
+    OrderDto createWhatsAppOrder(WhatsAppOrderCreateDto dto);
     OrderChannelStatsDto getChannelStats();
 }

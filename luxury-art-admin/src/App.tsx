@@ -10,7 +10,11 @@ import NewsPage from './pages/NewsPage'
 import ModerationPage from './pages/ModerationPage'
 import LoyaltyPage from './pages/LoyaltyPage'
 import FacebookOrdersPage from './pages/FacebookOrdersPage'
+import InstagramOrdersPage from './pages/InstagramOrdersPage'
+import WhatsAppOrdersPage from './pages/WhatsAppOrdersPage'
 import AnalyticsPage from './pages/AnalyticsPage'
+import ClientsPage from './pages/ClientsPage'
+import SettingsPage from './pages/SettingsPage'
 
 export default function App() {
   return (
@@ -24,11 +28,15 @@ export default function App() {
               <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/orders" element={<OrdersPage />} />
               <Route path="/facebook-orders" element={<FacebookOrdersPage />} />
+              <Route path="/instagram-orders" element={<InstagramOrdersPage />} />
+              <Route path="/whatsapp-orders" element={<WhatsAppOrdersPage />} />
+              <Route path="/clients" element={<ClientsPage />} />
               <Route path="/revenue" element={<RevenuePage />} />
               <Route path="/products" element={<ProductsPage />} />
               <Route path="/news" element={<NewsPage />} />
               <Route path="/moderation" element={<ModerationPage />} />
               <Route path="/loyalty" element={<LoyaltyPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/login" replace />} />

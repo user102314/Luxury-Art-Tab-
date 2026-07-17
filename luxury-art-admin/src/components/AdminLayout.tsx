@@ -11,20 +11,30 @@ import {
   MessageSquare,
   Gift,
   Facebook,
+  Instagram,
   BarChart3,
+  Users,
+  MessageCircle,
+  Settings,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { prefetchEssentials, prefetchRoute } from '../hooks/useAdminQueries'
+import StockAlertsBanner from './StockAlertsBanner'
+import OrderNotificationsBell from './OrderNotificationsBell'
 
 const nav = [
   { to: '/revenue', icon: TrendingUp, label: 'Revenus' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/orders', icon: ShoppingBag, label: 'Commandes' },
   { to: '/facebook-orders', icon: Facebook, label: 'Facebook' },
+  { to: '/instagram-orders', icon: Instagram, label: 'Instagram' },
+  { to: '/whatsapp-orders', icon: MessageCircle, label: 'WhatsApp' },
+  { to: '/clients', icon: Users, label: 'Clients' },
   { to: '/products', icon: Package, label: 'Produits' },
   { to: '/moderation', icon: MessageSquare, label: 'Avis & Commentaires' },
   { to: '/loyalty', icon: Gift, label: 'Fidélité' },
   { to: '/news', icon: Newspaper, label: 'Actualités' },
+  { to: '/settings', icon: Settings, label: 'Boutique' },
 ]
 
 export default function AdminLayout() {
@@ -54,7 +64,7 @@ export default function AdminLayout() {
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1 p-4">
+        <nav className="flex-1 space-y-1 overflow-y-auto p-4">
           {nav.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
@@ -88,11 +98,15 @@ export default function AdminLayout() {
       </aside>
 
       <main className="ml-64 flex-1">
-        <div className="border-b border-white/10 bg-ink-950/80 px-8 py-5 backdrop-blur">
-          <h1 className="font-display text-2xl font-semibold text-white">Tableau de bord</h1>
-          <p className="text-sm text-zinc-500">Gestion de la boutique Luxury Art</p>
+        <div className="flex items-center justify-between border-b border-white/10 bg-ink-950/80 px-8 py-5 backdrop-blur">
+          <div>
+            <h1 className="font-display text-2xl font-semibold text-white">Tableau de bord</h1>
+            <p className="text-sm text-zinc-500">Gestion de la boutique Luxury Art</p>
+          </div>
+          <OrderNotificationsBell />
         </div>
         <div className="p-8">
+          <StockAlertsBanner />
           <Outlet />
         </div>
       </main>

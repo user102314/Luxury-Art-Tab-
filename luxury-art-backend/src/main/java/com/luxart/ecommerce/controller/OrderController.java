@@ -47,6 +47,16 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(orderService.createFacebookOrder(dto));
     }
 
+    @PostMapping("/instagram")
+    public ResponseEntity<OrderDto> createInstagramOrder(@Valid @RequestBody InstagramOrderCreateDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(orderService.createInstagramOrder(dto));
+    }
+
+    @PostMapping("/whatsapp")
+    public ResponseEntity<OrderDto> createWhatsAppOrder(@Valid @RequestBody WhatsAppOrderCreateDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(orderService.createWhatsAppOrder(dto));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<OrderDto> update(@PathVariable Long id, @Valid @RequestBody OrderDto dto) {
         return ResponseEntity.ok(orderService.update(id, dto));

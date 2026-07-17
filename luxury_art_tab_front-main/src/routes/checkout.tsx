@@ -41,15 +41,12 @@ function CheckoutPage() {
 
     setLoading(true)
     try {
-      const fullAddress = [adresse, telephone ? `Tél: ${telephone}` : '', email ? `Email: ${email}` : '']
-        .filter(Boolean)
-        .join('\n')
-
       const result = await api.checkout({
         visitorKey: getVisitorKey(),
         nom: nom.trim() || client?.nom || undefined,
         clientUserId: client?.id,
-        adresseLivraison: fullAddress,
+        adresseLivraison: adresse.trim(),
+        telephone: telephone.trim() || undefined,
         items: items.map((item) => ({
           productId: item.productId,
           quantite: item.quantite,

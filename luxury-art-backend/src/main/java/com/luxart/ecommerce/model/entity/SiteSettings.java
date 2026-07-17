@@ -29,6 +29,23 @@ public class SiteSettings {
     @Builder.Default
     private String whatsappNumber = "212600000000";
 
+    /** Identité boutique (facture, vitrine, admin). */
+    @Builder.Default
+    private String boutiqueNom = "Luxury Art";
+
+    @Builder.Default
+    private String slogan = "Art & Décoration";
+
+    private String emailContact;
+
+    private String telephoneContact;
+
+    private String adresse;
+
+    private String ville;
+
+    private String pays;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String supportFaqJson;
 

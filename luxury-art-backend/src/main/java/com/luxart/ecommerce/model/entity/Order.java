@@ -52,6 +52,15 @@ public class Order {
     /** Réf. conversation / publication Facebook */
     private String referenceFacebook;
 
+    /** Réf. conversation / publication Instagram */
+    private String referenceInstagram;
+
+    /** Réf. conversation WhatsApp */
+    private String referenceWhatsapp;
+
+    /** Numéro de colis (généré à la confirmation) */
+    private String numeroColis;
+
     /** Stock déjà déduit pour cette commande */
     @Builder.Default
     private Boolean stockDeduit = false;

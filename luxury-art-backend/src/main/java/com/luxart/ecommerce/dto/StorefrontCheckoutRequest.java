@@ -28,6 +28,9 @@ public class StorefrontCheckoutRequest {
     @NotBlank
     private String adresseLivraison;
 
+    /** Téléphone client (affiché dans le détail commande admin) */
+    private String telephone;
+
     @NotEmpty
     @Valid
     private List<CheckoutLineItem> items;

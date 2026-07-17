@@ -42,5 +42,11 @@ public class OrderDto {
 
     private String referenceFacebook;
 
+    private String referenceInstagram;
+
+    private String referenceWhatsapp;
+
+    private String numeroColis;
+
     private List<OrderItemDto> items;
 }
