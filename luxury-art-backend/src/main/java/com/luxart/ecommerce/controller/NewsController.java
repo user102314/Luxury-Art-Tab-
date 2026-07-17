@@ -52,4 +52,11 @@ public class NewsController {
     public ResponseEntity<NewsDto> publish(@PathVariable Long id) {
         return ResponseEntity.ok(newsService.publier(id));
     }
+
+    @PostMapping(value = "/{id}/image", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<NewsDto> uploadImage(
+            @PathVariable Long id,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        return ResponseEntity.ok(newsService.uploadImage(id, file));
+    }
 }

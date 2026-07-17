@@ -22,6 +22,8 @@ import {
   Package,
   Upload,
   ImageIcon,
+  Tags,
+  FolderPlus,
 } from 'lucide-react'
 import { api, formatCurrency, formatDate } from '../lib/api'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
@@ -32,7 +34,7 @@ import {
   useProducts,
 } from '../hooks/useAdminQueries'
 import { queryKeys } from '../lib/queryKeys'
-import type { Product, ProductAnalytics, ProductImage, ProductStatut } from '../types'
+import type { Category, Product, ProductAnalytics, ProductImage, ProductStatut } from '../types'
 
 const STATUTS: ProductStatut[] = ['DISPONIBLE', 'RUPTURE_STOCK', 'ARCHIVE']
 
@@ -103,6 +105,16 @@ export default function ProductsPage() {
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [showCategoryForm, setShowCategoryForm] = useState(false)
+  const [showCategoryManager, setShowCategoryManager] = useState(false)
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [categoryNom, setCategoryNom] = useState('')
+  const [categoryDesc, setCategoryDesc] = useState('')
+  const [categoryError, setCategoryError] = useState('')
+  const [savingCategory, setSavingCategory] = useState(false)
+
+  const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.nom]))
+
   useEffect(() => {
     const urls = pendingFiles.map((file) => URL.createObjectURL(file))
     setPreviewUrls(urls)
@@ -119,6 +131,10 @@ export default function ProductsPage() {
     setPendingFiles([])
     setPreviewUrls([])
     setExistingImages([])
+    setShowCategoryForm(false)
+    setCategoryNom('')
+    setCategoryDesc('')
+    setCategoryError('')
     setForm({
       ...emptyForm,
       categoryId: categories[0]?.id?.toString() ?? '',
@@ -131,6 +147,10 @@ export default function ProductsPage() {
     setEditing(p)
     setPendingFiles([])
     setExistingImages(p.images ?? [])
+    setShowCategoryForm(false)
+    setCategoryNom('')
+    setCategoryDesc('')
+    setCategoryError('')
     setForm({
       nom: p.nom,
       description: p.description ?? '',
@@ -141,6 +161,90 @@ export default function ProductsPage() {
     })
     setShowForm(true)
     setError('')
+  }
+
+  const resetCategoryFields = () => {
+    setCategoryNom('')
+    setCategoryDesc('')
+    setCategoryError('')
+    setEditingCategory(null)
+    setShowCategoryForm(false)
+  }
+
+  const startEditCategory = (category: Category) => {
+    setEditingCategory(category)
+    setCategoryNom(category.nom)
+    setCategoryDesc(category.description ?? '')
+    setCategoryError('')
+    setShowCategoryForm(true)
+  }
+
+  const handleSaveCategory = async (e?: React.FormEvent) => {
+    e?.preventDefault()
+    setCategoryError('')
+    const nom = categoryNom.trim()
+    if (!nom) {
+      setCategoryError('Le nom de la catégorie est obligatoire')
+      return
+    }
+    const duplicate = categories.some(
+      (c) =>
+        c.nom.toLowerCase() === nom.toLowerCase() &&
+        c.id !== editingCategory?.id,
+    )
+    if (duplicate) {
+      setCategoryError('Cette catégorie existe déjà')
+      return
+    }
+
+    setSavingCategory(true)
+    try {
+      const payload = {
+        nom,
+        description: categoryDesc.trim() || undefined,
+      }
+      if (editingCategory) {
+        await api.updateCategory(editingCategory.id, payload)
+        await invalidate.categories()
+        resetCategoryFields()
+      } else {
+        const created = await api.createCategory(payload)
+        await invalidate.categories()
+        setForm((prev) => ({ ...prev, categoryId: String(created.id) }))
+        resetCategoryFields()
+      }
+    } catch (err) {
+      setCategoryError(
+        err instanceof Error
+          ? err.message
+          : editingCategory
+            ? 'Erreur lors de la modification'
+            : 'Erreur lors de la création',
+      )
+    } finally {
+      setSavingCategory(false)
+    }
+  }
+
+  const handleDeleteCategory = async (id: number) => {
+    const used = products.some((p) => p.categoryId === id)
+    if (used) {
+      alert('Impossible de supprimer : des produits utilisent cette catégorie.')
+      return
+    }
+    if (!confirm('Supprimer cette catégorie ?')) return
+    try {
+      await api.deleteCategory(id)
+      await invalidate.categories()
+      if (form.categoryId === String(id)) {
+        setForm((prev) => ({
+          ...prev,
+          categoryId: categories.find((c) => c.id !== id)?.id?.toString() ?? '',
+        }))
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Suppression impossible')
+    }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -176,12 +280,18 @@ export default function ProductsPage() {
       setUploading(false)
       return
     }
+    const categoryId = parseInt(form.categoryId, 10)
+    if (!Number.isFinite(categoryId) || categoryId <= 0) {
+      setError('Choisissez ou créez une catégorie')
+      setUploading(false)
+      return
+    }
     const payload = {
       nom: form.nom.trim(),
       description: form.description,
       prix: Number(form.prix),
       stock,
-      categoryId: parseInt(form.categoryId, 10),
+      categoryId,
       statut: form.statut,
     }
     if (!Number.isFinite(payload.prix) || payload.prix <= 0) {
@@ -284,12 +394,28 @@ export default function ProductsPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-white">Gestion des produits</h2>
-          <p className="text-sm text-zinc-500">CRUD, j'aimes, commentaires et statistiques</p>
+          <p className="text-sm text-zinc-500">CRUD, catégories, j'aimes, commentaires et statistiques</p>
         </div>
-        <button onClick={openCreate} className="btn-primary">
-          <Plus className="h-4 w-4" />
-          Nouveau produit
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setShowCategoryManager(true)
+              setShowCategoryForm(true)
+              setCategoryNom('')
+              setCategoryDesc('')
+              setCategoryError('')
+            }}
+            className="btn-ghost"
+          >
+            <Tags className="h-4 w-4" />
+            Catégories
+          </button>
+          <button type="button" onClick={openCreate} className="btn-primary">
+            <Plus className="h-4 w-4" />
+            Nouveau produit
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2">
@@ -420,17 +546,70 @@ export default function ProductsPage() {
               </div>
 
               <div>
-                <label className="label">Catégorie</label>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="label mb-0">Catégorie</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCategoryForm((v) => !v)
+                      setCategoryError('')
+                    }}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-gold-400 hover:text-gold-300"
+                  >
+                    <FolderPlus className="h-3.5 w-3.5" />
+                    {showCategoryForm ? 'Masquer' : 'Nouvelle catégorie'}
+                  </button>
+                </div>
                 <select
                   className="input"
                   value={form.categoryId}
                   onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
                   required
                 >
+                  <option value="" className="bg-ink-800">
+                    {categories.length === 0 ? 'Aucune catégorie — créez-en une' : 'Choisir une catégorie…'}
+                  </option>
                   {categories.map((c) => (
-                    <option key={c.id} value={c.id} className="bg-ink-800">{c.nom}</option>
+                    <option key={c.id} value={c.id} className="bg-ink-800">
+                      {c.nom}
+                    </option>
                   ))}
                 </select>
+
+                {showCategoryForm && (
+                  <div className="mt-3 space-y-3 rounded-xl border border-gold-500/20 bg-gold-500/5 p-4">
+                    <p className="text-xs text-zinc-400">
+                      La nouvelle catégorie sera sélectionnée automatiquement pour ce produit.
+                    </p>
+                    <div>
+                      <label className="label">Nom *</label>
+                      <input
+                        className="input"
+                        value={categoryNom}
+                        onChange={(e) => setCategoryNom(e.target.value)}
+                        placeholder="Ex. Décoration murale"
+                      />
+                    </div>
+                    <div>
+                      <label className="label">Description</label>
+                      <textarea
+                        className="input min-h-[60px]"
+                        value={categoryDesc}
+                        onChange={(e) => setCategoryDesc(e.target.value)}
+                        placeholder="Optionnel"
+                      />
+                    </div>
+                    {categoryError && <p className="text-sm text-red-400">{categoryError}</p>}
+                    <button
+                      type="button"
+                      disabled={savingCategory}
+                      onClick={() => handleSaveCategory()}
+                      className="btn-primary w-full text-sm"
+                    >
+                      {savingCategory ? 'Enregistrement…' : 'Créer la catégorie'}
+                    </button>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="label">Statut</label>
@@ -456,6 +635,124 @@ export default function ProductsPage() {
         </div>
       )}
 
+      {showCategoryManager && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="card max-h-[90vh] w-full max-w-lg overflow-y-auto p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-white">Catégories</h3>
+                <p className="text-sm text-zinc-500">Créer et gérer les catégories produits</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCategoryManager(false)
+                  resetCategoryFields()
+                }}
+                className="text-zinc-500 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCategory} className="mb-6 space-y-3 rounded-xl border border-white/10 bg-ink-800/40 p-4">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium text-white">
+                  {editingCategory ? `Modifier « ${editingCategory.nom} »` : 'Nouvelle catégorie'}
+                </p>
+                {editingCategory && (
+                  <button
+                    type="button"
+                    onClick={resetCategoryFields}
+                    className="text-xs text-zinc-500 hover:text-white"
+                  >
+                    Annuler
+                  </button>
+                )}
+              </div>
+              <div>
+                <label className="label">Nom *</label>
+                <input
+                  className="input"
+                  value={categoryNom}
+                  onChange={(e) => setCategoryNom(e.target.value)}
+                  placeholder="Ex. Cuisine, Enfant…"
+                  required
+                />
+              </div>
+              <div>
+                <label className="label">Description</label>
+                <textarea
+                  className="input min-h-[60px]"
+                  value={categoryDesc}
+                  onChange={(e) => setCategoryDesc(e.target.value)}
+                  placeholder="Optionnel"
+                />
+              </div>
+              {categoryError && <p className="text-sm text-red-400">{categoryError}</p>}
+              <button type="submit" disabled={savingCategory} className="btn-primary w-full">
+                {editingCategory ? <Pencil className="h-4 w-4" /> : <FolderPlus className="h-4 w-4" />}
+                {savingCategory
+                  ? 'Enregistrement…'
+                  : editingCategory
+                    ? 'Enregistrer les modifications'
+                    : 'Ajouter la catégorie'}
+              </button>
+            </form>
+
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-wider text-zinc-500">
+                Liste ({categories.length})
+              </p>
+              {categories.length === 0 ? (
+                <p className="py-6 text-center text-sm text-zinc-500">Aucune catégorie pour le moment</p>
+              ) : (
+                categories.map((c) => {
+                  const count = products.filter((p) => p.categoryId === c.id).length
+                  const isEditing = editingCategory?.id === c.id
+                  return (
+                    <div
+                      key={c.id}
+                      className={`flex items-start justify-between gap-3 rounded-xl px-4 py-3 ${
+                        isEditing ? 'bg-gold-500/10 ring-1 ring-gold-500/30' : 'bg-ink-800/50'
+                      }`}
+                    >
+                      <div>
+                        <p className="font-medium text-white">{c.nom}</p>
+                        {c.description && (
+                          <p className="mt-0.5 text-xs text-zinc-500">{c.description}</p>
+                        )}
+                        <p className="mt-1 text-xs text-zinc-600">
+                          {count} produit{count !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          title="Modifier"
+                          onClick={() => startEditCategory(c)}
+                          className="rounded-lg p-2 text-zinc-500 hover:bg-gold-500/10 hover:text-gold-300"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          title="Supprimer"
+                          onClick={() => handleDeleteCategory(c.id)}
+                          className="rounded-lg p-2 text-zinc-500 hover:bg-red-500/10 hover:text-red-400"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {tab === 'catalogue' && (
         <div className="card overflow-hidden">
           {isLoading && products.length === 0 ? (
@@ -471,6 +768,7 @@ export default function ProductsPage() {
                 <tr className="border-b border-white/10 text-xs uppercase text-zinc-500">
                   <th className="px-6 py-4">Image</th>
                   <th className="px-6 py-4">Produit</th>
+                  <th className="px-6 py-4">Catégorie</th>
                   <th className="px-6 py-4">Prix</th>
                   <th className="px-6 py-4">Stock</th>
                   <th className="px-6 py-4">Statut</th>
@@ -499,6 +797,9 @@ export default function ProductsPage() {
                     <td className="px-6 py-4">
                       <p className="font-medium text-white">{p.nom}</p>
                       <p className="max-w-xs truncate text-xs text-zinc-500">{p.description}</p>
+                    </td>
+                    <td className="px-6 py-4 text-zinc-300">
+                      {categoryMap[p.categoryId] ?? `#${p.categoryId}`}
                     </td>
                     <td className="px-6 py-4 text-gold-400">{formatCurrency(Number(p.prix))}</td>
                     <td className="px-6 py-4">{p.stock}</td>
@@ -635,9 +936,10 @@ export default function ProductsPage() {
                   <span className="rounded-lg bg-white/5 px-2 py-0.5 text-xs">
                     {selectedProduct?.statut ?? '—'}
                   </span>
-                  <span className="text-zinc-500">
-                    Catégorie #
-                    {selectedProduct?.categoryId ?? '—'}
+                  <span className="text-zinc-400">
+                    {selectedProduct?.categoryId
+                      ? categoryMap[selectedProduct.categoryId] ?? `Catégorie #${selectedProduct.categoryId}`
+                      : '—'}
                   </span>
                 </div>
                 {selected && (

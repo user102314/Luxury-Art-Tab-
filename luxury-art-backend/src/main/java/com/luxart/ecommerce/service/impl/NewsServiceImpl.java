@@ -7,18 +7,28 @@ import com.luxart.ecommerce.model.entity.User;
 import com.luxart.ecommerce.model.enums.NewsStatut;
 import com.luxart.ecommerce.repository.NewsRepository;
 import com.luxart.ecommerce.repository.UserRepository;
+import com.luxart.ecommerce.service.LocalFileStorageService;
 import com.luxart.ecommerce.service.NewsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class NewsServiceImpl implements NewsService {
 
+    private static final Set<String> ALLOWED = Set.of(
+            "image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif");
+
     private final NewsRepository newsRepository;
     private final UserRepository userRepository;
+    private final LocalFileStorageService localFileStorageService;
 
     @Override
     public List<NewsDto> findAll() {
@@ -74,6 +84,27 @@ public class NewsServiceImpl implements NewsService {
         News news = getEntity(id);
         news.publier();
         return toDto(newsRepository.save(news));
+    }
+
+    @Override
+    @Transactional
+    public NewsDto uploadImage(Long id, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Fichier image requis");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED.contains(contentType.toLowerCase())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Format image non supporté");
+        }
+        News news = getEntity(id);
+        try {
+            String path = localFileStorageService.buildNewsStoragePath(id, file.getOriginalFilename());
+            String url = localFileStorageService.upload(path, file.getBytes(), contentType);
+            news.setImageUrl(url);
+            return toDto(newsRepository.save(news));
+        } catch (java.io.IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erreur upload image");
+        }
     }
 
     private News getEntity(Long id) {

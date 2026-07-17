@@ -12,6 +12,8 @@ export const queryKeys = {
   loyaltyPrograms: ['loyaltyPrograms'] as const,
   loyaltyClients: ['loyaltyClients'] as const,
   loyaltyRewards: ['loyaltyRewards'] as const,
+  clients: ['clients'] as const,
+  stockAlerts: ['stockAlerts'] as const,
   productAnalytics: (id: number) => ['productAnalytics', id] as const,
   dashboardSummary: (from: string, to: string) => ['dashboardSummary', from, to] as const,
   salesOverTime: (from: string, to: string, granularity: string) =>

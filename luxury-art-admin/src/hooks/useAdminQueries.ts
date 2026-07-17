@@ -45,6 +45,24 @@ export function useCategories() {
   })
 }
 
+export function useClients() {
+  return useQuery({
+    queryKey: queryKeys.clients,
+    queryFn: api.getClients,
+    refetchInterval: REFETCH_INTERVAL,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useStockAlerts() {
+  return useQuery({
+    queryKey: queryKeys.stockAlerts,
+    queryFn: api.getStockAlerts,
+    refetchInterval: REFETCH_INTERVAL,
+    placeholderData: keepPreviousData,
+  })
+}
+
 export function useBestSellers() {
   return useQuery({
     queryKey: queryKeys.bestSellers,
@@ -176,6 +194,8 @@ export function useInvalidateAdmin() {
     orderChannelStats: () => qc.invalidateQueries({ queryKey: queryKeys.orderChannelStats }),
     products: () => qc.invalidateQueries({ queryKey: queryKeys.products }),
     categories: () => qc.invalidateQueries({ queryKey: queryKeys.categories }),
+    clients: () => qc.invalidateQueries({ queryKey: queryKeys.clients }),
+    stockAlerts: () => qc.invalidateQueries({ queryKey: queryKeys.stockAlerts }),
     bestSellers: () => qc.invalidateQueries({ queryKey: queryKeys.bestSellers }),
     dashboardStats: () => qc.invalidateQueries({ queryKey: queryKeys.dashboardStats }),
     news: () => qc.invalidateQueries({ queryKey: queryKeys.news }),
@@ -231,9 +251,14 @@ export function prefetchRoute(qc: QueryClient, path: string) {
       qc.prefetchQuery({ queryKey: queryKeys.news, queryFn: api.getNews, ...opts })
       break
     case '/facebook-orders':
+    case '/instagram-orders':
+    case '/whatsapp-orders':
       qc.prefetchQuery({ queryKey: queryKeys.orders, queryFn: api.getOrders, ...opts })
       qc.prefetchQuery({ queryKey: queryKeys.products, queryFn: api.getProducts, ...opts })
       qc.prefetchQuery({ queryKey: queryKeys.orderChannelStats, queryFn: api.getOrderChannelStats, ...opts })
+      break
+    case '/clients':
+      qc.prefetchQuery({ queryKey: queryKeys.clients, queryFn: api.getClients, ...opts })
       break
     case '/loyalty':
       qc.prefetchQuery({ queryKey: queryKeys.loyaltyStats, queryFn: api.getLoyaltyStats, ...opts })

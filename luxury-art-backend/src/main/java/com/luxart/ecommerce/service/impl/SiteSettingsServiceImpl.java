@@ -44,6 +44,27 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
         if (dto.getWhatsappNumber() != null) {
             settings.setWhatsappNumber(dto.getWhatsappNumber());
         }
+        if (dto.getBoutiqueNom() != null) {
+            settings.setBoutiqueNom(dto.getBoutiqueNom());
+        }
+        if (dto.getSlogan() != null) {
+            settings.setSlogan(dto.getSlogan());
+        }
+        if (dto.getEmailContact() != null) {
+            settings.setEmailContact(dto.getEmailContact());
+        }
+        if (dto.getTelephoneContact() != null) {
+            settings.setTelephoneContact(dto.getTelephoneContact());
+        }
+        if (dto.getAdresse() != null) {
+            settings.setAdresse(dto.getAdresse());
+        }
+        if (dto.getVille() != null) {
+            settings.setVille(dto.getVille());
+        }
+        if (dto.getPays() != null) {
+            settings.setPays(dto.getPays());
+        }
         if (dto.getSupportFaq() != null) {
             settings.setSupportFaqJson(toJson(dto.getSupportFaq()));
         }
@@ -56,6 +77,13 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
                         .termsVersion(1)
                         .termsContent(defaultTerms())
                         .whatsappNumber("212600000000")
+                        .boutiqueNom("Luxury Art")
+                        .slogan("Art & Décoration")
+                        .emailContact("contact@luxart.com")
+                        .telephoneContact("+212 600 000 000")
+                        .adresse("Maroc")
+                        .ville("")
+                        .pays("Maroc")
                         .supportFaqJson(toJson(defaultFaq()))
                         .build()));
     }
@@ -65,6 +93,13 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
                 .termsVersion(s.getTermsVersion())
                 .termsContent(s.getTermsContent())
                 .whatsappNumber(s.getWhatsappNumber())
+                .boutiqueNom(s.getBoutiqueNom())
+                .slogan(s.getSlogan())
+                .emailContact(s.getEmailContact())
+                .telephoneContact(s.getTelephoneContact())
+                .adresse(s.getAdresse())
+                .ville(s.getVille())
+                .pays(s.getPays())
                 .supportFaq(fromJson(s.getSupportFaqJson()))
                 .build();
     }

@@ -108,15 +108,18 @@ CREATE TABLE IF NOT EXISTS orders (
     adresse_livraison       VARCHAR(500)    NOT NULL,
     canal                   VARCHAR(20)     NOT NULL DEFAULT 'SITE_WEB'
                             CONSTRAINT chk_orders_canal
-                            CHECK (canal IN ('SITE_WEB', 'FACEBOOK')),
+                            CHECK (canal IN ('SITE_WEB', 'FACEBOOK', 'INSTAGRAM', 'WHATSAPP')),
     client_nom              VARCHAR(255),
     client_telephone        VARCHAR(50),
     reference_facebook      VARCHAR(255),
+    reference_instagram     VARCHAR(255),
+    reference_whatsapp      VARCHAR(255),
+    numero_colis            VARCHAR(64),
     stock_deduit            BOOLEAN         NOT NULL DEFAULT FALSE,
     fidelite_comptabilisee  BOOLEAN         NOT NULL DEFAULT FALSE
 );
 
-COMMENT ON TABLE orders IS 'Commandes (site web + Facebook)';
+COMMENT ON TABLE orders IS 'Commandes (site web + Facebook + Instagram)';
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 6. ORDER_ITEMS
@@ -277,6 +280,13 @@ CREATE TABLE IF NOT EXISTS site_settings (
     terms_version       INTEGER         NOT NULL DEFAULT 1,
     terms_content       TEXT            NOT NULL,
     whatsapp_number     VARCHAR(255)    NOT NULL DEFAULT '212600000000',
+    boutique_nom        VARCHAR(255)    DEFAULT 'Luxury Art',
+    slogan              VARCHAR(255)    DEFAULT 'Art & Décoration',
+    email_contact       VARCHAR(255),
+    telephone_contact   VARCHAR(100),
+    adresse             VARCHAR(500),
+    ville               VARCHAR(100),
+    pays                VARCHAR(100),
     support_faq_json    TEXT            NOT NULL,
     updated_at          TIMESTAMPTZ
 );

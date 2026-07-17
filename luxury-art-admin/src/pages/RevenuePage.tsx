@@ -14,7 +14,7 @@ import {
   Pie,
   Cell,
 } from 'recharts'
-import { FileBarChart, RefreshCw, Clock, CheckCircle, Facebook, Package } from 'lucide-react'
+import { FileBarChart, RefreshCw, Clock, CheckCircle, Facebook, Instagram, MessageCircle, Package } from 'lucide-react'
 import StatCard, { TrendingUp, formatCurrency } from '../components/StatCard'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
 import {
@@ -107,13 +107,29 @@ export default function RevenuePage() {
       </div>
 
       {channelStats && (
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <div className="card flex items-center gap-4 p-4">
             <Facebook className="h-8 w-8 text-indigo-400" />
             <div>
               <p className="text-xs text-zinc-500">CA Facebook (livré)</p>
               <p className="text-xl font-bold text-white">{formatCurrency(Number(channelStats.caFacebook) || 0)}</p>
               <p className="text-xs text-zinc-500">{channelStats.facebookLivrees} commande(s)</p>
+            </div>
+          </div>
+          <div className="card flex items-center gap-4 p-4">
+            <Instagram className="h-8 w-8 text-pink-400" />
+            <div>
+              <p className="text-xs text-zinc-500">CA Instagram (livré)</p>
+              <p className="text-xl font-bold text-white">{formatCurrency(Number(channelStats.caInstagram) || 0)}</p>
+              <p className="text-xs text-zinc-500">{channelStats.instagramLivrees} commande(s)</p>
+            </div>
+          </div>
+          <div className="card flex items-center gap-4 p-4">
+            <MessageCircle className="h-8 w-8 text-emerald-400" />
+            <div>
+              <p className="text-xs text-zinc-500">CA WhatsApp (livré)</p>
+              <p className="text-xl font-bold text-white">{formatCurrency(Number(channelStats.caWhatsapp) || 0)}</p>
+              <p className="text-xs text-zinc-500">{channelStats.whatsappLivrees ?? 0} commande(s)</p>
             </div>
           </div>
           <div className="card flex items-center gap-4 p-4">
@@ -130,7 +146,8 @@ export default function RevenuePage() {
               <p className="text-xs text-zinc-500">CA total canaux</p>
               <p className="text-xl font-bold text-gold-400">{formatCurrency(Number(channelStats.caTotal) || 0)}</p>
               <p className="text-xs text-zinc-500">
-                {channelStats.totalFacebook} FB · {channelStats.totalSiteWeb} web
+                {channelStats.totalFacebook} FB · {channelStats.totalInstagram ?? 0} IG ·{' '}
+                {channelStats.totalWhatsapp ?? 0} WA · {channelStats.totalSiteWeb} web
               </p>
             </div>
           </div>

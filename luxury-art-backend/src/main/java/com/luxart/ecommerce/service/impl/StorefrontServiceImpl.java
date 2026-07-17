@@ -4,6 +4,7 @@ import com.luxart.ecommerce.dto.StorefrontCheckoutRequest;
 import com.luxart.ecommerce.dto.StorefrontCheckoutResponse;
 import com.luxart.ecommerce.dto.VisitorRegisterRequest;
 import com.luxart.ecommerce.dto.VisitorResponse;
+import com.luxart.ecommerce.event.OrderCreatedEvent;
 import com.luxart.ecommerce.exception.ResourceNotFoundException;
 import com.luxart.ecommerce.model.entity.Order;
 import com.luxart.ecommerce.model.entity.OrderItem;
@@ -16,9 +17,11 @@ import com.luxart.ecommerce.repository.OrderItemRepository;
 import com.luxart.ecommerce.repository.OrderRepository;
 import com.luxart.ecommerce.repository.ProductRepository;
 import com.luxart.ecommerce.repository.UserRepository;
+import com.luxart.ecommerce.dto.OrderDto;
 import com.luxart.ecommerce.service.StockService;
 import com.luxart.ecommerce.service.StorefrontService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +39,7 @@ public class StorefrontServiceImpl implements StorefrontService {
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
     private final StockService stockService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public VisitorResponse registerVisitor(VisitorRegisterRequest request) {
@@ -58,6 +62,7 @@ public class StorefrontServiceImpl implements StorefrontService {
                 .adresseLivraison(request.getAdresseLivraison())
                 .canal(OrderCanal.SITE_WEB)
                 .clientNom(request.getNom())
+                .clientTelephone(blankToNull(request.getTelephone()))
                 .stockDeduit(false)
                 .build();
         order = orderRepository.save(order);
@@ -80,11 +85,29 @@ public class StorefrontServiceImpl implements StorefrontService {
         order.setStockDeduit(true);
         orderRepository.save(order);
 
+        eventPublisher.publishEvent(new OrderCreatedEvent(OrderDto.builder()
+                .id(order.getId())
+                .userId(user.getId())
+                .userNom(request.getNom())
+                .clientNom(request.getNom())
+                .statut(order.getStatut())
+                .total(total)
+                .adresseLivraison(order.getAdresseLivraison())
+                .canal(OrderCanal.SITE_WEB)
+                .clientTelephone(order.getClientTelephone())
+                .dateCommande(order.getDateCommande())
+                .build()));
+
         return StorefrontCheckoutResponse.builder()
                 .orderId(order.getId())
                 .userId(user.getId())
                 .total(total)
                 .build();
+    }
+
+    private static String blankToNull(String value) {
+        if (value == null || value.isBlank()) return null;
+        return value.trim();
     }
 
     private User resolveCheckoutUser(StorefrontCheckoutRequest request) {

@@ -8,6 +8,8 @@ import type {
   OrderCanal,
   OrderChannelStats,
   FacebookOrderCreate,
+  InstagramOrderCreate,
+  WhatsAppOrderCreate,
   Product,
   ProductAnalytics,
   ProductBestSeller,
@@ -22,6 +24,9 @@ import type {
   LoyaltyStats,
   ClientProfile,
   LoyaltyReward,
+  ClientCrm,
+  StockAlert,
+  SiteSettings,
 } from '../types'
 
 /** Commandes comptabilisées dans le chiffre d'affaires (livrées uniquement) */
@@ -70,6 +75,10 @@ export const api = {
   getOrderChannelStats: () => request<OrderChannelStats>('/orders/stats/channels'),
   createFacebookOrder: (data: FacebookOrderCreate) =>
     request<Order>('/orders/facebook', { method: 'POST', body: JSON.stringify(data) }),
+  createInstagramOrder: (data: InstagramOrderCreate) =>
+    request<Order>('/orders/instagram', { method: 'POST', body: JSON.stringify(data) }),
+  createWhatsAppOrder: (data: WhatsAppOrderCreate) =>
+    request<Order>('/orders/whatsapp', { method: 'POST', body: JSON.stringify(data) }),
   updateOrder: (id: number, data: Partial<Order>) =>
     request<Order>(`/orders/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteOrder: (id: number) =>
@@ -102,6 +111,12 @@ export const api = {
     request<void>(`/products/images/${imageId}`, { method: 'DELETE' }),
 
   getCategories: () => request<Category[]>('/categories'),
+  createCategory: (data: { nom: string; description?: string }) =>
+    request<Category>('/categories', { method: 'POST', body: JSON.stringify(data) }),
+  updateCategory: (id: number, data: { nom: string; description?: string }) =>
+    request<Category>(`/categories/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteCategory: (id: number) =>
+    request<void>(`/categories/${id}`, { method: 'DELETE' }),
   getBestSellers: () => request<ProductBestSeller[]>('/products/analytics/best-sellers'),
   getProductAnalytics: (id: number) =>
     request<ProductAnalytics>(`/products/${id}/analytics`),
@@ -117,8 +132,32 @@ export const api = {
     request<News>(`/news/${id}/publish`, { method: 'PATCH' }),
   deleteNews: (id: number) =>
     request<void>(`/news/${id}`, { method: 'DELETE' }),
+  uploadNewsImage: async (newsId: number, file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch(`/api/news/${newsId}/image`, { method: 'POST', body: formData })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: 'Erreur upload' }))
+      throw new Error(err.message ?? `Erreur ${res.status}`)
+    }
+    return res.json() as Promise<News>
+  },
+
+  getSiteSettings: () => request<SiteSettings>('/admin/site/settings'),
+  updateSiteSettings: (data: SiteSettings) =>
+    request<SiteSettings>('/admin/site/settings', { method: 'PUT', body: JSON.stringify(data) }),
 
   getUsers: () => request<User[]>('/users'),
+
+  getClients: () => request<ClientCrm[]>('/admin/clients'),
+  getClient: (userId: number) => request<ClientCrm>(`/admin/clients/${userId}`),
+
+  getStockAlerts: () => request<StockAlert[]>('/admin/stock/alerts'),
+  restockProduct: (productId: number, quantite: number) =>
+    request<Product>(`/admin/stock/${productId}/restock`, {
+      method: 'POST',
+      body: JSON.stringify({ quantite }),
+    }),
 
   getReviews: () => request<Review[]>('/reviews'),
   approveReview: (id: number) =>
@@ -245,11 +284,15 @@ export function formatDate(iso: string) {
 export const ORDER_CANAL_LABELS: Record<OrderCanal, string> = {
   SITE_WEB: 'Site web',
   FACEBOOK: 'Facebook',
+  INSTAGRAM: 'Instagram',
+  WHATSAPP: 'WhatsApp',
 }
 
 export const ORDER_CANAL_COLORS: Record<OrderCanal, string> = {
   SITE_WEB: 'bg-blue-500/20 text-blue-300',
   FACEBOOK: 'bg-indigo-500/20 text-indigo-300',
+  INSTAGRAM: 'bg-pink-500/20 text-pink-300',
+  WHATSAPP: 'bg-emerald-500/20 text-emerald-300',
 }
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {

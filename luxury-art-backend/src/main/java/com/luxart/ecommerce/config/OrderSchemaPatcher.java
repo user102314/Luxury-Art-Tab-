@@ -20,6 +20,10 @@ public class OrderSchemaPatcher implements CommandLineRunner {
         ensureCanal();
         ensureBooleanColumn("stock_deduit", false);
         ensureBooleanColumn("fidelite_comptabilisee", false);
+        ensureOptionalVarcharColumn("reference_instagram");
+        ensureOptionalVarcharColumn("reference_whatsapp");
+        ensureOptionalVarcharColumn("numero_colis");
+        ensureCanalAllowsExtraChannels();
     }
 
     private void ensureCanal() {
@@ -32,6 +36,28 @@ public class OrderSchemaPatcher implements CommandLineRunner {
             log.info("Commandes mises à jour (canal): {}", updated);
         }
         setNotNull("canal");
+    }
+
+    private void ensureOptionalVarcharColumn(String column) {
+        if (!columnExists(column)) {
+            jdbcTemplate.execute("ALTER TABLE orders ADD COLUMN " + column + " varchar(255)");
+            log.info("Colonne orders.{} ajoutée", column);
+        }
+    }
+
+    /** Étend le CHECK canal pour accepter INSTAGRAM + WHATSAPP (PostgreSQL / Supabase). */
+    private void ensureCanalAllowsExtraChannels() {
+        try {
+            jdbcTemplate.execute("ALTER TABLE orders DROP CONSTRAINT IF EXISTS chk_orders_canal");
+            jdbcTemplate.execute("""
+                    ALTER TABLE orders
+                      ADD CONSTRAINT chk_orders_canal
+                      CHECK (canal IN ('SITE_WEB', 'FACEBOOK', 'INSTAGRAM', 'WHATSAPP'))
+                    """);
+            log.info("Contrainte chk_orders_canal mise à jour (SITE_WEB|FACEBOOK|INSTAGRAM|WHATSAPP)");
+        } catch (Exception e) {
+            log.debug("Mise à jour chk_orders_canal : {}", e.getMessage());
+        }
     }
 
     private void ensureBooleanColumn(String column, boolean defaultValue) {

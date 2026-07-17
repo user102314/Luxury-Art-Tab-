@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Eye, Trash2, RefreshCw, X } from 'lucide-react'
+import { Eye, FileText, Trash2, RefreshCw, X } from 'lucide-react'
 import {
   api,
   formatCurrency,
@@ -10,6 +10,7 @@ import {
   ORDER_STATUS_COLORS,
 } from '../lib/api'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
+import InvoiceModal from '../components/InvoiceModal'
 import { useInvalidateAdmin, useOrders } from '../hooks/useAdminQueries'
 import type { Order, OrderStatut } from '../types'
 
@@ -24,26 +25,35 @@ const STATUTS: OrderStatut[] = [
 export default function OrdersPage() {
   const { data: orders = [], isLoading, isFetching } = useOrders()
   const invalidate = useInvalidateAdmin()
-  const [filter, setFilter] = useState<string>('ALL')
+  const [filter, setFilter] = useState<string>('EN_ATTENTE')
   const [canalFilter, setCanalFilter] = useState<string>('ALL')
   const [detail, setDetail] = useState<Order | null>(null)
+  const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
+  const [loadingInvoice, setLoadingInvoice] = useState(false)
 
-  const filtered = orders.filter((o) => {
-    if (filter !== 'ALL' && o.statut !== filter) return false
-    if (canalFilter !== 'ALL' && o.canal !== canalFilter) return false
-    return true
-  })
+  const filtered = orders
+    .filter((o) => {
+      if (filter !== 'ALL' && o.statut !== filter) return false
+      if (canalFilter !== 'ALL' && o.canal !== canalFilter) return false
+      return true
+    })
+    .sort(
+      (a, b) => new Date(b.dateCommande).getTime() - new Date(a.dateCommande).getTime(),
+    )
 
   const updateStatut = async (id: number, statut: OrderStatut) => {
     const order = orders.find((o) => o.id === id)
     if (!order) return
-    await api.updateOrder(id, { ...order, statut })
+    const updated = await api.updateOrder(id, { ...order, statut })
     await invalidate.orders()
     await invalidate.orderChannelStats()
-    if (statut === 'ANNULEE') await invalidate.products()
+    if (statut === 'ANNULEE') {
+      await invalidate.products()
+      await invalidate.stockAlerts()
+    }
     if (detail?.id === id) {
-      setDetail({ ...detail, statut })
+      setDetail(updated)
     }
   }
 
@@ -66,13 +76,25 @@ export default function OrdersPage() {
     }
   }
 
+  const openInvoice = async (order: Order) => {
+    setLoadingInvoice(true)
+    try {
+      const full = await api.getOrder(order.id)
+      setInvoiceOrder(full)
+    } catch {
+      setInvoiceOrder(order)
+    } finally {
+      setLoadingInvoice(false)
+    }
+  }
+
   if (isLoading && orders.length === 0) {
     return <PageSkeleton rows={6} />
   }
 
   return (
     <div className="space-y-6">
-      <QueryStatusBar fetching={isFetching || loadingDetail} />
+      <QueryStatusBar fetching={isFetching || loadingDetail || loadingInvoice} />
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -89,6 +111,8 @@ export default function OrdersPage() {
         <FilterBtn active={canalFilter === 'ALL'} onClick={() => setCanalFilter('ALL')} label="Tous canaux" />
         <FilterBtn active={canalFilter === 'SITE_WEB'} onClick={() => setCanalFilter('SITE_WEB')} label="Site web" />
         <FilterBtn active={canalFilter === 'FACEBOOK'} onClick={() => setCanalFilter('FACEBOOK')} label="Facebook" />
+        <FilterBtn active={canalFilter === 'INSTAGRAM'} onClick={() => setCanalFilter('INSTAGRAM')} label="Instagram" />
+        <FilterBtn active={canalFilter === 'WHATSAPP'} onClick={() => setCanalFilter('WHATSAPP')} label="WhatsApp" />
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -116,6 +140,7 @@ export default function OrdersPage() {
                   <th className="px-6 py-4">Canal</th>
                   <th className="px-6 py-4">Client</th>
                   <th className="px-6 py-4">Total</th>
+                  <th className="px-6 py-4">Colis</th>
                   <th className="px-6 py-4">Statut</th>
                   <th className="px-6 py-4">Adresse</th>
                   <th className="px-6 py-4">Actions</th>
@@ -134,6 +159,9 @@ export default function OrdersPage() {
                     <td className="px-6 py-4 text-zinc-300">{o.clientNom ?? o.userNom ?? `User #${o.userId}`}</td>
                     <td className="px-6 py-4 font-semibold text-gold-400">
                       {formatCurrency(Number(o.total) || 0)}
+                    </td>
+                    <td className="max-w-[140px] truncate px-6 py-4 text-xs text-emerald-300/90">
+                      {o.numeroColis ?? '—'}
                     </td>
                     <td className="px-6 py-4">
                       <select
@@ -163,6 +191,14 @@ export default function OrdersPage() {
                         </button>
                         <button
                           type="button"
+                          onClick={() => openInvoice(o)}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-medium text-emerald-300 transition hover:bg-emerald-500/25"
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          Facture
+                        </button>
+                        <button
+                          type="button"
                           title="Supprimer"
                           onClick={() => remove(o.id)}
                           className="rounded-lg p-2 text-zinc-500 hover:bg-red-500/10 hover:text-red-400"
@@ -187,9 +223,22 @@ export default function OrdersPage() {
                 <h3 className="text-lg font-semibold text-white">Commande #{detail.id}</h3>
                 <p className="text-sm text-zinc-500">{formatDate(detail.dateCommande)}</p>
               </div>
-              <button type="button" onClick={() => setDetail(null)} className="text-zinc-500 hover:text-white">
-                <X className="h-5 w-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInvoiceOrder(detail)
+                    setDetail(null)
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-medium text-emerald-300 transition hover:bg-emerald-500/25"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  Créer une facture
+                </button>
+                <button type="button" onClick={() => setDetail(null)} className="text-zinc-500 hover:text-white">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
 
             <div className="mb-6 grid gap-3 sm:grid-cols-2 text-sm">
@@ -199,6 +248,9 @@ export default function OrdersPage() {
               <Info label="Statut" value={ORDER_STATUS_LABELS[detail.statut]} />
               <Info label="Adresse" value={detail.adresseLivraison} />
               <Info label="Réf. Facebook" value={detail.referenceFacebook || '—'} />
+              <Info label="Réf. Instagram" value={detail.referenceInstagram || '—'} />
+              <Info label="Réf. WhatsApp" value={detail.referenceWhatsapp || '—'} />
+              <Info label="N° colis" value={detail.numeroColis || '—'} />
               <Info label="Total" value={formatCurrency(Number(detail.total) || 0)} />
             </div>
 
@@ -231,6 +283,10 @@ export default function OrdersPage() {
             )}
           </div>
         </div>
+      )}
+
+      {invoiceOrder && (
+        <InvoiceModal order={invoiceOrder} onClose={() => setInvoiceOrder(null)} />
       )}
     </div>
   )

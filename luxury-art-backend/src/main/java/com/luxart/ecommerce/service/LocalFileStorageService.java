@@ -49,6 +49,13 @@ public class LocalFileStorageService {
         return "products/" + productId + "/" + UUID.randomUUID() + "-" + safeName;
     }
 
+    public String buildNewsStoragePath(Long newsId, String originalFilename) {
+        String safeName = originalFilename != null
+                ? originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_")
+                : "image.jpg";
+        return "news/" + newsId + "/" + UUID.randomUUID() + "-" + safeName;
+    }
+
     public String getPublicUrl(String storagePath) {
         return "/uploads/" + storagePath.replace("\\", "/");
     }

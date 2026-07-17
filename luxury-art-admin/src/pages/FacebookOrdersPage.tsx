@@ -11,8 +11,6 @@ import {
 import {
   api,
   formatDate,
-  ORDER_CANAL_COLORS,
-  ORDER_CANAL_LABELS,
   ORDER_STATUS_COLORS,
   ORDER_STATUS_LABELS,
 } from '../lib/api'
@@ -179,7 +177,7 @@ export default function FacebookOrdersPage() {
         <StatCard
           title="CA total (livré)"
           value={formatCurrency(Number(channelStats?.caTotal) || 0)}
-          subtitle="Facebook + site web"
+          subtitle="FB + IG + site web"
           icon={TrendingUp}
           accent="emerald"
         />
