@@ -162,6 +162,10 @@
     border-color: var(--color-border);
   }
 
+  html {
+    font-size: 87.5%; /* scale globale ~ -12.5% */
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -241,5 +245,23 @@
 
   .animate-card-rise {
     animation: card-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes paint-float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(var(--paint-rot, 0deg));
+    }
+    50% {
+      transform: translateY(-10px) rotate(var(--paint-rot, 0deg));
+    }
+  }
+
+  .animate-paint-float {
+    animation: paint-float 7s ease-in-out infinite;
+  }
+
+  .animate-paint-float-slow {
+    animation: paint-float 11s ease-in-out infinite;
   }
 }

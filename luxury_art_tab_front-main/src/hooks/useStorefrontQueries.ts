@@ -30,6 +30,15 @@ export function useCategories() {
   })
 }
 
+export function useCategoryShowcase() {
+  return useQuery({
+    queryKey: queryKeys.categoryShowcase,
+    queryFn: api.getCategoryShowcase,
+    refetchInterval: REFETCH_INTERVAL,
+    placeholderData: keepPreviousData,
+  })
+}
+
 export function usePublishedNews() {
   return useQuery({
     queryKey: queryKeys.newsPublished,

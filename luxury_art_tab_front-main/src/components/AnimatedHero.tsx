@@ -3,11 +3,11 @@ import { heroCategories as categories } from "@/data/heroCategories";
 
 // Per-column layout + parallax speed (px translation per scroll px)
 const columns = [
-  { baseY: -24, height: "h-72 md:h-80", speed: 0.18 },
-  { baseY: 16, height: "h-80 md:h-96", speed: -0.12 },
-  { baseY: -40, height: "h-72 md:h-80", speed: 0.22 },
-  { baseY: 24, height: "h-80 md:h-96", speed: -0.16 },
-  { baseY: -16, height: "h-72 md:h-80", speed: 0.14 },
+  { baseY: -24, height: "h-60 md:h-72", speed: 0.18 },
+  { baseY: 16, height: "h-72 md:h-80", speed: -0.12 },
+  { baseY: -40, height: "h-60 md:h-72", speed: 0.22 },
+  { baseY: 24, height: "h-72 md:h-80", speed: -0.16 },
+  { baseY: -16, height: "h-60 md:h-72", speed: 0.14 },
 ];
 
 const CYCLE_MS = 4200;
@@ -155,8 +155,8 @@ export function AnimatedHero() {
         }}
       />
       {/* Top headline */}
-      <div className="relative z-20 mx-auto max-w-5xl px-6 pt-16 text-center md:pt-24">
-        <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-foreground md:text-6xl lg:text-7xl">
+      <div className="relative z-20 mx-auto max-w-5xl px-6 pt-12 text-center md:pt-16">
+        <h1 className="font-display text-3xl font-bold leading-[1.05] tracking-tight text-foreground md:text-5xl lg:text-6xl">
           Trouvez votre prochain
           <br />
           <span className="inline-block min-h-[1.2em]">
@@ -170,7 +170,7 @@ export function AnimatedHero() {
         </h1>
 
         {/* dots */}
-        <div className="mt-8 flex items-center justify-center gap-2">
+        <div className="mt-6 flex items-center justify-center gap-2">
           {categories.map((_, i) => (
             <button
               key={i}
@@ -185,8 +185,8 @@ export function AnimatedHero() {
       </div>
 
       {/* Image grid */}
-      <div className="relative z-10 mx-auto mt-12 max-w-7xl px-3 pb-24 md:px-6 md:pb-32">
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-5">
+      <div className="relative z-10 mx-auto mt-8 max-w-7xl px-3 pb-16 md:px-6 md:pb-24">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-5 md:gap-4">
           {columns.map((col, i) => {
             const src = current.images[i];
             const hideOnMobile = i > 1 ? "hidden md:block" : "";
@@ -230,7 +230,7 @@ export function AnimatedHero() {
         </div>
 
         {/* Category CTA */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-8 md:bottom-10 flex justify-center">
+        <div className="pointer-events-none absolute inset-x-0 bottom-6 md:bottom-8 flex justify-center">
           <a
             href={`/category/${current.slug}`}
             className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-brand-red px-6 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-[1.03]"

@@ -1,6 +1,7 @@
 package com.luxart.ecommerce.controller;
 
 import com.luxart.ecommerce.dto.CategoryDto;
+import com.luxart.ecommerce.dto.CategoryShowcaseDto;
 import com.luxart.ecommerce.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,11 @@ public class CategoryController {
     @GetMapping
     public ResponseEntity<List<CategoryDto>> getAll() {
         return ResponseEntity.ok(categoryService.findAll());
+    }
+
+    @GetMapping("/showcase")
+    public ResponseEntity<List<CategoryShowcaseDto>> getShowcase() {
+        return ResponseEntity.ok(categoryService.findShowcase());
     }
 
     @GetMapping("/{id}")

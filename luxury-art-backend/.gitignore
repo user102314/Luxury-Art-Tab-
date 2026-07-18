@@ -1,2 +1,30 @@
-uploads/
+# Build Maven
 target/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+replay_pid*
+
+# Credentials locaux
+src/main/resources/application-local.properties
+
+# Uploads images produits
+uploads/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Editor / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

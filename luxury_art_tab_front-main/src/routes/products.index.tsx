@@ -15,13 +15,20 @@ import {
 } from '@/components/ui/select'
 
 export const Route = createFileRoute('/products/')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    category:
+      typeof search.category === 'string' && search.category !== ''
+        ? search.category
+        : undefined,
+  }),
   component: ProductsPage,
 })
 
 type SortOption = 'price-asc' | 'price-desc' | 'name' | 'stock'
 
 function ProductsPage() {
-  const [categoryId, setCategoryId] = useState<string>('all')
+  const { category: categoryFromUrl } = Route.useSearch()
+  const [categoryId, setCategoryId] = useState<string>(categoryFromUrl ?? 'all')
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<SortOption>('name')
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000])
@@ -29,6 +36,10 @@ function ProductsPage() {
 
   const { data: products = [], isLoading: loadingProducts } = useProducts()
   const { data: categories = [] } = useCategories()
+
+  useEffect(() => {
+    setCategoryId(categoryFromUrl ?? 'all')
+  }, [categoryFromUrl])
 
   const categoryMap = useMemo(
     () => Object.fromEntries(categories.map((c) => [c.id, c.nom])),

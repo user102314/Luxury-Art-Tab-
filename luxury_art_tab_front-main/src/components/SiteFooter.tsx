@@ -1,9 +1,23 @@
 import { Link } from '@tanstack/react-router'
+import { PaintSplash, PaintStroke } from '@/components/ArtDecor'
 
 export function SiteFooter() {
   return (
-    <footer className="mt-20 border-t border-white/10 bg-[#2f1b12] px-6 py-12 text-[#f7efe2] md:px-10">
-      <div className="mx-auto grid max-w-7xl gap-10 md:grid-cols-3">
+    <footer className="relative mt-20 overflow-hidden border-t border-white/10 bg-[#2f1b12] px-6 py-12 text-[#f7efe2] md:px-10">
+      <PaintSplash
+        color="orange"
+        opacity={0.25}
+        rotate={25}
+        className="-right-10 -top-8 hidden h-36 w-36 md:block"
+      />
+      <PaintStroke
+        color="beige"
+        opacity={0.22}
+        rotate={-4}
+        className="-left-16 bottom-8 hidden h-12 w-56 lg:block"
+      />
+
+      <div className="relative z-[1] mx-auto grid max-w-7xl gap-10 md:grid-cols-3">
         <div>
           <Link to="/" className="font-display text-2xl font-bold tracking-tight text-[#f4a15d]">
             Luxury Art Tab
@@ -50,7 +64,7 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <div className="mx-auto mt-10 flex max-w-7xl flex-col items-start justify-between gap-3 border-t border-white/15 pt-6 text-xs text-[#d9c8b3] md:flex-row md:items-center">
+      <div className="relative z-[1] mx-auto mt-10 flex max-w-7xl flex-col items-start justify-between gap-3 border-t border-white/15 pt-6 text-xs text-[#d9c8b3] md:flex-row md:items-center">
         <p>© 2026 Luxury Art Tab. Tous droits réservés.</p>
         <p>Fait avec passion pour votre décoration murale.</p>
       </div>

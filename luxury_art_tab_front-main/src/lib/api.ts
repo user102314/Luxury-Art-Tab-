@@ -1,5 +1,7 @@
 import type {
   CartItem,
+  Category,
+  CategoryShowcase,
   ContactMessage,
   News,
   Order,
@@ -94,6 +96,7 @@ export const api = {
   getProducts: () => request<Product[]>('/products'),
   getProduct: (id: number) => request<Product>(`/products/${id}`),
   getCategories: () => request<Category[]>('/categories'),
+  getCategoryShowcase: () => request<CategoryShowcase[]>('/categories/showcase'),
 
   getProductComments: (productId: number) =>
     request<ProductComment[]>(`/products/${productId}/comments`),

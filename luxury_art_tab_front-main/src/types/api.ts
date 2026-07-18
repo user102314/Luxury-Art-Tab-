@@ -30,6 +30,13 @@ export interface Category {
   description?: string
 }
 
+export interface CategoryShowcase {
+  categoryId: number
+  nom: string
+  description?: string
+  product: Product
+}
+
 export interface ProductComment {
   id: number
   userId: number
