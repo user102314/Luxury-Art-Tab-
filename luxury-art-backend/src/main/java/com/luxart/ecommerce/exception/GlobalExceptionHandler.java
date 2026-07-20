@@ -1,5 +1,6 @@
 package com.luxart.ecommerce.exception;
 
+import com.luxart.ecommerce.colissimo.ColissimoApiException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -22,6 +23,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                 "timestamp", LocalDateTime.now().toString(),
                 "message", message.isBlank() ? "Données invalides" : message
+        ));
+    }
+
+    @ExceptionHandler(ColissimoApiException.class)
+    public ResponseEntity<Map<String, Object>> handleColissimo(ColissimoApiException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "timestamp", LocalDateTime.now().toString(),
+                "message", ex.getMessage() != null ? ex.getMessage() : "Erreur Colissimo"
         ));
     }
 

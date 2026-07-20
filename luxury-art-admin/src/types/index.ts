@@ -40,7 +40,30 @@ export interface Order {
   referenceInstagram?: string
   referenceWhatsapp?: string
   numeroColis?: string
+  colissimoCodeBarre?: string
+  colissimoReference?: string
+  colissimoEtat?: string
+  colissimoDesignation?: string
+  colissimoImportedAt?: string
   items?: OrderItem[]
+}
+
+export interface ColissimoSyncResult {
+  syncedAt: string
+  totalFetched: number
+  created: number
+  updated: number
+  skipped: number
+  errors: string[]
+  message: string
+}
+
+export interface ColissimoSyncStatus {
+  enabled: boolean
+  configured: boolean
+  lastSyncAt: string | null
+  lastResult: ColissimoSyncResult | null
+  syncIntervalMs: number
 }
 
 export interface OrderChannelStats {
@@ -327,12 +350,21 @@ export interface SiteSettings {
 }
 
 export interface AdminNotification {
+  id?: number
   type: string
   title: string
   message: string
   orderId?: number
   canal?: string
   clientNom?: string
+  clientTelephone?: string
   total?: number
+  colissimoCodeBarre?: string
+  colissimoEtat?: string
+  statut?: string
+  adresseLivraison?: string
+  colissimoDesignation?: string
+  reference?: string
   createdAt?: string
+  read?: boolean
 }

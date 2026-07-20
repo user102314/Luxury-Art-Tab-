@@ -1,6 +1,7 @@
 import { Download, FileText, Package, X } from 'lucide-react'
+import { useState } from 'react'
 import { formatCurrency, formatDate, ORDER_CANAL_LABELS } from '../lib/api'
-import { downloadInvoicePdf, invoiceFileName, INVOICE_SELLER } from '../lib/invoice'
+import { downloadInvoicePdf, invoiceFileName } from '../lib/invoice'
 import type { Order } from '../types'
 
 interface InvoiceModalProps {
@@ -9,11 +10,28 @@ interface InvoiceModalProps {
 }
 
 export default function InvoiceModal({ order, onClose }: InvoiceModalProps) {
+  const [downloading, setDownloading] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
   const clientNom = order.clientNom ?? order.userNom ?? `Client #${order.userId}`
   const itemCount = order.items?.reduce((n, i) => n + i.quantite, 0) ?? 0
+  const isConfirmed =
+    order.statut === 'CONFIRMEE' || order.statut === 'EXPEDIEE' || order.statut === 'LIVREE'
 
-  const handleDownload = () => {
-    downloadInvoicePdf(order)
+  const handleDownload = async () => {
+    setDownloading(true)
+    setMessage(null)
+    try {
+      const source = await downloadInvoicePdf(order)
+      if (source === 'colissimo') {
+        setMessage('Étiquette / facture Colissimo téléchargée.')
+      } else {
+        setMessage('Facture locale générée (Colissimo indisponible pour cette commande).')
+      }
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Erreur lors du téléchargement')
+    } finally {
+      setDownloading(false)
+    }
   }
 
   return (
@@ -25,7 +43,7 @@ export default function InvoiceModal({ order, onClose }: InvoiceModalProps) {
               <FileText className="h-5 w-5 text-gold-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">Créer une facture</h3>
+              <h3 className="text-lg font-semibold text-white">Facture Colissimo</h3>
               <p className="text-sm text-zinc-500">Commande #{order.id}</p>
             </div>
           </div>
@@ -39,7 +57,10 @@ export default function InvoiceModal({ order, onClose }: InvoiceModalProps) {
           <Row label="Date" value={formatDate(order.dateCommande)} />
           <Row label="Canal" value={ORDER_CANAL_LABELS[order.canal ?? 'SITE_WEB']} />
           <Row label="Articles" value={`${itemCount || (order.items?.length ?? 0)} produit(s)`} />
-          <Row label="N° colis" value={order.numeroColis || 'Généré à la confirmation'} />
+          <Row
+            label="N° colis Colissimo"
+            value={order.colissimoCodeBarre ?? order.numeroColis ?? (isConfirmed ? 'Créé à la confirmation' : 'Après confirmation')}
+          />
           <Row label="Total" value={formatCurrency(Number(order.total) || 0)} />
           <Row label="Fichier" value={invoiceFileName(order)} />
         </div>
@@ -47,26 +68,38 @@ export default function InvoiceModal({ order, onClose }: InvoiceModalProps) {
         <div className="mb-5 flex gap-3 rounded-xl border border-gold-500/20 bg-gold-500/5 p-3 text-xs text-zinc-400">
           <Package className="mt-0.5 h-4 w-4 shrink-0 text-gold-400" />
           <p>
-            Facture professionnelle <strong className="text-zinc-300">{INVOICE_SELLER.nom}</strong> —
-            à glisser dans le colis du client (détail produits, prix, date, adresse).
+            Document officiel <strong className="text-zinc-300">Colissimo</strong> (étiquette / bordereau)
+            — généré via <code className="text-gold-300">getColisPdf</code>. À coller sur le colis avant expédition.
+            {!isConfirmed && (
+              <span className="mt-1 block text-amber-300/90">
+                Confirmez la commande pour créer automatiquement le colis sur Colissimo.
+              </span>
+            )}
           </p>
         </div>
 
+        {message && (
+          <p className="mb-4 rounded-lg border border-white/10 bg-ink-800/80 px-3 py-2 text-sm text-zinc-300">
+            {message}
+          </p>
+        )}
+
         <p className="mb-4 text-sm text-zinc-400">
-          Voulez-vous télécharger la facture maintenant ?
+          Télécharger la facture Colissimo pour cette commande ?
         </p>
 
         <div className="flex flex-wrap justify-end gap-3">
-          <button type="button" onClick={onClose} className="btn-ghost">
+          <button type="button" onClick={onClose} className="btn-ghost" disabled={downloading}>
             Annuler
           </button>
           <button
             type="button"
             onClick={handleDownload}
+            disabled={downloading}
             className="btn-primary inline-flex items-center gap-2"
           >
             <Download className="h-4 w-4" />
-            Télécharger la facture
+            {downloading ? 'Téléchargement…' : 'Télécharger Colissimo'}
           </button>
         </div>
       </div>

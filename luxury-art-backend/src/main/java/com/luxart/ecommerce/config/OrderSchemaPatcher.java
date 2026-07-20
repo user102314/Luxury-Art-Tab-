@@ -23,6 +23,12 @@ public class OrderSchemaPatcher implements CommandLineRunner {
         ensureOptionalVarcharColumn("reference_instagram");
         ensureOptionalVarcharColumn("reference_whatsapp");
         ensureOptionalVarcharColumn("numero_colis");
+        ensureOptionalVarcharColumn("colissimo_code_barre");
+        ensureOptionalVarcharColumn("colissimo_reference");
+        ensureOptionalVarcharColumn("colissimo_etat");
+        ensureOptionalVarcharColumn("colissimo_designation");
+        ensureOptionalTimestampColumn("colissimo_imported_at");
+        ensureUniqueIndex("colissimo_code_barre");
         ensureCanalAllowsExtraChannels();
     }
 
@@ -42,6 +48,26 @@ public class OrderSchemaPatcher implements CommandLineRunner {
         if (!columnExists(column)) {
             jdbcTemplate.execute("ALTER TABLE orders ADD COLUMN " + column + " varchar(255)");
             log.info("Colonne orders.{} ajoutée", column);
+        }
+    }
+
+    private void ensureOptionalTimestampColumn(String column) {
+        if (!columnExists(column)) {
+            jdbcTemplate.execute("ALTER TABLE orders ADD COLUMN " + column + " timestamp");
+            log.info("Colonne orders.{} ajoutée", column);
+        }
+    }
+
+    private void ensureUniqueIndex(String column) {
+        if (!columnExists(column)) {
+            return;
+        }
+        try {
+            jdbcTemplate.execute(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS uq_orders_" + column + " ON orders (" + column + ") WHERE " + column + " IS NOT NULL");
+            log.info("Index unique orders.{} vérifié", column);
+        } catch (Exception e) {
+            log.debug("Index unique orders.{} : {}", column, e.getMessage());
         }
     }
 

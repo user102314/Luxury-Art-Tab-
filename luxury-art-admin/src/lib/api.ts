@@ -27,6 +27,8 @@ import type {
   ClientCrm,
   StockAlert,
   SiteSettings,
+  ColissimoSyncResult,
+  ColissimoSyncStatus,
 } from '../types'
 
 /** Commandes comptabilisées dans le chiffre d'affaires (livrées uniquement) */
@@ -83,6 +85,24 @@ export const api = {
     request<Order>(`/orders/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteOrder: (id: number) =>
     request<void>(`/orders/${id}`, { method: 'DELETE' }),
+
+  getColissimoStatus: () => request<ColissimoSyncStatus>('/colissimo/status'),
+  syncColissimo: () =>
+    request<ColissimoSyncResult>('/colissimo/sync', { method: 'POST' }),
+  pushOrderToColissimo: (orderId: number) =>
+    request<{ orderId: number; colissimoCodeBarre: string; numeroColis: string }>(
+      `/colissimo/orders/${orderId}/push`,
+      { method: 'POST' },
+    ),
+  getColissimoInvoiceUrl: (orderId: number) => `${BASE}/colissimo/orders/${orderId}/invoice`,
+
+  getNotifications: () => request<import('../types').AdminNotification[]>('/notifications'),
+  getUnreadNotificationCount: () =>
+    request<{ count: number }>('/notifications/unread-count'),
+  markAllNotificationsRead: () =>
+    request<void>('/notifications/mark-all-read', { method: 'POST' }),
+  markNotificationRead: (id: number) =>
+    request<void>(`/notifications/${id}/read`, { method: 'POST' }),
 
   getProducts: () => request<Product[]>('/products'),
   getProduct: (id: number) => request<Product>(`/products/${id}`),

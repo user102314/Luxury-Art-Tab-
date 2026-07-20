@@ -16,6 +16,7 @@ import {
   Users,
   MessageCircle,
   Settings,
+  Bell,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { prefetchEssentials, prefetchRoute } from '../hooks/useAdminQueries'
@@ -26,6 +27,7 @@ const nav = [
   { to: '/revenue', icon: TrendingUp, label: 'Revenus' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/orders', icon: ShoppingBag, label: 'Commandes' },
+  { to: '/notifications', icon: Bell, label: 'Notifications' },
   { to: '/facebook-orders', icon: Facebook, label: 'Facebook' },
   { to: '/instagram-orders', icon: Instagram, label: 'Instagram' },
   { to: '/whatsapp-orders', icon: MessageCircle, label: 'WhatsApp' },

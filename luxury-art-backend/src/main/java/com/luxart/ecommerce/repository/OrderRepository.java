@@ -10,11 +10,16 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByUserId(Long userId);
     List<Order> findByCanalOrderByDateCommandeDesc(OrderCanal canal);
+
+    Optional<Order> findByColissimoCodeBarre(String colissimoCodeBarre);
+
+    Optional<Order> findByNumeroColis(String numeroColis);
 
     @Query("""
             SELECT COUNT(o) FROM Order o

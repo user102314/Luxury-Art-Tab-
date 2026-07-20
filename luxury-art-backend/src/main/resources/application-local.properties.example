@@ -2,3 +2,8 @@
 # spring.profiles.active=local est déjà défini dans application.properties
 
 spring.datasource.password=VOTRE_MOT_DE_PASSE
+
+# Colissimo API — delivery.colissimo.com.tn > Profil > Identifiants API
+colissimo.enabled=true
+colissimo.utilisateur=clt_liv_XXXX
+colissimo.pass=VOTRE_CLE_API
