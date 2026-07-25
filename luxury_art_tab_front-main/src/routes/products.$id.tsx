@@ -10,7 +10,7 @@ import { ProductImageGallery } from '@/components/ProductImageGallery'
 import { api } from '@/lib/api'
 import { queryKeys } from '@/lib/queryKeys'
 import { REFETCH_INTERVAL } from '@/lib/queryClient'
-import { useProduct } from '@/hooks/useStorefrontQueries'
+import { useProduct, useProducts } from '@/hooks/useStorefrontQueries'
 import { useProductTracking } from '@/hooks/useProductTracking'
 import { getProductImage, getProductImages } from '@/lib/images'
 import {
@@ -22,6 +22,7 @@ import {
 import { useCart } from '@/context/CartContext'
 import { useFavorites } from '@/context/FavoritesContext'
 import { useVisitor } from '@/context/VisitorContext'
+import { ProductCard } from '@/components/ProductCard'
 
 export const Route = createFileRoute('/products/$id')({
   component: ProductDetailPage,
@@ -45,6 +46,7 @@ function ProductDetailPage() {
   const [detailsOpen, setDetailsOpen] = useState(true)
 
   const { data: product, isLoading } = useProduct(productId)
+  const { data: allProducts = [] } = useProducts()
   const { trackClick } = useProductTracking(
     !Number.isNaN(productId) && productId > 0 ? productId : null,
   )
@@ -83,6 +85,18 @@ function ProductDetailPage() {
     () => (product ? getProductImages(product) : []),
     [product],
   )
+
+  const similarProducts = useMemo(() => {
+    if (!product) return []
+    return allProducts
+      .filter(
+        (p) =>
+          p.id !== product.id &&
+          p.categoryId === product.categoryId &&
+          p.statut !== 'ARCHIVE',
+      )
+      .slice(0, 8)
+  }, [allProducts, product])
 
   if (isLoading && !product) {
     return (
@@ -466,6 +480,46 @@ function ProductDetailPage() {
             ))}
           </div>
         </section>
+
+        {similarProducts.length > 0 && (
+          <section className="mt-16 border-t border-border/50 pt-12">
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">
+                  Articles similaires
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {categoryName
+                    ? `Autres tableaux de la catégorie « ${categoryName} »`
+                    : 'Dans la même catégorie'}
+                </p>
+              </div>
+              <Link
+                to="/products"
+                search={{ category: String(product.categoryId) }}
+                className="text-sm font-semibold text-brand-red hover:underline"
+              >
+                Voir plus →
+              </Link>
+            </div>
+
+            <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-3 snap-x snap-mandatory">
+              {similarProducts.map((p, i) => (
+                <div
+                  key={p.id}
+                  className="w-[200px] shrink-0 snap-start sm:w-[220px]"
+                >
+                  <ProductCard
+                    product={p}
+                    categoryName={categoryName}
+                    index={i}
+                    compact
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
       <SiteFooter />
