@@ -7,6 +7,7 @@ import OrdersPage from './pages/OrdersPage'
 import RevenuePage from './pages/RevenuePage'
 import ProductsPage from './pages/ProductsPage'
 import NewsPage from './pages/NewsPage'
+import TestimonialsPage from './pages/TestimonialsPage'
 import ModerationPage from './pages/ModerationPage'
 import LoyaltyPage from './pages/LoyaltyPage'
 import FacebookOrdersPage from './pages/FacebookOrdersPage'
@@ -36,6 +37,7 @@ export default function App() {
               <Route path="/revenue" element={<RevenuePage />} />
               <Route path="/products" element={<ProductsPage />} />
               <Route path="/news" element={<NewsPage />} />
+              <Route path="/testimonials" element={<TestimonialsPage />} />
               <Route path="/moderation" element={<ModerationPage />} />
               <Route path="/loyalty" element={<LoyaltyPage />} />
               <Route path="/settings" element={<SettingsPage />} />

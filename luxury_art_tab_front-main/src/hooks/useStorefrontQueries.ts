@@ -48,6 +48,24 @@ export function usePublishedNews() {
   })
 }
 
+export function useActiveTestimonials() {
+  return useQuery({
+    queryKey: queryKeys.testimonialsActive,
+    queryFn: api.getActiveTestimonials,
+    refetchInterval: REFETCH_INTERVAL,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useSiteSettings() {
+  return useQuery({
+    queryKey: queryKeys.siteSettings,
+    queryFn: api.getSiteSettings,
+    staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
+  })
+}
+
 export function useProduct(id: number) {
   return useQuery({
     queryKey: queryKeys.product(id),

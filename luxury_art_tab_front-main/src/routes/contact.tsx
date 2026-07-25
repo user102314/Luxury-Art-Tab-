@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
+import { Mail, MapPin, Phone } from 'lucide-react'
 import { toast } from 'sonner'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
@@ -8,17 +9,29 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { api } from '@/lib/api'
+import { useSiteSettings } from '@/hooks/useStorefrontQueries'
+import { formatShopAddress, whatsappHref } from '@/lib/siteSettings'
 
 export const Route = createFileRoute('/contact')({
   component: ContactPage,
 })
 
 function ContactPage() {
+  const { data: settings } = useSiteSettings()
   const [loading, setLoading] = useState(false)
   const [nom, setNom] = useState('')
   const [email, setEmail] = useState('')
   const [sujet, setSujet] = useState('')
   const [message, setMessage] = useState('')
+
+  const boutiqueNom = settings?.boutiqueNom?.trim() || 'Luxury Art'
+  const contactEmail = settings?.emailContact?.trim()
+  const phone = settings?.telephoneContact?.trim()
+  const address = formatShopAddress(settings)
+  const wa = whatsappHref(
+    settings?.whatsappNumber || settings?.telephoneContact,
+    `Bonjour ${boutiqueNom}, j'aimerais des informations.`,
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,7 +48,7 @@ function ContactPage() {
       setSujet('')
       setMessage('')
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Erreur lors de l\'envoi')
+      toast.error(err instanceof Error ? err.message : "Erreur lors de l'envoi")
     } finally {
       setLoading(false)
     }
@@ -62,10 +75,57 @@ function ContactPage() {
                     Messages traités en direct via notre plateforme admin.
                   </p>
                 </div>
-                <div>
-                  <h3 className="font-display text-xl font-semibold text-foreground">Email</h3>
-                  <p className="mt-2 text-muted-foreground">contact@luxuryart.com</p>
-                </div>
+
+                {contactEmail && (
+                  <div>
+                    <h3 className="font-display text-xl font-semibold text-foreground">Email</h3>
+                    <a
+                      href={`mailto:${contactEmail}`}
+                      className="mt-2 inline-flex items-center gap-2 text-muted-foreground transition hover:text-brand-red"
+                    >
+                      <Mail className="h-4 w-4" />
+                      {contactEmail}
+                    </a>
+                  </div>
+                )}
+
+                {phone && (
+                  <div>
+                    <h3 className="font-display text-xl font-semibold text-foreground">Téléphone</h3>
+                    <a
+                      href={`tel:${phone.replace(/\s/g, '')}`}
+                      className="mt-2 inline-flex items-center gap-2 text-muted-foreground transition hover:text-brand-red"
+                    >
+                      <Phone className="h-4 w-4" />
+                      {phone}
+                    </a>
+                  </div>
+                )}
+
+                {wa && (
+                  <div>
+                    <h3 className="font-display text-xl font-semibold text-foreground">WhatsApp</h3>
+                    <a
+                      href={wa}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 inline-flex items-center gap-2 text-muted-foreground transition hover:text-accent-green"
+                    >
+                      <Phone className="h-4 w-4" />
+                      {settings?.whatsappNumber?.trim() || phone}
+                    </a>
+                  </div>
+                )}
+
+                {address && (
+                  <div>
+                    <h3 className="font-display text-xl font-semibold text-foreground">Adresse</h3>
+                    <p className="mt-2 inline-flex items-start gap-2 text-muted-foreground">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
+                      {address}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

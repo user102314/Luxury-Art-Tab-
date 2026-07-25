@@ -4,8 +4,8 @@ import { ORDER_CANAL_LABELS, ORDER_STATUS_LABELS } from './api'
 
 /** Infos vendeur affichées sur la facture (colis client). */
 export const INVOICE_SELLER = {
-  nom: 'Luxury Art',
-  slogan: 'Art & Décoration',
+  nom: 'Luxury Art_Tab',
+  slogan: 'By Insaf — Art & Décoration',
   email: 'contact@luxart.com',
   telephone: '+212 600 000 000',
   adresse: 'Maroc',

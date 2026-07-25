@@ -67,6 +67,7 @@
   --color-accent-yellow: var(--accent-yellow);
   --color-accent-purple: var(--accent-purple);
   --font-display: "Fraunces", Georgia, serif;
+  --font-brand: "Great Vibes", cursive;
 }
 
 :root {
@@ -163,7 +164,7 @@
   }
 
   html {
-    font-size: 87.5%; /* scale globale ~ -12.5% */
+    font-size: 100%; /* typo un peu plus grande sur tout le site */
   }
 
   body {
@@ -263,5 +264,16 @@
 
   .animate-paint-float-slow {
     animation: paint-float 11s ease-in-out infinite;
+  }
+
+  .font-brand {
+    font-family: var(--font-brand);
+  }
+
+  .brand-gold-text {
+    background-image: linear-gradient(135deg, #f3e0a8 0%, #d4af37 35%, #b8873a 65%, #8a5a2b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 }

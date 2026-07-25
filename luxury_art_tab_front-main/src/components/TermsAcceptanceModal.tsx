@@ -1,38 +1,50 @@
 import { useEffect, useState } from 'react'
-import { api } from '@/lib/api'
+import { BrandLogo } from '@/components/BrandLogo'
+import { useSiteSettings } from '@/hooks/useStorefrontQueries'
+import { hasDefinedTerms } from '@/lib/siteSettings'
 
 const TERMS_KEY = 'luxart_terms_accepted'
 
 export function TermsAcceptanceModal() {
+  const { data: settings, isError } = useSiteSettings()
   const [open, setOpen] = useState(false)
-  const [terms, setTerms] = useState('')
-  const [version, setVersion] = useState(1)
+
+  const terms = settings?.termsContent?.trim() ?? ''
+  const version = settings?.termsVersion ?? 1
+  const boutiqueNom = settings?.boutiqueNom?.trim() || 'Luxury Art_Tab'
 
   useEffect(() => {
-    api.getSiteSettings().then((s) => {
-      setTerms(s.termsContent)
-      setVersion(s.termsVersion)
-      const accepted = localStorage.getItem(TERMS_KEY)
-      if (accepted !== String(s.termsVersion)) setOpen(true)
-    }).catch(() => {
-      setTerms('En utilisant Luxury Art Tab, vous acceptez nos conditions générales de vente et notre politique de confidentialité.')
+    if (!settings && !isError) return
+
+    if (!hasDefinedTerms(settings)) {
+      setOpen(false)
+      return
+    }
+
+    const accepted = localStorage.getItem(TERMS_KEY)
+    if (accepted !== String(version)) {
       setOpen(true)
-    })
-  }, [])
+    } else {
+      setOpen(false)
+    }
+  }, [settings, isError, version])
 
   const accept = () => {
     localStorage.setItem(TERMS_KEY, String(version))
     setOpen(false)
   }
 
-  if (!open) return null
+  if (!open || !terms) return null
 
   return (
     <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/70 p-4">
       <div className="max-h-[85vh] w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
         <div className="border-b border-border px-6 py-4">
-          <h2 className="font-display text-lg font-bold text-foreground">Règles du site web</h2>
-          <p className="text-xs text-muted-foreground">Vous devez accepter pour utiliser Luxury Art Tab</p>
+          <BrandLogo size="md" className="mb-3" name={boutiqueNom} />
+          <h2 className="font-display text-lg font-bold text-foreground">Conditions générales</h2>
+          <p className="text-xs text-muted-foreground">
+            Veuillez lire et accepter les conditions de {boutiqueNom} pour continuer
+          </p>
         </div>
         <div className="max-h-[50vh] overflow-y-auto px-6 py-4 text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
           {terms}
@@ -43,7 +55,7 @@ export function TermsAcceptanceModal() {
             onClick={accept}
             className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
           >
-            J&apos;accepte les règles du site
+            J&apos;accepte les conditions
           </button>
         </div>
       </div>

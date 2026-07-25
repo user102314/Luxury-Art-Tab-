@@ -6,6 +6,7 @@ export const queryKeys = {
   bestSellers: ['bestSellers'] as const,
   dashboardStats: ['dashboardStats'] as const,
   news: ['news'] as const,
+  testimonials: ['testimonials'] as const,
   reviews: ['reviews'] as const,
   comments: ['comments'] as const,
   loyaltyStats: ['loyaltyStats'] as const,

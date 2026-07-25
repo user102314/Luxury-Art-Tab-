@@ -148,6 +148,8 @@ export const api = {
   getNews: () => request<News[]>('/news'),
   createNews: (data: Partial<News>) =>
     request<News>('/news', { method: 'POST', body: JSON.stringify(data) }),
+  updateNews: (id: number, data: Partial<News>) =>
+    request<News>(`/news/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   publishNews: (id: number) =>
     request<News>(`/news/${id}/publish`, { method: 'PATCH' }),
   deleteNews: (id: number) =>
@@ -161,6 +163,30 @@ export const api = {
       throw new Error(err.message ?? `Erreur ${res.status}`)
     }
     return res.json() as Promise<News>
+  },
+
+  getTestimonials: () => request<import('../types').Testimonial[]>('/testimonials'),
+  createTestimonial: (data: Partial<import('../types').Testimonial>) =>
+    request<import('../types').Testimonial>('/testimonials', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateTestimonial: (id: number, data: Partial<import('../types').Testimonial>) =>
+    request<import('../types').Testimonial>(`/testimonials/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  deleteTestimonial: (id: number) =>
+    request<void>(`/testimonials/${id}`, { method: 'DELETE' }),
+  uploadTestimonialImage: async (id: number, file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch(`/api/testimonials/${id}/image`, { method: 'POST', body: formData })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: 'Erreur upload' }))
+      throw new Error(err.message ?? `Erreur ${res.status}`)
+    }
+    return res.json() as Promise<import('../types').Testimonial>
   },
 
   getSiteSettings: () => request<SiteSettings>('/admin/site/settings'),

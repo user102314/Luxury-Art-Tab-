@@ -1,16 +1,18 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import { CheckCircle2, ChevronDown, Truck } from 'lucide-react'
 import { toast } from 'sonner'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
 import { ArViewer } from '@/components/ArViewer'
+import { ProductImageGallery } from '@/components/ProductImageGallery'
 import { api } from '@/lib/api'
 import { queryKeys } from '@/lib/queryKeys'
 import { REFETCH_INTERVAL } from '@/lib/queryClient'
 import { useProduct } from '@/hooks/useStorefrontQueries'
 import { useProductTracking } from '@/hooks/useProductTracking'
-import { getProductImage } from '@/lib/images'
+import { getProductImage, getProductImages } from '@/lib/images'
 import {
   dimensionOptions,
   frameOptions,
@@ -40,6 +42,7 @@ function ProductDetailPage() {
   const [commentText, setCommentText] = useState('')
   const [reviewNote, setReviewNote] = useState(5)
   const [reviewText, setReviewText] = useState('')
+  const [detailsOpen, setDetailsOpen] = useState(true)
 
   const { data: product, isLoading } = useProduct(productId)
   const { trackClick } = useProductTracking(
@@ -76,16 +79,25 @@ function ProductDetailPage() {
     refetchInterval: REFETCH_INTERVAL,
   })
 
+  const galleryImages = useMemo(
+    () => (product ? getProductImages(product) : []),
+    [product],
+  )
+
   if (isLoading && !product) {
     return (
       <main className="min-h-screen bg-background">
         <SiteNav />
-        <div className="mx-auto max-w-7xl px-6 py-32">
-          <div className="grid gap-8 md:grid-cols-2">
-            <div className="aspect-[4/5] animate-pulse rounded-3xl bg-muted" />
+        <div className="mx-auto max-w-7xl px-6 py-16">
+          <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="flex gap-4">
+              <div className="hidden h-[420px] w-[72px] animate-pulse rounded-lg bg-muted md:block" />
+              <div className="aspect-[4/5] flex-1 animate-pulse rounded-2xl bg-muted" />
+            </div>
             <div className="space-y-4">
+              <div className="h-8 w-1/3 animate-pulse rounded bg-muted" />
               <div className="h-10 w-2/3 animate-pulse rounded bg-muted" />
-              <div className="h-6 w-1/3 animate-pulse rounded bg-muted" />
+              <div className="h-12 w-full animate-pulse rounded bg-muted" />
             </div>
           </div>
         </div>
@@ -115,6 +127,18 @@ function ProductDetailPage() {
     reviews.length > 0
       ? (reviews.reduce((s, r) => s + r.note, 0) / reviews.length).toFixed(1)
       : null
+  const likeCount = likeSummary?.count ?? 0
+  const inStock = product.stock > 0
+
+  const deliveryHint = (() => {
+    const start = new Date()
+    start.setDate(start.getDate() + 3)
+    const end = new Date()
+    end.setDate(end.getDate() + 7)
+    const fmt = (d: Date) =>
+      d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+    return `${fmt(start)} – ${fmt(end)}`
+  })()
 
   const handleAddToCart = () => {
     trackClick('ADD_TO_CART')
@@ -129,7 +153,6 @@ function ProductDetailPage() {
     })
     toast.success('Ajouté au panier', {
       description: `${product.nom} · ${size}`,
-      action: { label: 'Voir panier', onClick: () => {} },
     })
   }
 
@@ -172,7 +195,9 @@ function ProductDetailPage() {
   const handleLike = async () => {
     try {
       await toggleFavorite(product.id)
-      queryClient.invalidateQueries({ queryKey: queryKeys.productLikes(productId, visitor?.id ?? null) })
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.productLikes(productId, visitor?.id ?? null),
+      })
     } catch {
       toast.error("Impossible de mettre à jour le j'aime")
     }
@@ -182,155 +207,188 @@ function ProductDetailPage() {
     <main className="min-h-screen bg-background font-[Inter,sans-serif]">
       <SiteNav />
 
-      <div className="mx-auto max-w-7xl px-6 py-10 md:px-10">
-        <nav className="mb-8 text-sm text-muted-foreground">
-          <Link to="/" className="hover:text-brand-red">Accueil</Link>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:px-10 md:py-10">
+        <nav className="mb-6 text-sm text-muted-foreground">
+          <Link to="/" className="hover:text-brand-red">
+            Accueil
+          </Link>
           <span className="mx-2">/</span>
-          <Link to="/products" className="hover:text-brand-red">Produits</Link>
+          <Link to="/products" className="hover:text-brand-red">
+            Produits
+          </Link>
           <span className="mx-2">/</span>
-          <span className="text-foreground font-medium">{product.nom}</span>
+          <span className="font-medium text-foreground">{product.nom}</span>
         </nav>
 
-        <div className="grid gap-12 lg:grid-cols-2">
-          <div className="relative overflow-hidden rounded-3xl bg-muted shadow-xl">
-            <img src={image} alt={product.nom} className="aspect-[4/5] w-full object-cover" />
-            <button
-              type="button"
-              onClick={() => setArImage(image)}
-              className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full bg-accent-green px-4 py-2 text-sm font-semibold text-white shadow-lg hover:opacity-90"
-            >
-              Voir en AR
-            </button>
-          </div>
+        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,420px)] lg:gap-12">
+          <ProductImageGallery
+            images={galleryImages}
+            alt={product.nom}
+            liked={liked}
+            onLike={handleLike}
+            onAr={setArImage}
+          />
 
-          <div>
-            {categoryName && (
-              <span className="inline-block rounded-full bg-accent-green/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-accent-green">
-                {categoryName}
-              </span>
+          <aside className="lg:sticky lg:top-24">
+            {(likeCount > 0 || comments.length > 0) && (
+              <p className="text-sm font-medium text-brand-red">
+                {likeCount > 0
+                  ? `${likeCount} personne${likeCount > 1 ? 's' : ''} aiment ce tableau`
+                  : `${comments.length} commentaire${comments.length > 1 ? 's' : ''} récents`}
+              </p>
             )}
-            <h1 className="mt-4 font-display text-4xl font-bold text-foreground md:text-5xl">
+
+            <p className="mt-3 font-display text-4xl font-bold tracking-tight text-foreground md:text-[2.75rem]">
+              {formatPrice(unitPrice)}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Prix selon la taille sélectionnée · TVA incluse si applicable
+            </p>
+
+            <h1 className="mt-5 font-display text-2xl font-bold leading-snug text-foreground md:text-3xl">
               {product.nom}
             </h1>
 
-            <div className="mt-3 flex flex-wrap items-center gap-4">
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+              {categoryName && (
+                <span className="rounded-full bg-accent-green/15 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-accent-green">
+                  {categoryName}
+                </span>
+              )}
               {avgRating && (
-                <span className="flex items-center gap-1 text-sm font-semibold text-foreground">
-                  <span className="text-brand-red">★</span> {avgRating} ({reviews.length} avis)
+                <span className="inline-flex items-center gap-1 font-semibold">
+                  <span className="text-brand-red">{'★'.repeat(Math.round(Number(avgRating)))}</span>
+                  <span>{avgRating}</span>
+                  <span className="font-normal text-muted-foreground">({reviews.length} avis)</span>
                 </span>
               )}
-              {likeSummary && (
-                <span className="text-sm text-muted-foreground">
-                  <span className="font-semibold text-brand-red">{likeSummary.count}</span> j&apos;aime
-                </span>
-              )}
-              <span
-                className={`text-sm font-semibold ${
-                  product.stock > 0 ? 'text-accent-green' : 'text-brand-red'
-                }`}
-              >
-                {product.stock > 0 ? `${product.stock} en stock` : 'Rupture de stock'}
+              <span className={`font-semibold ${inStock ? 'text-accent-green' : 'text-brand-red'}`}>
+                {inStock ? `${product.stock} en stock` : 'Rupture de stock'}
               </span>
             </div>
 
-            <p className="mt-6 font-display text-3xl font-bold text-brand-red">
-              {formatPrice(unitPrice)}
-            </p>
-
-            {product.description && (
-              <p className="mt-6 leading-relaxed text-muted-foreground">{product.description}</p>
-            )}
-
-            <div className="mt-8">
-              <p className="text-sm font-semibold">Taille du tableau</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {dimensionOptions.map((dim) => (
-                  <button
-                    key={dim.value}
-                    type="button"
-                    onClick={() => setSize(dim.value)}
-                    className={`rounded-lg border px-4 py-2 text-sm font-semibold transition ${
-                      size === dim.value
-                        ? 'border-accent-green bg-accent-green text-white'
-                        : 'border-border hover:border-brand-red/40'
-                    }`}
-                  >
-                    {dim.label}
-                  </button>
-                ))}
+            <div className="mt-5 flex items-start gap-2 rounded-xl border border-accent-blue/20 bg-accent-blue/5 px-3 py-3 text-sm text-foreground">
+              <Truck className="mt-0.5 h-4 w-4 shrink-0 text-accent-green" />
+              <div>
+                <p className="font-semibold">Livraison estimée</p>
+                <p className="text-muted-foreground">
+                  Commandez aujourd&apos;hui — réception entre le {deliveryHint}
+                </p>
               </div>
             </div>
 
-            <div className="mt-6">
-              <p className="text-sm font-semibold">Encadrement</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {frameOptions.map((f) => (
+            <div className="mt-6 space-y-4">
+              <div>
+                <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold" htmlFor="size-select">
+                  Taille
+                </label>
+                <select
+                  id="size-select"
+                  value={size}
+                  onChange={(e) => setSize(e.target.value)}
+                  className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/20"
+                >
+                  {dimensionOptions.map((dim) => (
+                    <option key={dim.value} value={dim.value}>
+                      {dim.label} — {formatPrice(getPrice(Number(product.prix), dim.value))}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold" htmlFor="frame-select">
+                  Style / encadrement
+                </label>
+                <select
+                  id="frame-select"
+                  value={frame}
+                  onChange={(e) => setFrame(e.target.value as typeof frame)}
+                  className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/20"
+                >
+                  {frameOptions.map((f) => (
+                    <option key={f} value={f}>
+                      {f}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold">Quantité</label>
+                <div className="inline-flex h-11 items-center rounded-xl border border-border bg-white">
                   <button
-                    key={f}
                     type="button"
-                    onClick={() => setFrame(f)}
-                    className={`rounded-lg border px-3 py-2 text-xs font-semibold uppercase transition ${
-                      frame === f
-                        ? 'border-brand-red bg-brand-red text-white'
-                        : 'border-border hover:border-brand-red/40'
-                    }`}
+                    onClick={() => setQty(Math.max(1, qty - 1))}
+                    className="h-11 w-10 text-lg hover:bg-muted"
                   >
-                    {f.replace('Toile avec cadre exterieur ', '')}
+                    −
                   </button>
-                ))}
+                  <span className="w-10 text-center font-semibold">{qty}</span>
+                  <button
+                    type="button"
+                    onClick={() => setQty((q) => Math.min(Math.max(product.stock, 1), q + 1))}
+                    className="h-11 w-10 text-lg hover:bg-muted"
+                    disabled={!inStock}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <div className="inline-flex h-11 items-center rounded-xl border border-border">
-                <button
-                  type="button"
-                  onClick={() => setQty(Math.max(1, qty - 1))}
-                  className="h-11 w-10 text-lg hover:bg-muted"
-                >
-                  −
-                </button>
-                <span className="w-10 text-center font-semibold">{qty}</span>
-                <button
-                  type="button"
-                  onClick={() => setQty(qty + 1)}
-                  className="h-11 w-10 text-lg hover:bg-muted"
-                >
-                  +
-                </button>
-              </div>
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={!inStock}
+              className="mt-6 w-full rounded-full bg-[#3b2418] px-8 py-3.5 text-base font-bold text-[#f7efe2] transition hover:bg-[#4a2f1f] disabled:opacity-50"
+            >
+              {inStock ? 'Ajouter au panier' : 'Indisponible'}
+            </button>
 
+            <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+              <CheckCircle2 className="h-3.5 w-3.5 text-accent-green" />
+              Impression soignée · Formats personnalisés · Retours sous conditions
+            </div>
+
+            <div className="mt-8 border-t border-border/70">
               <button
                 type="button"
-                onClick={handleAddToCart}
-                disabled={product.stock <= 0}
-                className="flex-1 rounded-xl bg-brand-red px-8 py-3 text-sm font-bold text-white transition hover:bg-brand-red/90 disabled:opacity-50"
+                onClick={() => setDetailsOpen((o) => !o)}
+                className="flex w-full items-center justify-between py-4 text-left text-sm font-semibold"
               >
-                Ajouter au panier
+                Détails de l&apos;article
+                <ChevronDown
+                  className={`h-4 w-4 transition ${detailsOpen ? 'rotate-180' : ''}`}
+                />
               </button>
-
-              <button
-                type="button"
-                onClick={handleLike}
-                className={`flex h-11 w-11 items-center justify-center rounded-xl border transition ${
-                  liked
-                    ? 'border-brand-red bg-brand-red text-white'
-                    : 'border-border hover:border-brand-red'
-                }`}
-                aria-label="J'aime"
-              >
-                ♥
-              </button>
+              {detailsOpen && (
+                <div className="space-y-3 pb-5 text-sm leading-relaxed text-muted-foreground">
+                  {product.description ? (
+                    <p className="whitespace-pre-wrap text-foreground/80">{product.description}</p>
+                  ) : (
+                    <p>
+                      Tableau décoratif Luxury Art_Tab — rendu élégant pour salon, cuisine ou
+                      chambre. Choisissez la taille et l&apos;encadrement adaptés à votre intérieur.
+                    </p>
+                  )}
+                  <ul className="list-inside list-disc space-y-1">
+                    <li>Catégorie : {categoryName ?? '—'}</li>
+                    <li>Taille sélectionnée : {size}</li>
+                    <li>Encadrement : {frame}</li>
+                    <li>Stock disponible : {product.stock}</li>
+                  </ul>
+                </div>
+              )}
             </div>
-          </div>
+          </aside>
         </div>
 
-        {/* Comments */}
-        <section className="mt-20 rounded-3xl border border-border/60 bg-white/60 p-8">
+        <section className="mt-16 rounded-3xl border border-border/60 bg-white/60 p-6 md:p-8">
           <h2 className="font-display text-2xl font-bold">
             Commentaires <span className="text-accent-green">({comments.length})</span>
           </h2>
-          <div className="mt-6 flex gap-3">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <input
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
@@ -359,8 +417,7 @@ function ProductDetailPage() {
           </div>
         </section>
 
-        {/* Reviews */}
-        <section className="mt-10 rounded-3xl border border-border/60 bg-white/60 p-8">
+        <section className="mt-10 rounded-3xl border border-border/60 bg-white/60 p-6 md:p-8">
           <h2 className="font-display text-2xl font-bold">
             Avis clients <span className="text-brand-red">({reviews.length})</span>
           </h2>

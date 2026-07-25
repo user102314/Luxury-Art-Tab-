@@ -5,13 +5,23 @@ export function resolveImageSrc(url?: string | null): string {
   return url.startsWith('/') ? url : `/${url}`
 }
 
+export function getProductImages(product: {
+  imageUrl?: string
+  images?: { url: string; ordre?: number }[]
+}): string[] {
+  if (product.images?.length) {
+    return [...product.images]
+      .sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
+      .map((img) => resolveImageSrc(img.url))
+      .filter(Boolean)
+  }
+  if (product.imageUrl) return [resolveImageSrc(product.imageUrl)]
+  return ['/placeholder-art.svg']
+}
+
 export function getProductImage(product: {
   imageUrl?: string
   images?: { url: string; ordre?: number }[]
 }): string {
-  if (product.images?.length) {
-    const sorted = [...product.images].sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
-    return resolveImageSrc(sorted[0].url)
-  }
-  return resolveImageSrc(product.imageUrl)
+  return getProductImages(product)[0]
 }

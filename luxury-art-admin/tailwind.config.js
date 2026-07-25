@@ -6,6 +6,7 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         display: ['Playfair Display', 'serif'],
+        brand: ['"Great Vibes"', 'cursive'],
       },
       colors: {
         gold: {

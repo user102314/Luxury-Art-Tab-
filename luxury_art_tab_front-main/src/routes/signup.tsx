@@ -5,6 +5,7 @@ import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
 import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
+import { useSiteSettings } from '@/hooks/useStorefrontQueries'
 
 export const Route = createFileRoute('/signup')({
   component: SignUpPage,
@@ -13,17 +14,20 @@ export const Route = createFileRoute('/signup')({
 function SignUpPage() {
   const { register } = useAuth()
   const navigate = useNavigate()
+  const { data: settings } = useSiteSettings()
   const [nom, setNom] = useState('')
   const [email, setEmail] = useState('')
   const [telephone, setTelephone] = useState('')
   const [password, setPassword] = useState('')
   const [acceptTerms, setAcceptTerms] = useState(false)
-  const [termsPreview, setTermsPreview] = useState('')
   const [programHint, setProgramHint] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const termsPreview = settings?.termsContent?.trim()
+    ? `${settings.termsContent.trim().slice(0, 400)}…`
+    : ''
+
   useEffect(() => {
-    api.getSiteSettings().then((s) => setTermsPreview(s.termsContent.slice(0, 400) + '…')).catch(() => {})
     api.getActiveLoyaltyProgram().then((p) => {
       if (!p) return
       setProgramHint(

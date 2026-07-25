@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Gem, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { BrandLogo } from '../components/BrandLogo'
 
 export default function LoginPage() {
   const { login, user } = useAuth()
@@ -38,11 +39,8 @@ export default function LoginPage() {
 
       <div className="relative w-full max-w-md px-6">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gold-500/20 ring-1 ring-gold-500/30">
-            <Gem className="h-8 w-8 text-gold-400" />
-          </div>
-          <h1 className="font-display text-3xl font-bold text-white">Luxury Art</h1>
-          <p className="mt-2 text-zinc-400">Espace administrateur</p>
+          <BrandLogo onDark size="lg" className="mx-auto items-center" />
+          <p className="mt-4 text-zinc-400">Espace administrateur</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card space-y-5 p-8">

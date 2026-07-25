@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Bot, MessageCircle, Send, Sparkles, X } from 'lucide-react'
-import { api } from '@/lib/api'
+import { MessageCircle, Send, Sparkles, X } from 'lucide-react'
 import {
   buildWelcomeReply,
   formatProductLine,
@@ -10,7 +9,9 @@ import {
   type BotReply,
   type ChatProductCard,
 } from '@/lib/chatbot'
-import { useCategories, useProducts } from '@/hooks/useStorefrontQueries'
+import { useCategories, useProducts, useSiteSettings } from '@/hooks/useStorefrontQueries'
+import { digitsOnly, whatsappHref } from '@/lib/siteSettings'
+import { BrandLogo } from '@/components/BrandLogo'
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -67,7 +68,7 @@ function BotMessageContent({ msg }: { msg: ChatMessage }) {
 export function FixedSupportWidget() {
   const { data: products = [] } = useProducts()
   const { data: categories = [] } = useCategories()
-  const [whatsapp, setWhatsapp] = useState('212600000000')
+  const { data: settings } = useSiteSettings()
   const [chatOpen, setChatOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -75,11 +76,9 @@ export function FixedSupportWidget() {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const quickPrompts = useMemo(() => getQuickPrompts(), [])
+  const whatsapp = digitsOnly(settings?.whatsappNumber || settings?.telephoneContact) || '212600000000'
 
   useEffect(() => {
-    api.getSiteSettings().then((s) => {
-      setWhatsapp(s.whatsappNumber.replace(/\D/g, ''))
-    }).catch(() => {})
     const welcome = buildWelcomeReply()
     setMessages([{ from: 'bot', text: welcome.text, links: welcome.links }])
   }, [])
@@ -90,6 +89,7 @@ export function FixedSupportWidget() {
 
   const waLink = useMemo(
     () =>
+      whatsappHref(whatsapp, "Bonjour Luxury Art, j'aimerais des informations.") ??
       `https://wa.me/${whatsapp}?text=${encodeURIComponent("Bonjour Luxury Art, j'aimerais des informations.")}`,
     [whatsapp],
   )
@@ -119,9 +119,7 @@ export function FixedSupportWidget() {
       {chatOpen && (
         <div className="fixed bottom-24 right-4 z-[110] flex h-[min(520px,calc(100vh-7rem))] w-[min(360px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
           <div className="flex items-center gap-2 bg-[#3b2418] px-4 py-3 text-[#f7efe2]">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f4a15d]/20">
-              <Bot className="h-4 w-4 text-[#f4a15d]" />
-            </div>
+            <BrandLogo onDark size="sm" showByline={false} className="shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">Assistant Luxury Art</p>
               <p className="flex items-center gap-1 text-[10px] text-[#f7efe2]/70">

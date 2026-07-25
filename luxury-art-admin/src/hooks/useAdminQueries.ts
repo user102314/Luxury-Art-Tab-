@@ -88,6 +88,15 @@ export function useNews() {
   })
 }
 
+export function useTestimonials() {
+  return useQuery({
+    queryKey: queryKeys.testimonials,
+    queryFn: api.getTestimonials,
+    refetchInterval: REFETCH_INTERVAL,
+    placeholderData: keepPreviousData,
+  })
+}
+
 export function useReviews() {
   return useQuery({
     queryKey: queryKeys.reviews,
@@ -199,6 +208,7 @@ export function useInvalidateAdmin() {
     bestSellers: () => qc.invalidateQueries({ queryKey: queryKeys.bestSellers }),
     dashboardStats: () => qc.invalidateQueries({ queryKey: queryKeys.dashboardStats }),
     news: () => qc.invalidateQueries({ queryKey: queryKeys.news }),
+    testimonials: () => qc.invalidateQueries({ queryKey: queryKeys.testimonials }),
     reviews: () => qc.invalidateQueries({ queryKey: queryKeys.reviews }),
     comments: () => qc.invalidateQueries({ queryKey: queryKeys.comments }),
     loyaltyStats: () => qc.invalidateQueries({ queryKey: queryKeys.loyaltyStats }),
@@ -249,6 +259,9 @@ export function prefetchRoute(qc: QueryClient, path: string) {
       break
     case '/news':
       qc.prefetchQuery({ queryKey: queryKeys.news, queryFn: api.getNews, ...opts })
+      break
+    case '/testimonials':
+      qc.prefetchQuery({ queryKey: queryKeys.testimonials, queryFn: api.getTestimonials, ...opts })
       break
     case '/facebook-orders':
     case '/instagram-orders':

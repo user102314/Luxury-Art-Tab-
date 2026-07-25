@@ -144,7 +144,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
           <div className="min-w-0">
             <h3
               className={`font-display font-semibold text-foreground transition-colors group-hover:text-brand-red ${
-                compact ? 'truncate text-sm' : 'text-lg'
+                compact ? 'truncate text-base' : 'text-xl'
               }`}
             >
               {product.nom}
@@ -152,7 +152,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
             {categoryName && (
               <p
                 className={`mt-0.5 uppercase tracking-wider text-muted-foreground ${
-                  compact ? 'text-[10px]' : 'text-xs'
+                  compact ? 'text-xs' : 'text-sm'
                 }`}
               >
                 {categoryName}
@@ -161,7 +161,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
           </div>
           <p
             className={`shrink-0 whitespace-nowrap font-display font-semibold text-accent-green ${
-              compact ? 'text-sm' : 'text-lg'
+              compact ? 'text-base' : 'text-xl'
             }`}
           >
             {formatPrice(Number(product.prix))}

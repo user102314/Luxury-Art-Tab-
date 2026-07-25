@@ -7,7 +7,6 @@ import {
   Newspaper,
   Package,
   LogOut,
-  Gem,
   MessageSquare,
   Gift,
   Facebook,
@@ -17,11 +16,13 @@ import {
   MessageCircle,
   Settings,
   Bell,
+  HeartHandshake,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { prefetchEssentials, prefetchRoute } from '../hooks/useAdminQueries'
 import StockAlertsBanner from './StockAlertsBanner'
 import OrderNotificationsBell from './OrderNotificationsBell'
+import { BrandLogo } from './BrandLogo'
 
 const nav = [
   { to: '/revenue', icon: TrendingUp, label: 'Revenus' },
@@ -36,6 +37,7 @@ const nav = [
   { to: '/moderation', icon: MessageSquare, label: 'Avis & Commentaires' },
   { to: '/loyalty', icon: Gift, label: 'Fidélité' },
   { to: '/news', icon: Newspaper, label: 'Actualités' },
+  { to: '/testimonials', icon: HeartHandshake, label: 'Avis clients' },
   { to: '/settings', icon: Settings, label: 'Boutique' },
 ]
 
@@ -56,14 +58,8 @@ export default function AdminLayout() {
   return (
     <div className="flex min-h-screen">
       <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-white/10 bg-ink-900">
-        <div className="flex items-center gap-3 border-b border-white/10 px-6 py-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-500/20">
-            <Gem className="h-5 w-5 text-gold-400" />
-          </div>
-          <div>
-            <p className="font-display text-lg font-semibold text-white">Luxury Art</p>
-            <p className="text-xs text-zinc-500">Administration</p>
-          </div>
+        <div className="flex items-center border-b border-white/10 px-4 py-5">
+          <BrandLogo onDark size="sm" />
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
@@ -100,7 +96,7 @@ export default function AdminLayout() {
       </aside>
 
       <main className="ml-64 flex-1">
-        <div className="flex items-center justify-between border-b border-white/10 bg-ink-950/80 px-8 py-5 backdrop-blur">
+        <div className="relative z-40 flex items-center justify-between border-b border-white/10 bg-ink-950/80 px-8 py-5 backdrop-blur">
           <div>
             <h1 className="font-display text-2xl font-semibold text-white">Tableau de bord</h1>
             <p className="text-sm text-zinc-500">Gestion de la boutique Luxury Art</p>

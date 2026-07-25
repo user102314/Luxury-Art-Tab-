@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { ImageIcon, Plus, Send, Trash2, Upload, X } from 'lucide-react'
+import { ImageIcon, Pencil, Plus, Send, Trash2, Upload, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { api, formatDate } from '../lib/api'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
 import { useInvalidateAdmin, useNews } from '../hooks/useAdminQueries'
+import type { News } from '../types'
 
 function resolveImageSrc(url?: string) {
   if (!url) return undefined
@@ -16,6 +17,8 @@ export default function NewsPage() {
   const { data: news = [], isLoading, isFetching } = useNews()
   const invalidate = useInvalidateAdmin()
   const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [existingImageUrl, setExistingImageUrl] = useState<string | undefined>()
   const [titre, setTitre] = useState('')
   const [resume, setResume] = useState('')
   const [contenu, setContenu] = useState('')
@@ -29,41 +32,96 @@ export default function NewsPage() {
     setResume('')
     setContenu('')
     setImageFile(null)
-    if (preview) URL.revokeObjectURL(preview)
+    if (preview?.startsWith('blob:')) URL.revokeObjectURL(preview)
     setPreview(null)
+    setExistingImageUrl(undefined)
+    setEditingId(null)
     setShowForm(false)
     setError('')
+  }
+
+  const openCreate = () => {
+    if (showForm && editingId === null) {
+      clearForm()
+      return
+    }
+    if (preview?.startsWith('blob:')) URL.revokeObjectURL(preview)
+    setTitre('')
+    setResume('')
+    setContenu('')
+    setImageFile(null)
+    setPreview(null)
+    setExistingImageUrl(undefined)
+    setEditingId(null)
+    setError('')
+    setShowForm(true)
+  }
+
+  const openEdit = (n: News) => {
+    if (preview?.startsWith('blob:')) URL.revokeObjectURL(preview)
+    setEditingId(n.id)
+    setTitre(n.titre)
+    setResume(n.resume ?? '')
+    setContenu(n.contenu)
+    setImageFile(null)
+    setExistingImageUrl(n.imageUrl)
+    setPreview(n.imageUrl ? resolveImageSrc(n.imageUrl) ?? null : null)
+    setError('')
+    setShowForm(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    if (preview) URL.revokeObjectURL(preview)
+    if (preview?.startsWith('blob:')) URL.revokeObjectURL(preview)
     setImageFile(file)
     setPreview(URL.createObjectURL(file))
   }
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const clearImage = () => {
+    if (preview?.startsWith('blob:')) URL.revokeObjectURL(preview)
+    setPreview(null)
+    setImageFile(null)
+    if (editingId != null) setExistingImageUrl(undefined)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
     setSaving(true)
     setError('')
     try {
-      const created = await api.createNews({
-        titre,
-        resume,
-        contenu,
-        auteurId: user.id,
-        statut: 'BROUILLON',
-      })
-      if (imageFile) {
-        await api.uploadNewsImage(created.id, imageFile)
+      if (editingId != null) {
+        const article = news.find((n) => n.id === editingId)
+        await api.updateNews(editingId, {
+          titre,
+          resume,
+          contenu,
+          auteurId: article?.auteurId ?? user.id,
+          statut: article?.statut,
+          imageUrl: imageFile ? article?.imageUrl : existingImageUrl,
+        })
+        if (imageFile) {
+          await api.uploadNewsImage(editingId, imageFile)
+        }
+      } else {
+        const created = await api.createNews({
+          titre,
+          resume,
+          contenu,
+          auteurId: user.id,
+          statut: 'BROUILLON',
+        })
+        if (imageFile) {
+          await api.uploadNewsImage(created.id, imageFile)
+        }
       }
       clearForm()
       await invalidate.news()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur création')
+      setError(err instanceof Error ? err.message : editingId ? 'Erreur modification' : 'Erreur création')
     } finally {
       setSaving(false)
     }
@@ -77,6 +135,7 @@ export default function NewsPage() {
   const remove = async (id: number) => {
     if (!confirm('Supprimer cet article ?')) return
     await api.deleteNews(id)
+    if (editingId === id) clearForm()
     await invalidate.news()
   }
 
@@ -90,6 +149,8 @@ export default function NewsPage() {
     return <PageSkeleton rows={5} />
   }
 
+  const isEditing = editingId != null
+
   return (
     <div className="space-y-6">
       <QueryStatusBar fetching={isFetching || saving} />
@@ -97,16 +158,19 @@ export default function NewsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-white">Actualités</h2>
-          <p className="text-sm text-zinc-500">Créer et publier des articles (avec ou sans image)</p>
+          <p className="text-sm text-zinc-500">Créer, modifier et publier des articles</p>
         </div>
-        <button type="button" onClick={() => setShowForm(!showForm)} className="btn-primary">
+        <button type="button" onClick={openCreate} className="btn-primary">
           <Plus className="h-4 w-4" />
           Nouvel article
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="card space-y-4 p-6">
+        <form onSubmit={handleSubmit} className="card space-y-4 p-6">
+          <h3 className="font-semibold text-white">
+            {isEditing ? 'Modifier l’article' : 'Nouvel article'}
+          </h3>
           <div>
             <label className="label">Titre</label>
             <input className="input" value={titre} onChange={(e) => setTitre(e.target.value)} required />
@@ -128,7 +192,9 @@ export default function NewsPage() {
             <label className="label">Image (optionnelle)</label>
             <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-white/10 bg-ink-800/50 px-4 py-6 hover:border-gold-500/40">
               <Upload className="mb-2 h-6 w-6 text-gold-400" />
-              <span className="text-sm text-zinc-400">Choisir une image</span>
+              <span className="text-sm text-zinc-400">
+                {isEditing ? 'Remplacer l’image' : 'Choisir une image'}
+              </span>
               <input type="file" accept="image/*" className="sr-only" onChange={onFile} />
             </label>
             {preview && (
@@ -136,11 +202,7 @@ export default function NewsPage() {
                 <img src={preview} alt="Aperçu" className="h-32 rounded-lg object-cover" />
                 <button
                   type="button"
-                  onClick={() => {
-                    if (preview) URL.revokeObjectURL(preview)
-                    setPreview(null)
-                    setImageFile(null)
-                  }}
+                  onClick={clearImage}
                   className="absolute right-1 top-1 rounded-full bg-red-500/90 p-1"
                 >
                   <X className="h-3 w-3 text-white" />
@@ -151,7 +213,11 @@ export default function NewsPage() {
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex gap-3">
             <button type="submit" disabled={saving} className="btn-primary">
-              {saving ? 'Enregistrement…' : 'Enregistrer brouillon'}
+              {saving
+                ? 'Enregistrement…'
+                : isEditing
+                  ? 'Enregistrer les modifications'
+                  : 'Enregistrer brouillon'}
             </button>
             <button type="button" onClick={clearForm} className="btn-ghost">
               Annuler
@@ -193,6 +259,14 @@ export default function NewsPage() {
                 </div>
               </div>
               <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => openEdit(n)}
+                  className="rounded-xl p-2 text-zinc-500 hover:bg-white/5 hover:text-gold-300"
+                  title="Modifier"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
                 {n.statut === 'BROUILLON' && (
                   <button type="button" onClick={() => publish(n.id)} className="btn-primary text-xs">
                     <Send className="h-3 w-3" />

@@ -4,6 +4,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { ProductShowcase } from "@/components/ProductShowcase";
 import { LatestDecor } from "@/components/LatestDecor";
 import { NewsSection } from "@/components/NewsSection";
+import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const Route = createFileRoute("/")({
@@ -16,6 +17,7 @@ function Index() {
       <SiteNav />
       <AnimatedHero />
       <ProductShowcase />
+      <TestimonialsSection />
       <NewsSection />
       <LatestDecor />
       <SiteFooter />
