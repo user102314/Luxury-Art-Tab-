@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Eye, FileText, Trash2, RefreshCw, X } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Eye, FileText, Trash2, RefreshCw, X, Truck } from 'lucide-react'
 import {
   api,
   formatCurrency,
@@ -12,6 +13,7 @@ import {
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
 import InvoiceModal from '../components/InvoiceModal'
 import { useInvalidateAdmin, useOrders } from '../hooks/useAdminQueries'
+import { queryKeys } from '../lib/queryKeys'
 import type { Order, OrderStatut } from '../types'
 
 const STATUTS: OrderStatut[] = [
@@ -25,12 +27,15 @@ const STATUTS: OrderStatut[] = [
 export default function OrdersPage() {
   const { data: orders = [], isLoading, isFetching } = useOrders()
   const invalidate = useInvalidateAdmin()
-  const [filter, setFilter] = useState<string>('EN_ATTENTE')
+  const qc = useQueryClient()
+  const [filter, setFilter] = useState<string>('ALL')
   const [canalFilter, setCanalFilter] = useState<string>('ALL')
   const [detail, setDetail] = useState<Order | null>(null)
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [loadingInvoice, setLoadingInvoice] = useState(false)
+  const [syncingColissimo, setSyncingColissimo] = useState(false)
+  const [syncMessage, setSyncMessage] = useState<string | null>(null)
 
   const filtered = orders
     .filter((o) => {
@@ -88,6 +93,22 @@ export default function OrdersPage() {
     }
   }
 
+  const syncColissimo = async () => {
+    setSyncingColissimo(true)
+    setSyncMessage(null)
+    try {
+      const result = await api.syncColissimo()
+      setSyncMessage(result.message)
+      await invalidate.orders()
+      await invalidate.orderChannelStats()
+      qc.invalidateQueries({ queryKey: queryKeys.notifications })
+    } catch (err) {
+      setSyncMessage(err instanceof Error ? err.message : 'Erreur sync Colissimo')
+    } finally {
+      setSyncingColissimo(false)
+    }
+  }
+
   if (isLoading && orders.length === 0) {
     return <PageSkeleton rows={6} />
   }
@@ -101,11 +122,28 @@ export default function OrdersPage() {
           <h2 className="text-xl font-semibold text-white">Gestion des commandes</h2>
           <p className="text-sm text-zinc-500">{orders.length} commande(s) au total</p>
         </div>
-        <button onClick={() => invalidate.orders()} className="btn-ghost">
-          <RefreshCw className="h-4 w-4" />
-          Actualiser
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={syncColissimo}
+            disabled={syncingColissimo}
+            className="btn-primary"
+            title="Importer les colis depuis Colissimo (Facebook, Instagram, etc.)"
+          >
+            <Truck className="h-4 w-4" />
+            {syncingColissimo ? 'Sync Colissimo…' : 'Sync Colissimo'}
+          </button>
+          <button onClick={() => invalidate.orders()} className="btn-ghost">
+            <RefreshCw className="h-4 w-4" />
+            Actualiser
+          </button>
+        </div>
       </div>
+
+      {syncMessage && (
+        <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-200">
+          {syncMessage}
+        </p>
+      )}
 
       <div className="flex flex-wrap gap-2">
         <FilterBtn active={canalFilter === 'ALL'} onClick={() => setCanalFilter('ALL')} label="Tous canaux" />
@@ -251,12 +289,25 @@ export default function OrdersPage() {
               <Info label="Réf. Instagram" value={detail.referenceInstagram || '—'} />
               <Info label="Réf. WhatsApp" value={detail.referenceWhatsapp || '—'} />
               <Info label="N° colis" value={detail.numeroColis || '—'} />
+              {detail.colissimoCodeBarre && (
+                <Info label="Code Colissimo" value={detail.colissimoCodeBarre} />
+              )}
+              {detail.colissimoEtat && (
+                <Info label="État Colissimo" value={detail.colissimoEtat} />
+              )}
+              {detail.colissimoDesignation && (
+                <Info label="Article Colissimo" value={detail.colissimoDesignation} />
+              )}
               <Info label="Total" value={formatCurrency(Number(detail.total) || 0)} />
             </div>
 
             <h4 className="mb-3 font-semibold text-white">Articles</h4>
             {(detail.items?.length ?? 0) === 0 ? (
-              <p className="text-sm text-zinc-500">Aucun article</p>
+              <p className="text-sm text-zinc-500">
+                {detail.colissimoDesignation
+                  ? `Colis importé Colissimo — ${detail.colissimoDesignation}`
+                  : 'Aucun article (import Colissimo)'}
+              </p>
             ) : (
               <table className="w-full text-left text-sm">
                 <thead>

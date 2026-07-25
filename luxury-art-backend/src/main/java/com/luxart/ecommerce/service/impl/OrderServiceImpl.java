@@ -3,6 +3,7 @@ package com.luxart.ecommerce.service.impl;
 import com.luxart.ecommerce.dto.*;
 import com.luxart.ecommerce.event.OrderCreatedEvent;
 import com.luxart.ecommerce.exception.ResourceNotFoundException;
+import com.luxart.ecommerce.colissimo.ColissimoShipmentService;
 import com.luxart.ecommerce.model.entity.*;
 import com.luxart.ecommerce.model.enums.OrderCanal;
 import com.luxart.ecommerce.model.enums.OrderStatut;
@@ -38,6 +39,7 @@ public class OrderServiceImpl implements OrderService {
     private final LoyaltyService loyaltyService;
     private final StockService stockService;
     private final ApplicationEventPublisher eventPublisher;
+    private final ColissimoShipmentService colissimoShipmentService;
 
     @Override
     @Transactional(readOnly = true)
@@ -119,7 +121,7 @@ public class OrderServiceImpl implements OrderService {
 
         order.setStockDeduit(true);
         order = orderRepository.save(order);
-        ensureNumeroColis(order);
+        finalizeConfirmedOrder(order);
         order = orderRepository.save(order);
 
         if (order.getStatut() == OrderStatut.LIVREE) {
@@ -173,7 +175,7 @@ public class OrderServiceImpl implements OrderService {
 
         order.setStockDeduit(true);
         order = orderRepository.save(order);
-        ensureNumeroColis(order);
+        finalizeConfirmedOrder(order);
         order = orderRepository.save(order);
 
         if (order.getStatut() == OrderStatut.LIVREE) {
@@ -227,7 +229,7 @@ public class OrderServiceImpl implements OrderService {
 
         order.setStockDeduit(true);
         order = orderRepository.save(order);
-        ensureNumeroColis(order);
+        finalizeConfirmedOrder(order);
         order = orderRepository.save(order);
 
         if (order.getStatut() == OrderStatut.LIVREE) {
@@ -258,7 +260,7 @@ public class OrderServiceImpl implements OrderService {
             order.setNumeroColis(dto.getNumeroColis().trim());
         }
 
-        ensureNumeroColis(order);
+        finalizeConfirmedOrder(order);
         Order saved = orderRepository.save(order);
 
         if (previous != OrderStatut.ANNULEE && saved.getStatut() == OrderStatut.ANNULEE) {
@@ -538,6 +540,11 @@ public class OrderServiceImpl implements OrderService {
                 .referenceInstagram(order.getReferenceInstagram())
                 .referenceWhatsapp(order.getReferenceWhatsapp())
                 .numeroColis(order.getNumeroColis())
+                .colissimoCodeBarre(order.getColissimoCodeBarre())
+                .colissimoReference(order.getColissimoReference())
+                .colissimoEtat(order.getColissimoEtat())
+                .colissimoDesignation(order.getColissimoDesignation())
+                .colissimoImportedAt(order.getColissimoImportedAt())
                 .items(order.getItems().stream().map(item -> OrderItemDto.builder()
                         .id(item.getId())
                         .orderId(order.getId())
@@ -562,10 +569,26 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * Génère un numéro de colis dès que la commande est confirmée (ou déjà expédiée/livrée).
+     * À la confirmation : création du colis Colissimo puis numéro de suivi.
+     */
+    private void finalizeConfirmedOrder(Order order) {
+        OrderStatut s = order.getStatut();
+        if (s != OrderStatut.CONFIRMEE && s != OrderStatut.EXPEDIEE && s != OrderStatut.LIVREE) {
+            return;
+        }
+        colissimoShipmentService.pushOrderIfNeeded(order);
+        ensureNumeroColis(order);
+    }
+
+    /**
+     * Génère un numéro de colis interne si Colissimo n'a pas fourni de code à barre.
      * Format: LX-YYYYMMDD-XXXXX (unique par commande).
      */
     private void ensureNumeroColis(Order order) {
+        if (order.getColissimoCodeBarre() != null && !order.getColissimoCodeBarre().isBlank()) {
+            order.setNumeroColis(order.getColissimoCodeBarre());
+            return;
+        }
         if (order.getNumeroColis() != null && !order.getNumeroColis().isBlank()) {
             return;
         }

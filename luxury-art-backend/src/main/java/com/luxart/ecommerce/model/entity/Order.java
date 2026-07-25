@@ -61,6 +61,22 @@ public class Order {
     /** Numéro de colis (généré à la confirmation) */
     private String numeroColis;
 
+    /** Code à barre Colissimo (import automatique) */
+    @Column(unique = true)
+    private String colissimoCodeBarre;
+
+    /** Référence interne Colissimo */
+    private String colissimoReference;
+
+    /** État Colissimo brut (ex: Livré, En Attente) */
+    private String colissimoEtat;
+
+    /** Désignation article depuis Colissimo */
+    private String colissimoDesignation;
+
+    /** Date d'import depuis Colissimo */
+    private LocalDateTime colissimoImportedAt;
+
     /** Stock déjà déduit pour cette commande */
     @Builder.Default
     private Boolean stockDeduit = false;

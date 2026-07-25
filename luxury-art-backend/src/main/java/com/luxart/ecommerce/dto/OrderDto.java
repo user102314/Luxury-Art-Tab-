@@ -48,5 +48,15 @@ public class OrderDto {
 
     private String numeroColis;
 
+    private String colissimoCodeBarre;
+
+    private String colissimoReference;
+
+    private String colissimoEtat;
+
+    private String colissimoDesignation;
+
+    private LocalDateTime colissimoImportedAt;
+
     private List<OrderItemDto> items;
 }

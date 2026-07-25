@@ -28,7 +28,28 @@ function formatInvoiceDate(iso: string): string {
 }
 
 export function invoiceFileName(order: Order): string {
+  const code = order.colissimoCodeBarre ?? order.numeroColis
+  if (code) {
+    return `colissimo-${code}.pdf`
+  }
   return `facture-commande-${order.id}.pdf`
+}
+
+const BASE = import.meta.env.VITE_API_URL ?? '/api'
+
+async function downloadColissimoInvoice(orderId: number, fileName: string): Promise<boolean> {
+  const res = await fetch(`${BASE}/colissimo/orders/${orderId}/invoice`)
+  if (!res.ok) {
+    return false
+  }
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName
+  link.click()
+  URL.revokeObjectURL(url)
+  return true
 }
 
 /**
@@ -252,7 +273,26 @@ export function generateInvoicePdf(order: Order): jsPDF {
   return doc
 }
 
-export function downloadInvoicePdf(order: Order): void {
+export async function downloadInvoicePdf(order: Order): Promise<'colissimo' | 'local'> {
+  const fileName = invoiceFileName(order)
+  const canUseColissimo =
+    order.statut === 'CONFIRMEE' ||
+    order.statut === 'EXPEDIEE' ||
+    order.statut === 'LIVREE' ||
+    !!order.colissimoCodeBarre
+
+  if (canUseColissimo) {
+    try {
+      const ok = await downloadColissimoInvoice(order.id, fileName)
+      if (ok) {
+        return 'colissimo'
+      }
+    } catch {
+      // fallback facture locale
+    }
+  }
+
   const doc = generateInvoicePdf(order)
-  doc.save(invoiceFileName(order))
+  doc.save(fileName.replace(/^colissimo-/, 'facture-commande-'))
+  return 'local'
 }
