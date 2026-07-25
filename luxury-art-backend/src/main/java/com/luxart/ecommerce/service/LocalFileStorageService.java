@@ -1,6 +1,8 @@
 package com.luxart.ecommerce.service;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,7 +21,32 @@ import java.util.UUID;
 @Slf4j
 public class LocalFileStorageService {
 
-    private final Path localRoot = Paths.get(System.getProperty("user.dir"), "uploads").toAbsolutePath().normalize();
+    private final Path localRoot;
+
+    public LocalFileStorageService(
+            @Value("${app.uploads.dir:}") String uploadsDir) {
+        if (uploadsDir != null && !uploadsDir.isBlank()) {
+            this.localRoot = Paths.get(uploadsDir).toAbsolutePath().normalize();
+        } else {
+            Path cwd = Paths.get("").toAbsolutePath().normalize();
+            Path fromMonorepo = cwd.resolve("luxury-art-backend").resolve("uploads");
+            if (Files.isDirectory(fromMonorepo) || "Luxury-Art-Tab-".equals(cwd.getFileName().toString())) {
+                this.localRoot = fromMonorepo.toAbsolutePath().normalize();
+            } else {
+                this.localRoot = cwd.resolve("uploads").toAbsolutePath().normalize();
+            }
+        }
+    }
+
+    @PostConstruct
+    void ensureRoot() {
+        try {
+            Files.createDirectories(localRoot);
+            log.info("Dossier uploads : {}", localRoot);
+        } catch (IOException ex) {
+            throw new IllegalStateException("Impossible de créer le dossier uploads: " + localRoot, ex);
+        }
+    }
 
     public String upload(String storagePath, byte[] content, String contentType) {
         try {
