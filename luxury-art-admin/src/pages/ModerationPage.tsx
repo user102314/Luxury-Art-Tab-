@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Check, MessageCircle, Star, Trash2, X } from 'lucide-react'
 import { api, COMMENT_STATUS_LABELS, formatDate, REVIEW_STATUS_LABELS } from '../lib/api'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
+import { ListToolbar } from '../components/ListToolbar'
 import {
   useInvalidateAdmin,
   useProductComments,
@@ -9,6 +10,7 @@ import {
   useReviews,
 } from '../hooks/useAdminQueries'
 import type { ProductComment, Review } from '../types'
+import { compareDates, compareNumbers, compareStrings, matchesSearch, type SortDir } from '../lib/listUtils'
 
 type Tab = 'reviews' | 'comments'
 
@@ -19,14 +21,55 @@ export default function ModerationPage() {
   const { data: products = [] } = useProducts()
   const invalidate = useInvalidateAdmin()
   const [filter, setFilter] = useState<'all' | 'EN_ATTENTE' | 'APPROUVE' | 'REJETE'>('all')
+  const [search, setSearch] = useState('')
+  const [productFilter, setProductFilter] = useState('ALL')
+  const [sort, setSort] = useState<'date' | 'note' | 'product'>('date')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
 
   const productMap = useMemo(
     () => Object.fromEntries(products.map((p) => [p.id, p.nom])),
     [products],
   )
 
-  const filteredReviews = reviews.filter((r) => filter === 'all' || r.statut === filter)
-  const filteredComments = comments.filter((c) => filter === 'all' || c.statut === filter)
+  const filteredReviews = useMemo(() => {
+    let list = reviews.filter((r) => {
+      if (filter !== 'all' && r.statut !== filter) return false
+      if (productFilter !== 'ALL' && String(r.productId) !== productFilter) return false
+      if (!matchesSearch(search, [productMap[r.productId], r.commentaire, r.note, r.statut])) return false
+      return true
+    })
+    list = [...list].sort((a, b) => {
+      switch (sort) {
+        case 'note':
+          return compareNumbers(a.note, b.note, sortDir)
+        case 'product':
+          return compareStrings(productMap[a.productId] ?? '', productMap[b.productId] ?? '', sortDir)
+        case 'date':
+        default:
+          return compareDates(a.createdAt, b.createdAt, sortDir)
+      }
+    })
+    return list
+  }, [reviews, filter, search, productFilter, sort, sortDir, productMap])
+
+  const filteredComments = useMemo(() => {
+    let list = comments.filter((c) => {
+      if (filter !== 'all' && c.statut !== filter) return false
+      if (productFilter !== 'ALL' && String(c.productId) !== productFilter) return false
+      if (!matchesSearch(search, [productMap[c.productId], c.contenu, c.statut])) return false
+      return true
+    })
+    list = [...list].sort((a, b) => {
+      switch (sort) {
+        case 'product':
+          return compareStrings(productMap[a.productId] ?? '', productMap[b.productId] ?? '', sortDir)
+        case 'date':
+        default:
+          return compareDates(a.createdAt, b.createdAt, sortDir)
+      }
+    })
+    return list
+  }, [comments, filter, search, productFilter, sort, sortDir, productMap])
 
   const pendingReviews = reviews.filter((r) => r.statut === 'EN_ATTENTE').length
   const pendingComments = comments.filter((c) => c.statut === 'EN_ATTENTE').length
@@ -131,16 +174,60 @@ export default function ModerationPage() {
           </button>
         </div>
 
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value as typeof filter)}
-          className="input w-auto py-2 text-sm"
-        >
-          <option value="all">Tous les statuts</option>
-          <option value="EN_ATTENTE">En attente</option>
-          <option value="APPROUVE">Approuvés</option>
-          <option value="REJETE">Rejetés</option>
-        </select>
+        <ListToolbar
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder={tab === 'reviews' ? 'Rechercher produit, commentaire…' : 'Rechercher produit, commentaire…'}
+          sort={sort}
+          onSortChange={(v) => setSort(v as 'date' | 'note' | 'product')}
+          sortOptions={
+            tab === 'reviews'
+              ? [
+                  { value: 'date', label: 'Date' },
+                  { value: 'note', label: 'Note' },
+                  { value: 'product', label: 'Produit' },
+                ]
+              : [
+                  { value: 'date', label: 'Date' },
+                  { value: 'product', label: 'Produit' },
+                ]
+          }
+          sortDir={sortDir}
+          onSortDirChange={setSortDir}
+          resultCount={tab === 'reviews' ? filteredReviews.length : filteredComments.length}
+          totalCount={tab === 'reviews' ? reviews.length : comments.length}
+          onReset={() => {
+            setSearch('')
+            setFilter('all')
+            setProductFilter('ALL')
+            setSort('date')
+            setSortDir('desc')
+          }}
+          filters={[
+            {
+              id: 'statut',
+              label: 'Statut',
+              value: filter,
+              onChange: (v) => setFilter(v as typeof filter),
+              options: [
+                { value: 'all', label: 'Tous' },
+                { value: 'EN_ATTENTE', label: 'En attente' },
+                { value: 'APPROUVE', label: 'Approuvés' },
+                { value: 'REJETE', label: 'Rejetés' },
+              ],
+            },
+            {
+              id: 'product',
+              label: 'Produit',
+              value: productFilter,
+              onChange: setProductFilter,
+              options: [
+                { value: 'ALL', label: 'Tous produits' },
+                ...products.map((p) => ({ value: String(p.id), label: p.nom })),
+              ],
+            },
+          ]}
+        />
 
         <button
           type="button"

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Eye, FileText, Trash2, RefreshCw, X, Truck } from 'lucide-react'
 import {
@@ -13,17 +13,18 @@ import {
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
 import InvoiceModal from '../components/InvoiceModal'
 import OrderTrackingDetail from '../components/OrderTrackingDetail'
+import { FilterChip, ListToolbar } from '../components/ListToolbar'
 import { useInvalidateAdmin, useOrders } from '../hooks/useAdminQueries'
 import { queryKeys } from '../lib/queryKeys'
+import {
+  filterSortOrders,
+  ORDER_SORT_OPTIONS,
+  ORDER_STATUT_FILTER,
+  ORDER_STATUTS,
+} from '../lib/orderListFilters'
+import type { SortDir } from '../lib/listUtils'
 import type { Order, OrderStatut } from '../types'
-
-const STATUTS: OrderStatut[] = [
-  'EN_ATTENTE',
-  'CONFIRMEE',
-  'EXPEDIEE',
-  'LIVREE',
-  'ANNULEE',
-]
+import type { OrderSortKey } from '../lib/orderListFilters'
 
 export default function OrdersPage() {
   const { data: orders = [], isLoading, isFetching } = useOrders()
@@ -31,6 +32,11 @@ export default function OrdersPage() {
   const qc = useQueryClient()
   const [filter, setFilter] = useState<string>('ALL')
   const [canalFilter, setCanalFilter] = useState<string>('ALL')
+  const [search, setSearch] = useState('')
+  const [sort, setSort] = useState<OrderSortKey>('date')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const [detail, setDetail] = useState<Order | null>(null)
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
@@ -39,15 +45,28 @@ export default function OrdersPage() {
   const [syncMessage, setSyncMessage] = useState<string | null>(null)
   const [trackingOrderId, setTrackingOrderId] = useState<number | null>(null)
 
-  const filtered = orders
-    .filter((o) => {
-      if (filter !== 'ALL' && o.statut !== filter) return false
-      if (canalFilter !== 'ALL' && o.canal !== canalFilter) return false
-      return true
+  const filtered = useMemo(() => {
+    const list = filterSortOrders(orders, {
+      search,
+      statut: filter,
+      sort,
+      sortDir,
+      dateFrom,
+      dateTo,
     })
-    .sort(
-      (a, b) => new Date(b.dateCommande).getTime() - new Date(a.dateCommande).getTime(),
-    )
+    if (canalFilter === 'ALL') return list
+    return list.filter((o) => o.canal === canalFilter)
+  }, [orders, search, filter, sort, sortDir, dateFrom, dateTo, canalFilter])
+
+  const resetFilters = () => {
+    setSearch('')
+    setFilter('ALL')
+    setCanalFilter('ALL')
+    setSort('date')
+    setSortDir('desc')
+    setDateFrom('')
+    setDateTo('')
+  }
 
   const updateStatut = async (id: number, statut: OrderStatut) => {
     const order = orders.find((o) => o.id === id)
@@ -147,24 +166,40 @@ export default function OrdersPage() {
         </p>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        <FilterBtn active={canalFilter === 'ALL'} onClick={() => setCanalFilter('ALL')} label="Tous canaux" />
-        <FilterBtn active={canalFilter === 'SITE_WEB'} onClick={() => setCanalFilter('SITE_WEB')} label="Site web" />
-        <FilterBtn active={canalFilter === 'FACEBOOK'} onClick={() => setCanalFilter('FACEBOOK')} label="Facebook" />
-        <FilterBtn active={canalFilter === 'INSTAGRAM'} onClick={() => setCanalFilter('INSTAGRAM')} label="Instagram" />
-        <FilterBtn active={canalFilter === 'WHATSAPP'} onClick={() => setCanalFilter('WHATSAPP')} label="WhatsApp" />
-      </div>
+      <ListToolbar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Rechercher client, n° commande, colis, adresse…"
+        sort={sort}
+        onSortChange={(v) => setSort(v as OrderSortKey)}
+        sortOptions={ORDER_SORT_OPTIONS}
+        sortDir={sortDir}
+        onSortDirChange={setSortDir}
+        showDateRange
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onDateFromChange={setDateFrom}
+        onDateToChange={setDateTo}
+        resultCount={filtered.length}
+        totalCount={orders.length}
+        onReset={resetFilters}
+        filters={[
+          {
+            id: 'statut',
+            label: 'Statut',
+            value: filter,
+            onChange: setFilter,
+            options: ORDER_STATUT_FILTER,
+          },
+        ]}
+      />
 
       <div className="flex flex-wrap gap-2">
-        <FilterBtn active={filter === 'ALL'} onClick={() => setFilter('ALL')} label="Toutes" />
-        {STATUTS.map((s) => (
-          <FilterBtn
-            key={s}
-            active={filter === s}
-            onClick={() => setFilter(s)}
-            label={ORDER_STATUS_LABELS[s]}
-          />
-        ))}
+        <FilterChip active={canalFilter === 'ALL'} onClick={() => setCanalFilter('ALL')} label="Tous canaux" />
+        <FilterChip active={canalFilter === 'SITE_WEB'} onClick={() => setCanalFilter('SITE_WEB')} label="Site web" />
+        <FilterChip active={canalFilter === 'FACEBOOK'} onClick={() => setCanalFilter('FACEBOOK')} label="Facebook" />
+        <FilterChip active={canalFilter === 'INSTAGRAM'} onClick={() => setCanalFilter('INSTAGRAM')} label="Instagram" />
+        <FilterChip active={canalFilter === 'WHATSAPP'} onClick={() => setCanalFilter('WHATSAPP')} label="WhatsApp" />
       </div>
 
       <div className="card overflow-hidden">
@@ -209,7 +244,7 @@ export default function OrdersPage() {
                         onChange={(e) => updateStatut(o.id, e.target.value as OrderStatut)}
                         className={`rounded-lg border-0 px-3 py-1.5 text-xs font-medium ${ORDER_STATUS_COLORS[o.statut]}`}
                       >
-                        {STATUTS.map((s) => (
+                        {ORDER_STATUTS.map((s) => (
                           <option key={s} value={s} className="bg-ink-800 text-white">
                             {ORDER_STATUS_LABELS[s]}
                           </option>
@@ -392,28 +427,5 @@ function Info({ label, value }: { label: string; value: string }) {
       <p className="text-xs text-zinc-500">{label}</p>
       <p className="mt-0.5 text-zinc-200">{value}</p>
     </div>
-  )
-}
-
-function FilterBtn({
-  active,
-  onClick,
-  label,
-}: {
-  active: boolean
-  onClick: () => void
-  label: string
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
-        active
-          ? 'bg-gold-500/20 text-gold-300'
-          : 'bg-ink-800 text-zinc-400 hover:text-white'
-      }`}
-    >
-      {label}
-    </button>
   )
 }

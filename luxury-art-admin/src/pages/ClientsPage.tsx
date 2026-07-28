@@ -1,25 +1,52 @@
 import { useMemo, useState } from 'react'
-import { RefreshCw, Search, Users } from 'lucide-react'
+import { RefreshCw, Users } from 'lucide-react'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
+import { ListToolbar } from '../components/ListToolbar'
 import { useClients, useInvalidateAdmin } from '../hooks/useAdminQueries'
 import { formatCurrency, formatDate, ORDER_CANAL_LABELS } from '../lib/api'
+import { compareDates, compareNumbers, compareStrings, matchesSearch, type SortDir } from '../lib/listUtils'
 import type { OrderCanal } from '../types'
+
+type ClientSortKey = 'nom' | 'commandes' | 'ca' | 'date'
 
 export default function ClientsPage() {
   const { data: clients = [], isLoading, isFetching } = useClients()
   const invalidate = useInvalidateAdmin()
-  const [q, setQ] = useState('')
+  const [search, setSearch] = useState('')
+  const [canalFilter, setCanalFilter] = useState('ALL')
+  const [sort, setSort] = useState<ClientSortKey>('nom')
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
 
   const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase()
-    if (!term) return clients
-    return clients.filter(
-      (c) =>
-        c.nom.toLowerCase().includes(term) ||
-        c.email.toLowerCase().includes(term) ||
-        (c.telephone ?? '').toLowerCase().includes(term),
-    )
-  }, [clients, q])
+    let list = clients.filter((c) => {
+      if (
+        !matchesSearch(search, [c.nom, c.email, c.telephone, c.userId])
+      ) {
+        return false
+      }
+      if (canalFilter !== 'ALL') {
+        const canaux = c.canaux?.length ? c.canaux : ['SITE_WEB']
+        if (!canaux.includes(canalFilter as OrderCanal)) return false
+      }
+      return true
+    })
+
+    list = [...list].sort((a, b) => {
+      switch (sort) {
+        case 'commandes':
+          return compareNumbers(a.nombreCommandes, b.nombreCommandes, sortDir)
+        case 'ca':
+          return compareNumbers(Number(a.totalDepense) || 0, Number(b.totalDepense) || 0, sortDir)
+        case 'date':
+          return compareDates(a.derniereCommande, b.derniereCommande, sortDir)
+        case 'nom':
+        default:
+          return compareStrings(a.nom, b.nom, sortDir)
+      }
+    })
+
+    return list
+  }, [clients, search, canalFilter, sort, sortDir])
 
   if (isLoading && clients.length === 0) return <PageSkeleton rows={6} />
 
@@ -43,15 +70,44 @@ export default function ClientsPage() {
         </button>
       </div>
 
-      <div className="relative max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
-        <input
-          className="input pl-10"
-          placeholder="Rechercher nom, email, téléphone…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-      </div>
+      <ListToolbar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Rechercher nom, email, téléphone…"
+        sort={sort}
+        onSortChange={(v) => setSort(v as ClientSortKey)}
+        sortOptions={[
+          { value: 'nom', label: 'Nom' },
+          { value: 'commandes', label: 'Commandes' },
+          { value: 'ca', label: 'CA livré' },
+          { value: 'date', label: 'Dernière commande' },
+        ]}
+        sortDir={sortDir}
+        onSortDirChange={setSortDir}
+        resultCount={filtered.length}
+        totalCount={clients.length}
+        onReset={() => {
+          setSearch('')
+          setCanalFilter('ALL')
+          setSort('nom')
+          setSortDir('asc')
+        }}
+        filters={[
+          {
+            id: 'canal',
+            label: 'Canal',
+            value: canalFilter,
+            onChange: setCanalFilter,
+            options: [
+              { value: 'ALL', label: 'Tous canaux' },
+              { value: 'SITE_WEB', label: 'Site web' },
+              { value: 'FACEBOOK', label: 'Facebook' },
+              { value: 'INSTAGRAM', label: 'Instagram' },
+              { value: 'WHATSAPP', label: 'WhatsApp' },
+            ],
+          },
+        ]}
+      />
 
       <div className="card overflow-hidden">
         {filtered.length === 0 ? (

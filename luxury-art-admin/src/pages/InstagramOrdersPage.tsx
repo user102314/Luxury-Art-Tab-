@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Instagram, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import StatCard, { formatCurrency, TrendingUp } from '../components/StatCard'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
+import { ListToolbar } from '../components/ListToolbar'
 import {
   useInvalidateAdmin,
   useOrderChannelStats,
@@ -14,9 +15,17 @@ import {
   ORDER_STATUS_COLORS,
   ORDER_STATUS_LABELS,
 } from '../lib/api'
+import {
+  filterSortOrders,
+  ORDER_SORT_OPTIONS,
+  ORDER_STATUT_FILTER,
+  ORDER_STATUTS,
+  type OrderSortKey,
+} from '../lib/orderListFilters'
+import type { SortDir } from '../lib/listUtils'
 import type { InstagramOrderLine, OrderStatut } from '../types'
 
-const STATUTS: OrderStatut[] = ['EN_ATTENTE', 'CONFIRMEE', 'EXPEDIEE', 'LIVREE', 'ANNULEE']
+const STATUTS: OrderStatut[] = ORDER_STATUTS
 
 const emptyLine = (): InstagramOrderLine => ({ productId: 0, quantite: 1 })
 
@@ -35,13 +44,20 @@ export default function InstagramOrdersPage() {
   const [lines, setLines] = useState<InstagramOrderLine[]>([emptyLine()])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
+  const [listStatut, setListStatut] = useState('ALL')
+  const [sort, setSort] = useState<OrderSortKey>('date')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
 
   const instagramOrders = useMemo(
     () =>
-      orders
-        .filter((o) => o.canal === 'INSTAGRAM')
-        .sort((a, b) => new Date(b.dateCommande).getTime() - new Date(a.dateCommande).getTime()),
-    [orders],
+      filterSortOrders(
+        orders.filter((o) => o.canal === 'INSTAGRAM'),
+        { search, statut: listStatut, sort, sortDir, dateFrom, dateTo },
+      ),
+    [orders, search, listStatut, sort, sortDir, dateFrom, dateTo],
   )
 
   const productMap = useMemo(
@@ -339,6 +355,41 @@ export default function InstagramOrdersPage() {
         </div>
         {error && <p className="text-sm text-red-400">{error}</p>}
       </form>
+
+      <ListToolbar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Rechercher client, n° commande, réf. Instagram…"
+        sort={sort}
+        onSortChange={(v) => setSort(v as OrderSortKey)}
+        sortOptions={ORDER_SORT_OPTIONS}
+        sortDir={sortDir}
+        onSortDirChange={setSortDir}
+        showDateRange
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onDateFromChange={setDateFrom}
+        onDateToChange={setDateTo}
+        resultCount={instagramOrders.length}
+        totalCount={orders.filter((o) => o.canal === 'INSTAGRAM').length}
+        onReset={() => {
+          setSearch('')
+          setListStatut('ALL')
+          setSort('date')
+          setSortDir('desc')
+          setDateFrom('')
+          setDateTo('')
+        }}
+        filters={[
+          {
+            id: 'statut',
+            label: 'Statut',
+            value: listStatut,
+            onChange: setListStatut,
+            options: ORDER_STATUT_FILTER,
+          },
+        ]}
+      />
 
       <div className="card overflow-hidden">
         <div className="border-b border-white/10 px-6 py-4">

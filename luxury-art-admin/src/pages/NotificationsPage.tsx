@@ -1,10 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Bell, CheckCheck, MapPin, Package, Phone, RefreshCw, Truck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api, formatCurrency, formatDate, ORDER_CANAL_LABELS, ORDER_STATUS_LABELS } from '../lib/api'
 import { queryKeys } from '../lib/queryKeys'
 import { PageSkeleton } from '../components/QueryStatusBar'
+import { ListToolbar } from '../components/ListToolbar'
+import { compareDates, matchesSearch, type SortDir } from '../lib/listUtils'
 import type { AdminNotification } from '../types'
 
 function typeLabel(type: string): string {
@@ -58,6 +61,23 @@ export default function NotificationsPage() {
 
   const unread = items.filter((n) => !n.read).length
 
+  const [search, setSearch] = useState('')
+  const [typeFilter, setTypeFilter] = useState('ALL')
+  const [readFilter, setReadFilter] = useState('ALL')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
+
+  const filtered = useMemo(() => {
+    let list = items.filter((n) => {
+      if (typeFilter !== 'ALL' && n.type !== typeFilter) return false
+      if (readFilter === 'UNREAD' && n.read) return false
+      if (readFilter === 'READ' && !n.read) return false
+      if (!matchesSearch(search, [n.title, n.message, n.type, n.clientNom, n.orderId])) return false
+      return true
+    })
+    list = [...list].sort((a, b) => compareDates(a.createdAt, b.createdAt, sortDir))
+    return list
+  }, [items, search, typeFilter, readFilter, sortDir])
+
   if (isLoading) {
     return <PageSkeleton rows={8} />
   }
@@ -90,14 +110,60 @@ export default function NotificationsPage() {
         </div>
       </div>
 
+      <ListToolbar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Rechercher titre, message, client…"
+        sort="date"
+        sortOptions={[{ value: 'date', label: 'Date' }]}
+        sortDir={sortDir}
+        onSortDirChange={setSortDir}
+        resultCount={filtered.length}
+        totalCount={items.length}
+        onReset={() => {
+          setSearch('')
+          setTypeFilter('ALL')
+          setReadFilter('ALL')
+          setSortDir('desc')
+        }}
+        filters={[
+          {
+            id: 'type',
+            label: 'Type',
+            value: typeFilter,
+            onChange: setTypeFilter,
+            options: [
+              { value: 'ALL', label: 'Tous types' },
+              { value: 'NEW_ORDER', label: 'Nouvelle commande' },
+              { value: 'COLISSIMO_ORDER', label: 'Colis Colissimo' },
+              { value: 'COLISSIMO_ORDER_UPDATE', label: 'Colis mis à jour' },
+              { value: 'COLISSIMO_SYNC_ERROR', label: 'Erreur sync' },
+            ],
+          },
+          {
+            id: 'read',
+            label: 'Lecture',
+            value: readFilter,
+            onChange: setReadFilter,
+            options: [
+              { value: 'ALL', label: 'Toutes' },
+              { value: 'UNREAD', label: 'Non lues' },
+              { value: 'READ', label: 'Lues' },
+            ],
+          },
+        ]}
+      />
+
       <div className="space-y-3">
         {items.length === 0 ? (
           <div className="card flex flex-col items-center gap-3 p-12 text-center">
             <Bell className="h-10 w-10 text-zinc-600" />
             <p className="text-zinc-500">Aucune notification enregistrée</p>
           </div>
+        ) : filtered.length === 0 ? (
+          <div className="card p-8 text-center text-zinc-500">Aucune notification ne correspond aux filtres</div>
         ) : (
-          items.map((n) => (
+          filtered.map((n) => (
             <NotificationCard key={n.id ?? `${n.type}-${n.createdAt}`} item={n} />
           ))
         )}

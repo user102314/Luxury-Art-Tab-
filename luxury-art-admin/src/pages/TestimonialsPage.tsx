@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { HeartHandshake, Pencil, Plus, Trash2, Upload, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
+import { ListToolbar } from '../components/ListToolbar'
 import { useInvalidateAdmin, useTestimonials } from '../hooks/useAdminQueries'
+import { compareNumbers, compareStrings, matchesSearch, type SortDir } from '../lib/listUtils'
 import type { Testimonial, TestimonialPlateforme } from '../types'
 
 const PLATEFORMES: { value: TestimonialPlateforme; label: string }[] = [
@@ -35,6 +37,33 @@ export default function TestimonialsPage() {
   const [preview, setPreview] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
+  const [plateformeFilter, setPlateformeFilter] = useState('ALL')
+  const [actifFilter, setActifFilter] = useState('ALL')
+  const [sort, setSort] = useState<'ordre' | 'client' | 'plateforme'>('ordre')
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
+
+  const filteredItems = useMemo(() => {
+    let list = items.filter((t) => {
+      if (plateformeFilter !== 'ALL' && t.plateforme !== plateformeFilter) return false
+      if (actifFilter === 'ACTIF' && !t.actif) return false
+      if (actifFilter === 'INACTIF' && t.actif) return false
+      if (!matchesSearch(search, [t.clientNom, t.message, t.reponseBoutique, t.plateforme])) return false
+      return true
+    })
+    list = [...list].sort((a, b) => {
+      switch (sort) {
+        case 'client':
+          return compareStrings(a.clientNom, b.clientNom, sortDir)
+        case 'plateforme':
+          return compareStrings(a.plateforme, b.plateforme, sortDir)
+        case 'ordre':
+        default:
+          return compareNumbers(a.ordre ?? 0, b.ordre ?? 0, sortDir)
+      }
+    })
+    return list
+  }, [items, search, plateformeFilter, actifFilter, sort, sortDir])
 
   const clearForm = () => {
     setClientNom('')
@@ -252,11 +281,60 @@ export default function TestimonialsPage() {
         </form>
       )}
 
+      <ListToolbar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Rechercher client, message, plateforme…"
+        sort={sort}
+        onSortChange={(v) => setSort(v as 'ordre' | 'client' | 'plateforme')}
+        sortOptions={[
+          { value: 'ordre', label: 'Ordre affichage' },
+          { value: 'client', label: 'Client' },
+          { value: 'plateforme', label: 'Plateforme' },
+        ]}
+        sortDir={sortDir}
+        onSortDirChange={setSortDir}
+        resultCount={filteredItems.length}
+        totalCount={items.length}
+        onReset={() => {
+          setSearch('')
+          setPlateformeFilter('ALL')
+          setActifFilter('ALL')
+          setSort('ordre')
+          setSortDir('asc')
+        }}
+        filters={[
+          {
+            id: 'plateforme',
+            label: 'Plateforme',
+            value: plateformeFilter,
+            onChange: setPlateformeFilter,
+            options: [
+              { value: 'ALL', label: 'Toutes' },
+              ...PLATEFORMES.map((p) => ({ value: p.value, label: p.label })),
+            ],
+          },
+          {
+            id: 'actif',
+            label: 'Visibilité',
+            value: actifFilter,
+            onChange: setActifFilter,
+            options: [
+              { value: 'ALL', label: 'Tous' },
+              { value: 'ACTIF', label: 'Actifs' },
+              { value: 'INACTIF', label: 'Inactifs' },
+            ],
+          },
+        ]}
+      />
+
       <div className="grid gap-4 md:grid-cols-2">
         {items.length === 0 ? (
           <p className="card col-span-full p-8 text-center text-zinc-500">Aucun avis enregistré</p>
+        ) : filteredItems.length === 0 ? (
+          <p className="card col-span-full p-8 text-center text-zinc-500">Aucun avis ne correspond aux filtres</p>
         ) : (
-          items.map((t) => (
+          filteredItems.map((t) => (
             <article key={t.id} className="card overflow-hidden">
               {t.imageUrl && (
                 <img

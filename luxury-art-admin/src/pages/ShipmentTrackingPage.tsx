@@ -5,7 +5,6 @@ import {
   Eye,
   Package,
   RefreshCw,
-  Search,
   Truck,
   CheckCircle2,
   Clock,
@@ -22,9 +21,12 @@ import {
 import { queryKeys } from '../lib/queryKeys'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
 import OrderTrackingDetail from '../components/OrderTrackingDetail'
+import { FilterChip, ListToolbar } from '../components/ListToolbar'
+import { compareDates, compareStrings, inDateRange, matchesSearch, type SortDir } from '../lib/listUtils'
 import type { ColissimoTrackingSummary } from '../types'
 
 type FilterEtat = 'ALL' | 'EN_COURS' | 'LIVREE' | 'ATTENTE' | 'RETOUR'
+type TrackingSortKey = 'date' | 'client' | 'etat' | 'agence'
 
 function normalizeEtat(etat?: string) {
   return (etat ?? '').toLowerCase().replace(/é/g, 'e')
@@ -42,6 +44,10 @@ export default function ShipmentTrackingPage() {
   const qc = useQueryClient()
   const [q, setQ] = useState('')
   const [filter, setFilter] = useState<FilterEtat>('ALL')
+  const [sort, setSort] = useState<TrackingSortKey>('date')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
   const [syncing, setSyncing] = useState(false)
   const [syncMessage, setSyncMessage] = useState<string | null>(null)
@@ -66,19 +72,40 @@ export default function ShipmentTrackingPage() {
   }, [items])
 
   const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase()
-    return items.filter((item) => {
+    let list = items.filter((item) => {
       if (filter !== 'ALL' && etatCategory(item.etat) !== filter) return false
-      if (!term) return true
-      return (
-        String(item.orderId).includes(term) ||
-        item.clientNom.toLowerCase().includes(term) ||
-        (item.codeBarre ?? '').toLowerCase().includes(term) ||
-        (item.etat ?? '').toLowerCase().includes(term) ||
-        (item.agenceActuelle ?? '').toLowerCase().includes(term)
-      )
+      if (!inDateRange(item.dateCommande, dateFrom, dateTo)) return false
+      if (
+        !matchesSearch(q, [
+          item.orderId,
+          item.clientNom,
+          item.codeBarre,
+          item.etat,
+          item.agenceActuelle,
+          item.designation,
+        ])
+      ) {
+        return false
+      }
+      return true
     })
-  }, [items, q, filter])
+
+    list = [...list].sort((a, b) => {
+      switch (sort) {
+        case 'client':
+          return compareStrings(a.clientNom, b.clientNom, sortDir)
+        case 'etat':
+          return compareStrings(a.etatLabel ?? a.etat ?? '', b.etatLabel ?? b.etat ?? '', sortDir)
+        case 'agence':
+          return compareStrings(a.agenceActuelle ?? '', b.agenceActuelle ?? '', sortDir)
+        case 'date':
+        default:
+          return compareDates(a.dateCommande, b.dateCommande, sortDir)
+      }
+    })
+
+    return list
+  }, [items, q, filter, sort, sortDir, dateFrom, dateTo])
 
   const handleSync = async () => {
     setSyncing(true)
@@ -172,6 +199,37 @@ export default function ShipmentTrackingPage() {
         <StatCard icon={AlertCircle} label="Retours" value={stats.retour} color="text-red-400" />
       </div>
 
+      <ListToolbar
+        search={q}
+        onSearchChange={setQ}
+        searchPlaceholder="Rechercher commande, client, code colis, agence…"
+        sort={sort}
+        onSortChange={(v) => setSort(v as TrackingSortKey)}
+        sortOptions={[
+          { value: 'date', label: 'Date' },
+          { value: 'client', label: 'Client' },
+          { value: 'etat', label: 'État Colissimo' },
+          { value: 'agence', label: 'Agence' },
+        ]}
+        sortDir={sortDir}
+        onSortDirChange={setSortDir}
+        showDateRange
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onDateFromChange={setDateFrom}
+        onDateToChange={setDateTo}
+        resultCount={filtered.length}
+        totalCount={items.length}
+        onReset={() => {
+          setQ('')
+          setFilter('ALL')
+          setSort('date')
+          setSortDir('desc')
+          setDateFrom('')
+          setDateTo('')
+        }}
+      />
+
       <div className="flex flex-wrap gap-2">
         {(
           [
@@ -182,18 +240,8 @@ export default function ShipmentTrackingPage() {
             ['RETOUR', 'Retours'],
           ] as const
         ).map(([key, label]) => (
-          <FilterBtn key={key} active={filter === key} onClick={() => setFilter(key)} label={label} />
+          <FilterChip key={key} active={filter === key} onClick={() => setFilter(key)} label={label} />
         ))}
-      </div>
-
-      <div className="relative max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
-        <input
-          className="input pl-10"
-          placeholder="Rechercher commande, client, code colis, agence…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
       </div>
 
       <div className="card overflow-hidden">
@@ -330,27 +378,5 @@ function StatCard({
         <p className="text-sm text-zinc-500">{label}</p>
       </div>
     </div>
-  )
-}
-
-function FilterBtn({
-  active,
-  onClick,
-  label,
-}: {
-  active: boolean
-  onClick: () => void
-  label: string
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
-        active ? 'bg-sky-500/20 text-sky-300' : 'bg-ink-800 text-zinc-400 hover:text-white'
-      }`}
-    >
-      {label}
-    </button>
   )
 }

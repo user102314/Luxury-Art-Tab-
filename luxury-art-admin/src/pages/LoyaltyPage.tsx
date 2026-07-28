@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Gift, Plus, RefreshCw, Star, Users } from 'lucide-react'
 import StatCard, { formatCurrency } from '../components/StatCard'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
+import { ListToolbar } from '../components/ListToolbar'
 import {
   useInvalidateAdmin,
   useLoyaltyClients,
@@ -11,6 +12,7 @@ import {
 } from '../hooks/useAdminQueries'
 import { api, formatDate } from '../lib/api'
 import type { LoyaltyProgram, LoyaltyRewardType } from '../types'
+import { compareDates, compareNumbers, compareStrings, matchesSearch, type SortDir } from '../lib/listUtils'
 
 const emptyProgram = {
   nom: '',
@@ -29,6 +31,35 @@ export default function LoyaltyPage() {
   const invalidate = useInvalidateAdmin()
   const [form, setForm] = useState(emptyProgram)
   const [saving, setSaving] = useState(false)
+  const [clientSearch, setClientSearch] = useState('')
+  const [clientSort, setClientSort] = useState<'nom' | 'livrees' | 'recompenses'>('nom')
+  const [clientSortDir, setClientSortDir] = useState<SortDir>('asc')
+  const [rewardSearch, setRewardSearch] = useState('')
+  const [rewardSortDir, setRewardSortDir] = useState<SortDir>('desc')
+
+  const filteredClients = useMemo(() => {
+    let list = clients.filter((c) =>
+      matchesSearch(clientSearch, [c.nom, c.email, c.commandesCycle, c.totalCommandesLivrees]),
+    )
+    list = [...list].sort((a, b) => {
+      switch (clientSort) {
+        case 'livrees':
+          return compareNumbers(a.totalCommandesLivrees, b.totalCommandesLivrees, clientSortDir)
+        case 'recompenses':
+          return compareNumbers(a.totalRecompenses, b.totalRecompenses, clientSortDir)
+        case 'nom':
+        default:
+          return compareStrings(a.nom, b.nom, clientSortDir)
+      }
+    })
+    return list
+  }, [clients, clientSearch, clientSort, clientSortDir])
+
+  const filteredRewards = useMemo(() => {
+    let list = rewards.filter((r) => matchesSearch(rewardSearch, [r.clientNom, r.programmeNom, r.message]))
+    list = [...list].sort((a, b) => compareDates(a.earnedAt, b.earnedAt, rewardSortDir))
+    return list
+  }, [rewards, rewardSearch, rewardSortDir])
 
   const isLoading = loadingStats && !stats
   const isFetching = fetchingStats || fetchingPrograms
@@ -191,8 +222,33 @@ export default function LoyaltyPage() {
         <div className="border-b border-white/10 px-6 py-4">
           <h3 className="font-semibold text-white">Clients fidélité</h3>
         </div>
+        <div className="p-4">
+          <ListToolbar
+            search={clientSearch}
+            onSearchChange={setClientSearch}
+            searchPlaceholder="Rechercher client fidélité…"
+            sort={clientSort}
+            onSortChange={(v) => setClientSort(v as 'nom' | 'livrees' | 'recompenses')}
+            sortOptions={[
+              { value: 'nom', label: 'Nom' },
+              { value: 'livrees', label: 'Commandes livrées' },
+              { value: 'recompenses', label: 'Récompenses' },
+            ]}
+            sortDir={clientSortDir}
+            onSortDirChange={setClientSortDir}
+            resultCount={filteredClients.length}
+            totalCount={clients.length}
+            onReset={() => {
+              setClientSearch('')
+              setClientSort('nom')
+              setClientSortDir('asc')
+            }}
+          />
+        </div>
         {clients.length === 0 ? (
           <p className="p-8 text-center text-zinc-500">Aucun client inscrit</p>
+        ) : filteredClients.length === 0 ? (
+          <p className="p-8 text-center text-zinc-500">Aucun client ne correspond aux filtres</p>
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
@@ -206,7 +262,7 @@ export default function LoyaltyPage() {
               </tr>
             </thead>
             <tbody>
-              {clients.map((c) => (
+              {filteredClients.map((c) => (
                 <tr key={c.id} className="border-b border-white/5">
                   <td className="px-6 py-3">
                     <p className="text-white">{c.nom}</p>
@@ -230,8 +286,27 @@ export default function LoyaltyPage() {
         <div className="border-b border-white/10 px-6 py-4">
           <h3 className="font-semibold text-white">Dernières récompenses</h3>
         </div>
+        <div className="p-4">
+          <ListToolbar
+            search={rewardSearch}
+            onSearchChange={setRewardSearch}
+            searchPlaceholder="Rechercher client, programme…"
+            sort="date"
+            sortOptions={[{ value: 'date', label: 'Date' }]}
+            sortDir={rewardSortDir}
+            onSortDirChange={setRewardSortDir}
+            resultCount={filteredRewards.length}
+            totalCount={rewards.length}
+            onReset={() => {
+              setRewardSearch('')
+              setRewardSortDir('desc')
+            }}
+          />
+        </div>
         {rewards.length === 0 ? (
           <p className="p-8 text-center text-zinc-500">Aucune récompense encore</p>
+        ) : filteredRewards.length === 0 ? (
+          <p className="p-8 text-center text-zinc-500">Aucune récompense ne correspond aux filtres</p>
         ) : (
           <table className="w-full text-left text-sm">
             <thead>
@@ -243,7 +318,7 @@ export default function LoyaltyPage() {
               </tr>
             </thead>
             <tbody>
-              {rewards.map((r) => (
+              {filteredRewards.map((r) => (
                 <tr key={r.id} className="border-b border-white/5">
                   <td className="px-6 py-3 text-white">{r.clientNom}</td>
                   <td className="px-6 py-3 text-zinc-400">{r.programmeNom}</td>

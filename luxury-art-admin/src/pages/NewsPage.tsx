@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ImageIcon, Pencil, Plus, Send, Trash2, Upload, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { api, formatDate } from '../lib/api'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
+import { ListToolbar } from '../components/ListToolbar'
 import { useInvalidateAdmin, useNews } from '../hooks/useAdminQueries'
+import { compareDates, compareStrings, matchesSearch, type SortDir } from '../lib/listUtils'
 import type { News } from '../types'
 
 function resolveImageSrc(url?: string) {
@@ -26,6 +28,23 @@ export default function NewsPage() {
   const [preview, setPreview] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
+  const [statutFilter, setStatutFilter] = useState('ALL')
+  const [sort, setSort] = useState<'date' | 'titre'>('date')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
+
+  const filteredNews = useMemo(() => {
+    let list = news.filter((n) => {
+      if (statutFilter !== 'ALL' && n.statut !== statutFilter) return false
+      if (!matchesSearch(search, [n.titre, n.resume, n.contenu, n.statut])) return false
+      return true
+    })
+    list = [...list].sort((a, b) => {
+      if (sort === 'titre') return compareStrings(a.titre, b.titre, sortDir)
+      return compareDates(a.createdAt, b.createdAt, sortDir)
+    })
+    return list
+  }, [news, search, statutFilter, sort, sortDir])
 
   const clearForm = () => {
     setTitre('')
@@ -226,11 +245,49 @@ export default function NewsPage() {
         </form>
       )}
 
+      <ListToolbar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Rechercher titre, résumé, contenu…"
+        sort={sort}
+        onSortChange={(v) => setSort(v as 'date' | 'titre')}
+        sortOptions={[
+          { value: 'date', label: 'Date' },
+          { value: 'titre', label: 'Titre' },
+        ]}
+        sortDir={sortDir}
+        onSortDirChange={setSortDir}
+        resultCount={filteredNews.length}
+        totalCount={news.length}
+        onReset={() => {
+          setSearch('')
+          setStatutFilter('ALL')
+          setSort('date')
+          setSortDir('desc')
+        }}
+        filters={[
+          {
+            id: 'statut',
+            label: 'Statut',
+            value: statutFilter,
+            onChange: setStatutFilter,
+            options: [
+              { value: 'ALL', label: 'Tous' },
+              { value: 'BROUILLON', label: 'Brouillon' },
+              { value: 'PUBLIE', label: 'Publié' },
+              { value: 'ARCHIVE', label: 'Archivé' },
+            ],
+          },
+        ]}
+      />
+
       <div className="grid gap-4">
         {news.length === 0 ? (
           <p className="card p-8 text-center text-zinc-500">Aucun article</p>
+        ) : filteredNews.length === 0 ? (
+          <p className="card p-8 text-center text-zinc-500">Aucun article ne correspond aux filtres</p>
         ) : (
-          news.map((n) => (
+          filteredNews.map((n) => (
             <div key={n.id} className="card flex flex-wrap items-start justify-between gap-4 p-6">
               <div className="flex flex-1 gap-4">
                 {n.imageUrl ? (

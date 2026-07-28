@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   BarChart,
@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { api, formatCurrency, formatDate } from '../lib/api'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
+import { ListToolbar } from '../components/ListToolbar'
 import {
   useBestSellers,
   useCategories,
@@ -35,6 +36,7 @@ import {
 } from '../hooks/useAdminQueries'
 import { queryKeys } from '../lib/queryKeys'
 import type { Category, Product, ProductAnalytics, ProductImage, ProductStatut } from '../types'
+import { compareNumbers, compareStrings, matchesSearch, type SortDir } from '../lib/listUtils'
 
 const STATUTS: ProductStatut[] = ['DISPONIBLE', 'RUPTURE_STOCK', 'ARCHIVE']
 
@@ -48,6 +50,7 @@ const emptyForm = {
 }
 
 type Tab = 'catalogue' | 'stats' | 'detail'
+type ProductSortKey = 'nom' | 'prix' | 'stock' | 'category'
 
 function resolveImageSrc(url?: string) {
   if (!url) return undefined
@@ -113,7 +116,40 @@ export default function ProductsPage() {
   const [categoryError, setCategoryError] = useState('')
   const [savingCategory, setSavingCategory] = useState(false)
 
+  const [search, setSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('ALL')
+  const [statutFilter, setStatutFilter] = useState('ALL')
+  const [sort, setSort] = useState<ProductSortKey>('nom')
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
+
   const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.nom]))
+
+  const filteredProducts = useMemo(() => {
+    let list = products.filter((p) => {
+      if (categoryFilter !== 'ALL' && String(p.categoryId) !== categoryFilter) return false
+      if (statutFilter !== 'ALL' && p.statut !== statutFilter) return false
+      if (!matchesSearch(search, [p.nom, p.description, categoryMap[p.categoryId]])) return false
+      return true
+    })
+    list = [...list].sort((a, b) => {
+      switch (sort) {
+        case 'prix':
+          return compareNumbers(Number(a.prix) || 0, Number(b.prix) || 0, sortDir)
+        case 'stock':
+          return compareNumbers(Number(a.stock) || 0, Number(b.stock) || 0, sortDir)
+        case 'category':
+          return compareStrings(
+            categoryMap[a.categoryId] ?? '',
+            categoryMap[b.categoryId] ?? '',
+            sortDir,
+          )
+        case 'nom':
+        default:
+          return compareStrings(a.nom, b.nom, sortDir)
+      }
+    })
+    return list
+  }, [products, search, categoryFilter, statutFilter, sort, sortDir, categoryMap])
 
   useEffect(() => {
     const urls = pendingFiles.map((file) => URL.createObjectURL(file))
@@ -754,6 +790,53 @@ export default function ProductsPage() {
       )}
 
       {tab === 'catalogue' && (
+        <>
+          <ListToolbar
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Rechercher produit, description, catégorie…"
+            sort={sort}
+            onSortChange={(v) => setSort(v as ProductSortKey)}
+            sortOptions={[
+              { value: 'nom', label: 'Nom' },
+              { value: 'prix', label: 'Prix' },
+              { value: 'stock', label: 'Stock' },
+              { value: 'category', label: 'Catégorie' },
+            ]}
+            sortDir={sortDir}
+            onSortDirChange={setSortDir}
+            resultCount={filteredProducts.length}
+            totalCount={products.length}
+            onReset={() => {
+              setSearch('')
+              setCategoryFilter('ALL')
+              setStatutFilter('ALL')
+              setSort('nom')
+              setSortDir('asc')
+            }}
+            filters={[
+              {
+                id: 'category',
+                label: 'Catégorie',
+                value: categoryFilter,
+                onChange: setCategoryFilter,
+                options: [
+                  { value: 'ALL', label: 'Toutes catégories' },
+                  ...categories.map((c) => ({ value: String(c.id), label: c.nom })),
+                ],
+              },
+              {
+                id: 'statut',
+                label: 'Statut',
+                value: statutFilter,
+                onChange: setStatutFilter,
+                options: [
+                  { value: 'ALL', label: 'Tous statuts' },
+                  ...STATUTS.map((s) => ({ value: s, label: s.replace('_', ' ') })),
+                ],
+              },
+            ]}
+          />
         <div className="card overflow-hidden">
           {isLoading && products.length === 0 ? (
             <PageSkeleton rows={5} />
@@ -761,6 +844,11 @@ export default function ProductsPage() {
             <div className="p-12 text-center">
               <Package className="mx-auto mb-3 h-10 w-10 text-zinc-600" />
               <p className="text-zinc-500">Aucun produit — créez-en un</p>
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="p-12 text-center">
+              <Package className="mx-auto mb-3 h-10 w-10 text-zinc-600" />
+              <p className="text-zinc-500">Aucun produit ne correspond aux filtres</p>
             </div>
           ) : (
             <table className="w-full text-left text-sm">
@@ -776,7 +864,7 @@ export default function ProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {products.map((p) => (
+                {filteredProducts.map((p) => (
                   <tr key={p.id} className="border-b border-white/5 hover:bg-white/[0.02]">
                     <td className="px-6 py-4">
                       {p.imageUrl || p.images?.[0]?.url ? (
@@ -819,6 +907,7 @@ export default function ProductsPage() {
             </table>
           )}
         </div>
+        </>
       )}
 
       {tab === 'stats' && (
