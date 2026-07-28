@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Eye, FileText, Trash2, RefreshCw, X, Truck } from 'lucide-react'
+import { Eye, FileText, Trash2, RefreshCw, X, Truck, ShoppingBag, Clock, CheckCircle2, Package, RotateCcw, Ban } from 'lucide-react'
 import {
   api,
   formatCurrency,
@@ -11,6 +11,7 @@ import {
   ORDER_STATUS_COLORS,
 } from '../lib/api'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
+import StatCard from '../components/StatCard'
 import InvoiceModal from '../components/InvoiceModal'
 import OrderTrackingDetail from '../components/OrderTrackingDetail'
 import { FilterChip, ListToolbar } from '../components/ListToolbar'
@@ -67,6 +68,35 @@ export default function OrdersPage() {
     setDateFrom('')
     setDateTo('')
   }
+
+  const stats = useMemo(() => {
+    const scoped = filterSortOrders(orders, {
+      search,
+      statut: 'ALL',
+      sort: 'date',
+      sortDir: 'desc',
+      dateFrom,
+      dateTo,
+    }).filter((o) => canalFilter === 'ALL' || o.canal === canalFilter)
+
+    const count = (statut: OrderStatut) => scoped.filter((o) => o.statut === statut).length
+    const retours = scoped.filter((o) =>
+      (o.colissimoEtat ?? '').toLowerCase().includes('retour'),
+    )
+    const livrees = scoped.filter((o) => o.statut === 'LIVREE')
+    const caLivre = livrees.reduce((sum, o) => sum + (Number(o.total) || 0), 0)
+
+    return {
+      total: scoped.length,
+      enAttente: count('EN_ATTENTE'),
+      confirmees: count('CONFIRMEE'),
+      expediees: count('EXPEDIEE'),
+      livrees: livrees.length,
+      annulees: count('ANNULEE'),
+      retours: retours.length,
+      caLivre,
+    }
+  }, [orders, search, dateFrom, dateTo, canalFilter])
 
   const updateStatut = async (id: number, statut: OrderStatut) => {
     const order = orders.find((o) => o.id === id)
@@ -165,6 +195,75 @@ export default function OrdersPage() {
           {syncMessage}
         </p>
       )}
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
+        <StatCardButton active={filter === 'ALL'} onClick={() => setFilter('ALL')}>
+          <StatCard
+            title="Total commandes"
+            value={String(stats.total)}
+            subtitle="Tous statuts"
+            icon={ShoppingBag}
+            accent="gold"
+          />
+        </StatCardButton>
+        <StatCardButton active={filter === 'EN_ATTENTE'} onClick={() => setFilter('EN_ATTENTE')}>
+          <StatCard
+            title="En attente"
+            value={String(stats.enAttente)}
+            subtitle="À confirmer"
+            icon={Clock}
+            accent="purple"
+          />
+        </StatCardButton>
+        <StatCardButton active={filter === 'CONFIRMEE'} onClick={() => setFilter('CONFIRMEE')}>
+          <StatCard
+            title="Confirmées"
+            value={String(stats.confirmees)}
+            subtitle="Prêtes à expédier"
+            icon={CheckCircle2}
+            accent="blue"
+          />
+        </StatCardButton>
+        <StatCardButton active={filter === 'EXPEDIEE'} onClick={() => setFilter('EXPEDIEE')}>
+          <StatCard
+            title="Expédiées"
+            value={String(stats.expediees)}
+            subtitle="En cours de livraison"
+            icon={Truck}
+            accent="blue"
+          />
+        </StatCardButton>
+        <StatCardButton active={filter === 'LIVREE'} onClick={() => setFilter('LIVREE')}>
+          <StatCard
+            title="Livrées"
+            value={String(stats.livrees)}
+            subtitle={`CA : ${formatCurrency(stats.caLivre)}`}
+            icon={Package}
+            accent="emerald"
+          />
+        </StatCardButton>
+        <StatCardButton active={filter === 'ANNULEE'} onClick={() => setFilter('ANNULEE')}>
+          <StatCard
+            title="Annulées"
+            value={String(stats.annulees)}
+            subtitle={stats.retours > 0 ? `${stats.retours} retour(s) Colissimo` : 'Commandes annulées'}
+            icon={Ban}
+            accent="purple"
+          />
+        </StatCardButton>
+        <div className="card p-6 border border-red-500/20 bg-red-500/5">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Retours Colissimo</p>
+              <p className="mt-2 font-display text-3xl font-bold text-red-300">{stats.retours}</p>
+              <p className="mt-1 text-sm text-zinc-500">Colis retournés au dépôt</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500/20 to-red-600/5 text-red-400">
+              <RotateCcw className="h-6 w-6" />
+            </div>
+          </div>
+        </div>
+      </div>
 
       <ListToolbar
         search={search}
@@ -427,5 +526,25 @@ function Info({ label, value }: { label: string; value: string }) {
       <p className="text-xs text-zinc-500">{label}</p>
       <p className="mt-0.5 text-zinc-200">{value}</p>
     </div>
+  )
+}
+
+function StatCardButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`text-left transition ${active ? 'ring-2 ring-gold-500/50 rounded-2xl' : 'hover:opacity-90'}`}
+    >
+      {children}
+    </button>
   )
 }
