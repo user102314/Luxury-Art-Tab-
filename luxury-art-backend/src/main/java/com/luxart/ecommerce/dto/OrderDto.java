@@ -56,6 +56,10 @@ public class OrderDto {
 
     private String colissimoDesignation;
 
+    private String colissimoAgence;
+
+    private String colissimoManifeste;
+
     private LocalDateTime colissimoImportedAt;
 
     private List<OrderItemDto> items;

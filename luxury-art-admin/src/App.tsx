@@ -17,6 +17,7 @@ import AnalyticsPage from './pages/AnalyticsPage'
 import ClientsPage from './pages/ClientsPage'
 import SettingsPage from './pages/SettingsPage'
 import NotificationsPage from './pages/NotificationsPage'
+import ShipmentTrackingPage from './pages/ShipmentTrackingPage'
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
               <Route path="/dashboard" element={<Navigate to="/revenue" replace />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/orders" element={<OrdersPage />} />
+              <Route path="/tracking" element={<ShipmentTrackingPage />} />
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/facebook-orders" element={<FacebookOrdersPage />} />
               <Route path="/instagram-orders" element={<InstagramOrdersPage />} />

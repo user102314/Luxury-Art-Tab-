@@ -53,6 +53,9 @@ public class ColissimoParcelImportService {
         if (existing.isEmpty()) {
             existing = orderRepository.findByNumeroColis(parcel.getCode());
         }
+        if (existing.isEmpty()) {
+            existing = findByReference(parcel.getReference());
+        }
 
         if (existing.isPresent()) {
             Order order = existing.get();
@@ -69,6 +72,29 @@ public class ColissimoParcelImportService {
         return new ColissimoImportResult(ImportOutcome.CREATED, created);
     }
 
+    private Optional<Order> findByReference(String reference) {
+        if (reference == null || reference.isBlank()) {
+            return Optional.empty();
+        }
+        String ref = reference.trim();
+        var byRef = orderRepository.findByColissimoReference(ref);
+        if (byRef.isPresent()) {
+            return byRef;
+        }
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("(?:WEB|FC|INST|WA)-LX-(\\d+)", java.util.regex.Pattern.CASE_INSENSITIVE)
+                .matcher(ref);
+        if (m.find()) {
+            try {
+                long orderId = Long.parseLong(m.group(1));
+                return orderRepository.findById(orderId);
+            } catch (NumberFormatException ignored) {
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
     private boolean linkColissimoCodeIfMissing(Order order, ColissimoParcel parcel) {
         if (order.getColissimoCodeBarre() != null && !order.getColissimoCodeBarre().isBlank()) {
             return false;
@@ -78,6 +104,8 @@ public class ColissimoParcelImportService {
         order.setColissimoEtat(parcel.getEtat());
         order.setColissimoReference(parcel.getReference());
         order.setColissimoDesignation(parcel.getDesignation());
+        order.setColissimoAgence(parcel.getAgenceActuelle());
+        order.setColissimoManifeste(parcel.getNumManifeste());
         if (order.getColissimoImportedAt() == null) {
             order.setColissimoImportedAt(LocalDateTime.now());
         }
@@ -106,6 +134,8 @@ public class ColissimoParcelImportService {
                 .colissimoReference(parcel.getReference())
                 .colissimoEtat(parcel.getEtat())
                 .colissimoDesignation(parcel.getDesignation())
+                .colissimoAgence(parcel.getAgenceActuelle())
+                .colissimoManifeste(parcel.getNumManifeste())
                 .colissimoImportedAt(LocalDateTime.now())
                 .stockDeduit(false)
                 .build();
@@ -127,6 +157,32 @@ public class ColissimoParcelImportService {
 
         if (parcel.getEtat() != null && !parcel.getEtat().equals(order.getColissimoEtat())) {
             order.setColissimoEtat(parcel.getEtat());
+            changed = true;
+        }
+
+        if (parcel.getAgenceActuelle() != null
+                && !parcel.getAgenceActuelle().equals(order.getColissimoAgence())) {
+            order.setColissimoAgence(parcel.getAgenceActuelle());
+            changed = true;
+        } else if (parcel.getAgenceActuelle() != null
+                && (order.getColissimoAgence() == null || order.getColissimoAgence().isBlank())) {
+            order.setColissimoAgence(parcel.getAgenceActuelle());
+            changed = true;
+        }
+
+        if (parcel.getNumManifeste() != null
+                && !parcel.getNumManifeste().equals(order.getColissimoManifeste())) {
+            order.setColissimoManifeste(parcel.getNumManifeste());
+            changed = true;
+        } else if (parcel.getNumManifeste() != null
+                && (order.getColissimoManifeste() == null || order.getColissimoManifeste().isBlank())) {
+            order.setColissimoManifeste(parcel.getNumManifeste());
+            changed = true;
+        }
+
+        if (parcel.getDesignation() != null
+                && (order.getColissimoDesignation() == null || order.getColissimoDesignation().isBlank())) {
+            order.setColissimoDesignation(parcel.getDesignation());
             changed = true;
         }
 

@@ -21,6 +21,17 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     Optional<Order> findByNumeroColis(String numeroColis);
 
+    Optional<Order> findByColissimoReference(String colissimoReference);
+
+    @Query("""
+            SELECT o FROM Order o
+            WHERE (o.colissimoCodeBarre IS NOT NULL AND o.colissimoCodeBarre <> '')
+               OR (o.numeroColis IS NOT NULL AND o.numeroColis <> '' AND LENGTH(o.numeroColis) >= 10
+                   AND o.numeroColis NOT LIKE 'LX-%')
+            ORDER BY o.dateCommande DESC
+            """)
+    List<Order> findTrackableOrders();
+
     @Query("""
             SELECT COUNT(o) FROM Order o
             WHERE o.dateCommande >= :from

@@ -81,11 +81,14 @@ public class ColissimoShipmentService {
 
     public String resolveCodeBarre(Order order) {
         if (order.getColissimoCodeBarre() != null && !order.getColissimoCodeBarre().isBlank()) {
-            return order.getColissimoCodeBarre();
+            return order.getColissimoCodeBarre().trim();
         }
         String numero = order.getNumeroColis();
-        if (numero != null && numero.matches("\\d{10,}")) {
-            return numero;
+        if (numero != null && !numero.isBlank() && !numero.startsWith("LX-")) {
+            String trimmed = numero.trim();
+            if (trimmed.matches("\\d{8,}")) {
+                return trimmed;
+            }
         }
         return null;
     }

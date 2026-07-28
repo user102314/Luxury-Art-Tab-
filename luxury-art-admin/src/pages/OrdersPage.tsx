@@ -12,6 +12,7 @@ import {
 } from '../lib/api'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
 import InvoiceModal from '../components/InvoiceModal'
+import OrderTrackingDetail from '../components/OrderTrackingDetail'
 import { useInvalidateAdmin, useOrders } from '../hooks/useAdminQueries'
 import { queryKeys } from '../lib/queryKeys'
 import type { Order, OrderStatut } from '../types'
@@ -36,6 +37,7 @@ export default function OrdersPage() {
   const [loadingInvoice, setLoadingInvoice] = useState(false)
   const [syncingColissimo, setSyncingColissimo] = useState(false)
   const [syncMessage, setSyncMessage] = useState<string | null>(null)
+  const [trackingOrderId, setTrackingOrderId] = useState<number | null>(null)
 
   const filtered = orders
     .filter((o) => {
@@ -235,6 +237,16 @@ export default function OrdersPage() {
                           <FileText className="h-3.5 w-3.5" />
                           Facture
                         </button>
+                        {(o.colissimoCodeBarre || o.numeroColis) && (
+                          <button
+                            type="button"
+                            onClick={() => setTrackingOrderId(o.id)}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-sky-500/15 px-3 py-1.5 text-xs font-medium text-sky-300 transition hover:bg-sky-500/25"
+                          >
+                            <Truck className="h-3.5 w-3.5" />
+                            Suivi
+                          </button>
+                        )}
                         <button
                           type="button"
                           title="Supprimer"
@@ -298,8 +310,28 @@ export default function OrdersPage() {
               {detail.colissimoDesignation && (
                 <Info label="Article Colissimo" value={detail.colissimoDesignation} />
               )}
+              {detail.colissimoAgence && (
+                <Info label="Agence Colissimo" value={detail.colissimoAgence} />
+              )}
+              {detail.colissimoManifeste && (
+                <Info label="N° manifeste" value={detail.colissimoManifeste} />
+              )}
               <Info label="Total" value={formatCurrency(Number(detail.total) || 0)} />
             </div>
+
+            {(detail.colissimoCodeBarre || detail.numeroColis) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setTrackingOrderId(detail.id)
+                  setDetail(null)
+                }}
+                className="mb-6 inline-flex items-center gap-2 rounded-xl bg-sky-500/15 px-4 py-2.5 text-sm font-medium text-sky-300 transition hover:bg-sky-500/25"
+              >
+                <Truck className="h-4 w-4" />
+                Voir le suivi Colissimo détaillé
+              </button>
+            )}
 
             <h4 className="mb-3 font-semibold text-white">Articles</h4>
             {(detail.items?.length ?? 0) === 0 ? (
@@ -338,6 +370,17 @@ export default function OrdersPage() {
 
       {invoiceOrder && (
         <InvoiceModal order={invoiceOrder} onClose={() => setInvoiceOrder(null)} />
+      )}
+
+      {trackingOrderId != null && (
+        <OrderTrackingDetail
+          orderId={trackingOrderId}
+          onClose={() => setTrackingOrderId(null)}
+          onRefreshed={() => {
+            invalidate.orders()
+            invalidate.colissimoTracking()
+          }}
+        />
       )}
     </div>
   )

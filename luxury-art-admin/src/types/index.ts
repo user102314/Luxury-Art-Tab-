@@ -44,6 +44,8 @@ export interface Order {
   colissimoReference?: string
   colissimoEtat?: string
   colissimoDesignation?: string
+  colissimoAgence?: string
+  colissimoManifeste?: string
   colissimoImportedAt?: string
   items?: OrderItem[]
 }
@@ -64,6 +66,57 @@ export interface ColissimoSyncStatus {
   lastSyncAt: string | null
   lastResult: ColissimoSyncResult | null
   syncIntervalMs: number
+}
+
+export type TrackingStepStatus = 'completed' | 'current' | 'pending'
+
+export interface ColissimoTrackingStep {
+  key: string
+  label: string
+  description: string
+  status: TrackingStepStatus
+}
+
+export interface ColissimoTrackingSummary {
+  orderId: number
+  orderStatut: OrderStatut
+  canal?: OrderCanal
+  clientNom: string
+  dateCommande: string
+  codeBarre: string
+  etat?: string
+  etatLabel?: string
+  agenceActuelle?: string
+  designation?: string
+}
+
+export interface ColissimoTracking {
+  orderId: number
+  orderStatut: OrderStatut
+  canal?: OrderCanal
+  clientNom: string
+  clientTelephone?: string
+  dateCommande: string
+  codeBarre: string
+  reference?: string
+  etat?: string
+  etatLabel?: string
+  transporteur?: string
+  agenceActuelle?: string
+  numManifeste?: string
+  numPaiement?: string
+  adresse?: string
+  ville?: string
+  gouvernorat?: string
+  tel1?: string
+  designation?: string
+  prix?: number
+  nbPieces?: number
+  dateCreation?: string
+  type?: string
+  commentaire?: string
+  liveFromApi: boolean
+  timeline: ColissimoTrackingStep[]
 }
 
 export interface OrderChannelStats {

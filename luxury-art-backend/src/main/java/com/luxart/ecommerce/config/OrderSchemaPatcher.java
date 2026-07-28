@@ -29,6 +29,8 @@ public class OrderSchemaPatcher implements CommandLineRunner {
         ensureOptionalVarcharColumn("colissimo_reference");
         ensureOptionalVarcharColumn("colissimo_etat");
         ensureOptionalVarcharColumn("colissimo_designation");
+        ensureOptionalVarcharColumn("colissimo_agence");
+        ensureOptionalVarcharColumn("colissimo_manifeste");
         ensureOptionalTimestampColumn("colissimo_imported_at");
         ensureUniqueIndex("colissimo_code_barre");
         ensureCanalAllowsExtraChannels();

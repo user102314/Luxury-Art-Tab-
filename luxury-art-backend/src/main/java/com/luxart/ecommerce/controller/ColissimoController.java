@@ -3,8 +3,11 @@ package com.luxart.ecommerce.controller;
 import com.luxart.ecommerce.colissimo.ColissimoApiException;
 import com.luxart.ecommerce.colissimo.ColissimoShipmentService;
 import com.luxart.ecommerce.colissimo.ColissimoSyncService;
+import com.luxart.ecommerce.colissimo.ColissimoTrackingService;
 import com.luxart.ecommerce.colissimo.dto.ColissimoSyncResultDto;
 import com.luxart.ecommerce.colissimo.dto.ColissimoSyncStatusDto;
+import com.luxart.ecommerce.colissimo.dto.ColissimoTrackingDto;
+import com.luxart.ecommerce.colissimo.dto.ColissimoTrackingSummaryDto;
 import com.luxart.ecommerce.exception.ResourceNotFoundException;
 import com.luxart.ecommerce.model.entity.Order;
 import com.luxart.ecommerce.repository.OrderRepository;
@@ -15,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/colissimo")
 @RequiredArgsConstructor
@@ -22,6 +27,7 @@ public class ColissimoController {
 
     private final ColissimoSyncService syncService;
     private final ColissimoShipmentService shipmentService;
+    private final ColissimoTrackingService trackingService;
     private final OrderRepository orderRepository;
 
     @GetMapping("/status")
@@ -32,6 +38,19 @@ public class ColissimoController {
     @PostMapping("/sync")
     public ResponseEntity<ColissimoSyncResultDto> sync() {
         return ResponseEntity.ok(syncService.syncNow());
+    }
+
+    @GetMapping("/tracking")
+    public List<ColissimoTrackingSummaryDto> listTracking() {
+        return trackingService.listTrackableOrders();
+    }
+
+    @GetMapping("/orders/{orderId}/tracking")
+    @Transactional
+    public ColissimoTrackingDto getTracking(
+            @PathVariable Long orderId,
+            @RequestParam(defaultValue = "true") boolean refresh) {
+        return trackingService.getTracking(orderId, refresh);
     }
 
     @PostMapping("/orders/{orderId}/push")

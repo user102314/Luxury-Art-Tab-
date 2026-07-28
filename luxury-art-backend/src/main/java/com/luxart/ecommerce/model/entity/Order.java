@@ -74,6 +74,12 @@ public class Order {
     /** Désignation article depuis Colissimo */
     private String colissimoDesignation;
 
+    /** Agence Colissimo en charge du colis */
+    private String colissimoAgence;
+
+    /** N° manifeste (tournée de livraison) */
+    private String colissimoManifeste;
+
     /** Date d'import depuis Colissimo */
     private LocalDateTime colissimoImportedAt;
 

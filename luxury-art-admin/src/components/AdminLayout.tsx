@@ -17,6 +17,7 @@ import {
   Settings,
   Bell,
   HeartHandshake,
+  Truck,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { prefetchEssentials, prefetchRoute } from '../hooks/useAdminQueries'
@@ -28,6 +29,7 @@ const nav = [
   { to: '/revenue', icon: TrendingUp, label: 'Revenus' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/orders', icon: ShoppingBag, label: 'Commandes' },
+  { to: '/tracking', icon: Truck, label: 'Suivi livraisons' },
   { to: '/notifications', icon: Bell, label: 'Notifications' },
   { to: '/facebook-orders', icon: Facebook, label: 'Facebook' },
   { to: '/instagram-orders', icon: Instagram, label: 'Instagram' },

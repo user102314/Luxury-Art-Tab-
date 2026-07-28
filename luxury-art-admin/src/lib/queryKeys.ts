@@ -17,6 +17,8 @@ export const queryKeys = {
   stockAlerts: ['stockAlerts'] as const,
   notifications: ['notifications'] as const,
   notificationUnread: ['notificationUnread'] as const,
+  colissimoTracking: ['colissimoTracking'] as const,
+  colissimoTrackingDetail: (orderId: number) => ['colissimoTracking', orderId] as const,
   productAnalytics: (id: number) => ['productAnalytics', id] as const,
   dashboardSummary: (from: string, to: string) => ['dashboardSummary', from, to] as const,
   salesOverTime: (from: string, to: string, granularity: string) =>

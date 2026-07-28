@@ -544,6 +544,8 @@ public class OrderServiceImpl implements OrderService {
                 .colissimoReference(order.getColissimoReference())
                 .colissimoEtat(order.getColissimoEtat())
                 .colissimoDesignation(order.getColissimoDesignation())
+                .colissimoAgence(order.getColissimoAgence())
+                .colissimoManifeste(order.getColissimoManifeste())
                 .colissimoImportedAt(order.getColissimoImportedAt())
                 .items(order.getItems().stream().map(item -> OrderItemDto.builder()
                         .id(item.getId())

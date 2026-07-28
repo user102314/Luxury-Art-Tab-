@@ -29,6 +29,8 @@ import type {
   SiteSettings,
   ColissimoSyncResult,
   ColissimoSyncStatus,
+  ColissimoTracking,
+  ColissimoTrackingSummary,
 } from '../types'
 
 /** Commandes comptabilisées dans le chiffre d'affaires (livrées uniquement) */
@@ -95,6 +97,13 @@ export const api = {
       { method: 'POST' },
     ),
   getColissimoInvoiceUrl: (orderId: number) => `${BASE}/colissimo/orders/${orderId}/invoice`,
+
+  getColissimoTrackingList: () =>
+    request<ColissimoTrackingSummary[]>('/colissimo/tracking'),
+  getColissimoTracking: (orderId: number, refresh = true) =>
+    request<ColissimoTracking>(
+      `/colissimo/orders/${orderId}/tracking?refresh=${refresh}`,
+    ),
 
   getNotifications: () => request<import('../types').AdminNotification[]>('/notifications'),
   getUnreadNotificationCount: () =>

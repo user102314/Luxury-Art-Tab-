@@ -217,6 +217,7 @@ export function useInvalidateAdmin() {
     loyaltyRewards: () => qc.invalidateQueries({ queryKey: queryKeys.loyaltyRewards }),
     productAnalytics: (id: number) =>
       qc.invalidateQueries({ queryKey: queryKeys.productAnalytics(id) }),
+    colissimoTracking: () => qc.invalidateQueries({ queryKey: queryKeys.colissimoTracking }),
     all: () => qc.invalidateQueries(),
   }
 }
@@ -234,6 +235,9 @@ export function prefetchRoute(qc: QueryClient, path: string) {
       break
     case '/orders':
       qc.prefetchQuery({ queryKey: queryKeys.orders, queryFn: api.getOrders, ...opts })
+      break
+    case '/tracking':
+      qc.prefetchQuery({ queryKey: queryKeys.colissimoTracking, queryFn: api.getColissimoTrackingList, ...opts })
       break
     case '/analytics': {
       const to = new Date().toISOString().slice(0, 10)
