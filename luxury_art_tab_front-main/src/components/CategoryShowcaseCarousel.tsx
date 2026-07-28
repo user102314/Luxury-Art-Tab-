@@ -39,7 +39,7 @@ export function CategoryShowcaseCarousel() {
   if (isLoading) {
     return (
       <div className="mt-12 md:mt-16">
-        <div className="h-72 animate-pulse rounded-3xl bg-muted/60 md:h-80" />
+        <div className="h-56 animate-pulse rounded-2xl bg-[#3b2418]/40 md:h-64" />
       </div>
     )
   }
@@ -49,22 +49,22 @@ export function CategoryShowcaseCarousel() {
   const current = slides[index] ?? slides[0]
 
   return (
-    <section className="relative mt-12 max-w-5xl overflow-visible bg-transparent md:mt-16 md:mx-auto">
+    <section className="relative mt-12 max-w-4xl overflow-visible rounded-2xl bg-[#3b2418] text-[#f7efe2] shadow-[0_20px_40px_-24px_rgba(59,36,24,0.5)] md:mt-16 md:mx-auto">
       <PaintSplash
         color="orange"
         opacity={0.45}
         rotate={-18}
-        className="-left-14 -top-14 hidden h-40 w-40 md:block"
+        className="-left-12 -top-12 hidden h-32 w-32 md:block"
       />
       <PaintStroke
         color="beige"
         opacity={0.4}
         rotate={8}
         flip
-        className="-right-16 -bottom-4 hidden h-14 w-60 md:block"
+        className="-right-14 -bottom-3 hidden h-12 w-52 md:block"
       />
 
-      <div className="relative overflow-hidden px-5 py-8 md:px-10 md:py-10">
+      <div className="relative overflow-hidden rounded-2xl px-4 py-6 md:px-8 md:py-8">
         <div className="relative">
           <div className="relative overflow-hidden">
             {slides.map((slide, i) => {
@@ -81,13 +81,13 @@ export function CategoryShowcaseCarousel() {
                   }`}
                   aria-hidden={i !== index}
                 >
-                  <div className="grid grid-cols-1 items-center gap-6 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-10">
+                  <div className="grid grid-cols-1 items-center gap-5 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] md:gap-8">
                     <Link
                       to="/products/$id"
                       params={{ id: String(slide.product.id) }}
-                      className="group relative mx-auto block w-full max-w-[240px] md:mx-0 md:max-w-[280px]"
+                      className="group relative mx-auto block w-full max-w-[200px] md:mx-0 md:max-w-[220px]"
                     >
-                      <div className="relative z-[1] flex aspect-[3/4] items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-white/50 p-3 shadow-sm">
+                      <div className="relative z-[1] flex aspect-[3/4] items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-[#2a1a12] p-2.5">
                         <img
                           src={image}
                           alt={slide.product.nom}
@@ -96,28 +96,28 @@ export function CategoryShowcaseCarousel() {
                       </div>
                     </Link>
 
-                    <div className="relative flex flex-col justify-center pb-1 md:pb-0 md:pr-12">
+                    <div className="relative flex flex-col justify-center pb-1 md:pb-0 md:pr-10">
                       <div
-                        className="mb-3 h-0.5 w-10 rounded-full bg-[#f4a15d]"
+                        className="mb-2.5 h-0.5 w-8 rounded-full bg-[#f4a15d]"
                         aria-hidden
                       />
-                      <h3 className="font-display text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+                      <h3 className="font-display text-2xl font-bold tracking-tight text-[#f7efe2] md:text-3xl">
                         {slide.nom}
                       </h3>
                       {slide.description ? (
-                        <p className="mt-3 max-w-md text-base leading-relaxed text-muted-foreground line-clamp-3">
+                        <p className="mt-2.5 max-w-sm text-sm leading-relaxed text-[#f7efe2]/75 line-clamp-3">
                           {slide.description}
                         </p>
                       ) : (
-                        <p className="mt-3 max-w-md text-base leading-relaxed text-muted-foreground">
+                        <p className="mt-2.5 max-w-sm text-sm leading-relaxed text-[#f7efe2]/75">
                           Découvrez nos œuvres de la catégorie {slide.nom}.
                         </p>
                       )}
-                      <div className="mt-5">
+                      <div className="mt-4">
                         <Link
                           to="/products"
                           search={{ category: String(slide.categoryId) }}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-[#f4a15d]/50 bg-[#f4a15d]/10 px-5 py-2.5 text-base font-semibold text-[#c9783a] transition hover:bg-[#f4a15d]/20"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-[#f4a15d]/45 bg-[#f4a15d]/15 px-4 py-2 text-sm font-semibold text-[#f4a15d] transition hover:bg-[#f4a15d]/25"
                         >
                           Explorer la catégorie
                           <span aria-hidden>→</span>
@@ -130,10 +130,10 @@ export function CategoryShowcaseCarousel() {
             })}
 
             <div
-              className="pointer-events-none invisible grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-10"
+              className="pointer-events-none invisible grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] md:gap-8"
               aria-hidden
             >
-              <div className="mx-auto w-full max-w-[240px] md:mx-0 md:max-w-[280px]">
+              <div className="mx-auto w-full max-w-[200px] md:mx-0 md:max-w-[220px]">
                 <div className="aspect-[3/4] w-full" />
               </div>
               <div />
@@ -146,30 +146,30 @@ export function CategoryShowcaseCarousel() {
                 type="button"
                 onClick={goPrev}
                 aria-label="Catégorie précédente"
-                className="absolute left-0 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white/80 text-foreground shadow-sm transition hover:border-[#f4a15d]/50 hover:text-[#f4a15d] md:-left-2"
+                className="absolute left-0 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#3b2418] text-[#f7efe2] transition hover:border-[#f4a15d]/50 hover:text-[#f4a15d] md:-left-1"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 type="button"
                 onClick={goNext}
                 aria-label="Catégorie suivante"
-                className="absolute right-0 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white/80 text-foreground shadow-sm transition hover:border-[#f4a15d]/50 hover:text-[#f4a15d] md:-right-2"
+                className="absolute right-0 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#3b2418] text-[#f7efe2] transition hover:border-[#f4a15d]/50 hover:text-[#f4a15d] md:-right-1"
               >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-4 w-4" />
               </button>
             </>
           )}
         </div>
 
-        <div className="mt-6 flex items-center justify-center gap-2">
+        <div className="mt-5 flex items-center justify-center gap-1.5">
           {slides.map((slide, dotIndex) => (
             <button
               key={slide.categoryId}
               type="button"
               onClick={() => goTo(dotIndex)}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                dotIndex === index ? 'w-7 bg-[#f4a15d]' : 'w-1.5 bg-foreground/20'
+              className={`h-1 rounded-full transition-all duration-300 ${
+                dotIndex === index ? 'w-6 bg-[#f4a15d]' : 'w-1 bg-[#f7efe2]/25'
               }`}
               aria-label={slide.nom}
             />

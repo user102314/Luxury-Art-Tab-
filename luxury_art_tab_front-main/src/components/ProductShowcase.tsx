@@ -35,13 +35,13 @@ export function ProductShowcase() {
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 flex flex-col items-start justify-between gap-4 md:mb-10 md:flex-row md:items-end">
           <div>
-            <p className="font-display text-sm uppercase tracking-[0.25em] text-brand-red">
+            <p className="font-display text-xs uppercase tracking-[0.25em] text-brand-red">
               La Galerie
             </p>
-            <h2 className="mt-2 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-foreground md:text-4xl">
               Tableaux <em className="text-accent-orange">muraux</em>
             </h2>
-            <p className="mt-3 max-w-xl text-base text-muted-foreground md:text-lg">
+            <p className="mt-3 max-w-xl text-sm text-muted-foreground md:text-base">
               Une sélection d&apos;œuvres encadrées pour habiller vos murs — catalogue dynamique
               connecté à notre atelier.
             </p>
@@ -77,7 +77,7 @@ export function ProductShowcase() {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-5">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="aspect-[4/5] animate-pulse rounded-2xl bg-muted" />
             ))}
@@ -87,7 +87,7 @@ export function ProductShowcase() {
             <p className="text-muted-foreground">Aucun produit disponible pour le moment.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-5">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
             {filtered.map((p, i) => (
               <ProductCard
                 key={p.id}

@@ -213,9 +213,6 @@ export const api = {
 
   getPublishedNews: () => request<News[]>('/news/published'),
 
-  getActiveTestimonials: () =>
-    request<import('@/types/api').Testimonial[]>('/testimonials/active'),
-
   registerClient: (data: {
     nom: string
     email: string

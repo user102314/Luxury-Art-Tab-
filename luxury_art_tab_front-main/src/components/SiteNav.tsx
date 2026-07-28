@@ -4,18 +4,16 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Menu, X } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { useFavorites } from '@/context/FavoritesContext'
-import { prefetchStorefrontRoute, useProducts, useSiteSettings } from '@/hooks/useStorefrontQueries'
+import { prefetchStorefrontRoute, useProducts } from '@/hooks/useStorefrontQueries'
 import { useAuth } from '@/context/AuthContext'
 import { getProductImage } from '@/lib/images'
 import { formatPrice } from '@/lib/pricing'
-import { BrandLogo } from '@/components/BrandLogo'
 
 const navLinkClass =
-  'text-base font-semibold text-[#f7efe2] transition-colors hover:text-[#f4a15d]'
+  'text-sm font-semibold text-[#f7efe2] transition-colors hover:text-[#f4a15d]'
 
 export function SiteNav() {
   const { client } = useAuth()
-  const { data: settings } = useSiteSettings()
   const [openPanel, setOpenPanel] = useState<'panier' | 'favoris' | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
   const { items, count, total, removeItem, updateQuantity } = useCart()
@@ -71,16 +69,17 @@ export function SiteNav() {
           <div className="flex min-w-0 items-center gap-4 md:gap-8">
             <Link
               to="/"
-              className="flex min-w-0 shrink-0 items-center"
+              className="flex min-w-0 shrink-0 items-center gap-2 text-[#f4a15d]"
               onClick={closeMobile}
-              aria-label="Luxury Art_Tab By Insaf — Accueil"
             >
-              <BrandLogo
-                onDark
-                size="sm"
-                showByline={false}
-                name={settings?.boutiqueNom?.trim() || 'Luxury Art_Tab'}
-              />
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18" />
+                <path d="M9 21V9" />
+              </svg>
+              <span className="truncate font-display text-lg font-bold tracking-tight sm:text-xl">
+                Luxury Art Tab
+              </span>
             </Link>
 
             <nav className="hidden items-center gap-6 md:flex" aria-label="Navigation principale">
