@@ -10,8 +10,7 @@ replay_pid*
 # Credentials locaux
 src/main/resources/application-local.properties
 
-# Uploads images produits
-uploads/
+
 
 # Env / secrets
 .env

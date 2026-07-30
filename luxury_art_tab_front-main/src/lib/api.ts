@@ -239,6 +239,9 @@ export const api = {
 
   getSiteSettings: () => request<import('@/types/api').SiteSettings>('/site/settings'),
 
+  getActiveTestimonials: () =>
+    request<import('@/types/api').Testimonial[]>('/testimonials/active'),
+
   trackProductView: (productId: number, sessionId: string, userId?: number) =>
     trackBeacon(`/products/${productId}/track/view`, { sessionId, userId: userId ?? null }),
 

@@ -39,7 +39,7 @@ function BotMessageContent({ msg }: { msg: ChatMessage }) {
               <Link
                 to="/products/$id"
                 params={{ id: String(p.id) }}
-                className="block rounded-lg border border-[#f4a15d]/25 bg-[#f4a15d]/10 px-2.5 py-2 text-xs transition hover:bg-[#f4a15d]/20"
+                className="block rounded-lg border border-gold/25 bg-gold/10 px-2.5 py-2 text-xs transition hover:bg-gold/20"
               >
                 <span className="font-semibold text-foreground">{p.nom}</span>
                 <span className="mt-0.5 block text-muted-foreground">{formatProductLine(p)}</span>
@@ -54,7 +54,7 @@ function BotMessageContent({ msg }: { msg: ChatMessage }) {
             <Link
               key={link.to + link.label}
               to={link.to}
-              className="rounded-full bg-[#3b2418] px-2.5 py-1 text-[11px] font-medium text-[#f4a15d] hover:bg-[#3b2418]/90"
+              className="rounded-full bg-foliage px-2.5 py-1 text-[11px] font-medium text-gold hover:bg-foliage/90"
             >
               {link.label} →
             </Link>
@@ -118,16 +118,16 @@ export function FixedSupportWidget() {
       {/* Fenêtre chat — au-dessus des icônes en bas à droite */}
       {chatOpen && (
         <div className="fixed bottom-24 right-4 z-[110] flex h-[min(520px,calc(100vh-7rem))] w-[min(360px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
-          <div className="flex items-center gap-2 bg-[#3b2418] px-4 py-3 text-[#f7efe2]">
+          <div className="flex items-center gap-2 bg-foliage px-4 py-3 text-sand">
             <BrandLogo onDark size="sm" showByline={false} className="shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">Assistant Luxury Art</p>
-              <p className="flex items-center gap-1 text-[10px] text-[#f7efe2]/70">
+              <p className="flex items-center gap-1 text-[10px] text-sand/70">
                 <Sparkles className="h-3 w-3" />
                 Catalogue & guide en direct
               </p>
             </div>
-            <button type="button" onClick={() => setChatOpen(false)} className="rounded p-1 hover:bg-white/10" aria-label="Fermer">
+            <button type="button" onClick={() => setChatOpen(false)} className="rounded p-1 hover:bg-sand/10" aria-label="Fermer">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -139,7 +139,7 @@ export function FixedSupportWidget() {
                 className={`max-w-[92%] rounded-xl px-3 py-2 ${
                   m.from === 'bot'
                     ? 'bg-muted text-foreground'
-                    : 'ml-auto bg-[#f4a15d]/20 text-foreground'
+                    : 'ml-auto bg-gold/20 text-foreground'
                 }`}
               >
                 {m.from === 'bot' ? <BotMessageContent msg={m} /> : <p className="text-sm">{m.text}</p>}
@@ -199,7 +199,7 @@ export function FixedSupportWidget() {
           href={waLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg ring-4 ring-background/80 transition hover:scale-105"
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-gold text-sand shadow-lg ring-4 ring-background/80 transition hover:scale-105"
           title="WhatsApp vendeur"
         >
           <WhatsAppIcon className="h-7 w-7" />
@@ -208,7 +208,7 @@ export function FixedSupportWidget() {
           type="button"
           onClick={() => setChatOpen((v) => !v)}
           className={`flex h-14 w-14 items-center justify-center rounded-full shadow-lg ring-4 ring-background/80 transition hover:scale-105 ${
-            chatOpen ? 'bg-[#f4a15d] text-[#2f1b12]' : 'bg-[#3b2418] text-[#f4a15d]'
+            chatOpen ? 'bg-gold text-foliage' : 'bg-foliage text-gold'
           }`}
           title="Assistant intelligent"
           aria-expanded={chatOpen}

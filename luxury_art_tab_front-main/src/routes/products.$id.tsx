@@ -1,7 +1,15 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
-import { CheckCircle2, ChevronDown, Truck } from 'lucide-react'
+import {
+  CheckCircle2,
+  ChevronDown,
+  MessageSquare,
+  Send,
+  ShieldCheck,
+  Star,
+  Truck,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
@@ -44,6 +52,7 @@ function ProductDetailPage() {
   const [reviewNote, setReviewNote] = useState(5)
   const [reviewText, setReviewText] = useState('')
   const [detailsOpen, setDetailsOpen] = useState(true)
+  const [feedbackTab, setFeedbackTab] = useState<'avis' | 'commentaires'>('avis')
 
   const { data: product, isLoading } = useProduct(productId)
   const { data: allProducts = [] } = useProducts()
@@ -86,6 +95,16 @@ function ProductDetailPage() {
     [product],
   )
 
+  const reviewStats = useMemo(() => {
+    const total = reviews.length
+    const average = total ? reviews.reduce((sum, r) => sum + r.note, 0) / total : 0
+    const distribution = [5, 4, 3, 2, 1].map((star) => {
+      const count = reviews.filter((r) => r.note === star).length
+      return { star, count, percent: total ? (count / total) * 100 : 0 }
+    })
+    return { total, average, distribution }
+  }, [reviews])
+
   const similarProducts = useMemo(() => {
     if (!product) return []
     return allProducts
@@ -100,7 +119,7 @@ function ProductDetailPage() {
 
   if (isLoading && !product) {
     return (
-      <main className="min-h-screen bg-background">
+      <main className="flex min-h-screen flex-col bg-beige/25">
         <SiteNav />
         <div className="mx-auto max-w-7xl px-6 py-16">
           <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
@@ -121,7 +140,7 @@ function ProductDetailPage() {
 
   if (!product) {
     return (
-      <main className="min-h-screen bg-background">
+      <main className="flex min-h-screen flex-col bg-beige/25">
         <SiteNav />
         <div className="mx-auto max-w-7xl px-6 py-32 text-center">
           <p className="text-muted-foreground">Produit introuvable</p>
@@ -218,7 +237,7 @@ function ProductDetailPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background font-[Inter,sans-serif]">
+    <main className="flex min-h-screen flex-col bg-beige/25 font-[Inter,sans-serif]">
       <SiteNav />
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:px-10 md:py-10">
@@ -300,7 +319,7 @@ function ProductDetailPage() {
                   id="size-select"
                   value={size}
                   onChange={(e) => setSize(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/20"
+                  className="w-full rounded-xl border border-border bg-sand px-4 py-3 text-sm font-medium outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/20"
                 >
                   {dimensionOptions.map((dim) => (
                     <option key={dim.value} value={dim.value}>
@@ -318,7 +337,7 @@ function ProductDetailPage() {
                   id="frame-select"
                   value={frame}
                   onChange={(e) => setFrame(e.target.value as typeof frame)}
-                  className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/20"
+                  className="w-full rounded-xl border border-border bg-sand px-4 py-3 text-sm font-medium outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/20"
                 >
                   {frameOptions.map((f) => (
                     <option key={f} value={f}>
@@ -330,7 +349,7 @@ function ProductDetailPage() {
 
               <div>
                 <label className="mb-1.5 block text-sm font-semibold">Quantité</label>
-                <div className="inline-flex h-11 items-center rounded-xl border border-border bg-white">
+                <div className="inline-flex h-11 items-center rounded-xl border border-border bg-sand">
                   <button
                     type="button"
                     onClick={() => setQty(Math.max(1, qty - 1))}
@@ -355,7 +374,7 @@ function ProductDetailPage() {
               type="button"
               onClick={handleAddToCart}
               disabled={!inStock}
-              className="mt-6 w-full rounded-full bg-[#3b2418] px-8 py-3.5 text-base font-bold text-[#f7efe2] transition hover:bg-[#4a2f1f] disabled:opacity-50"
+              className="mt-6 w-full rounded-full bg-foliage px-8 py-3.5 text-base font-bold text-sand transition hover:bg-foliage disabled:opacity-50"
             >
               {inStock ? 'Ajouter au panier' : 'Indisponible'}
             </button>
@@ -398,86 +417,243 @@ function ProductDetailPage() {
           </aside>
         </div>
 
-        <section className="mt-16 rounded-3xl border border-border/60 bg-white/60 p-6 md:p-8">
-          <h2 className="font-display text-2xl font-bold">
-            Commentaires <span className="text-accent-green">({comments.length})</span>
-          </h2>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <input
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Partagez votre avis..."
-              className="flex-1 rounded-xl border border-border px-4 py-3 text-sm focus:border-accent-green focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={handleComment}
-              disabled={!commentText.trim()}
-              className="rounded-xl bg-accent-green px-6 py-3 text-sm font-semibold text-white disabled:opacity-50"
-            >
-              Publier
-            </button>
-          </div>
-          <div className="mt-8 space-y-4">
-            {comments.map((c) => (
-              <div key={c.id} className="rounded-2xl border border-border/40 bg-background/50 p-4">
-                <p className="text-sm font-semibold text-brand-red">{c.userNom ?? 'Client'}</p>
-                <p className="mt-2 text-sm text-foreground">{c.contenu}</p>
+        {/* Bloc unique « satisfaction » : synthèse à gauche, contributions à droite */}
+        <section
+          id="avis"
+          className="mt-16 overflow-hidden rounded-3xl border border-border/60 bg-sand shadow-[0_26px_55px_-42px_rgba(74,93,79,0.9)]"
+        >
+          <div className="grid lg:grid-cols-[300px_1fr]">
+            <div className="border-b border-border/60 bg-beige/45 p-6 lg:border-b-0 lg:border-r">
+              <p className="font-display text-xs uppercase tracking-[0.22em] text-gold">
+                Satisfaction client
+              </p>
+
+              <div className="mt-3 flex items-end gap-2">
+                <span className="font-display text-5xl font-bold leading-none text-foreground">
+                  {reviewStats.total ? reviewStats.average.toFixed(1).replace('.', ',') : '—'}
+                </span>
+                <span className="pb-1.5 text-sm text-muted-foreground">/ 5</span>
               </div>
-            ))}
-            {comments.length === 0 && (
-              <p className="text-sm text-muted-foreground">Soyez le premier à commenter.</p>
-            )}
-          </div>
-        </section>
+              <StarRow value={reviewStats.average} size="md" className="mt-2" />
+              <p className="mt-2 text-sm text-muted-foreground">
+                {reviewStats.total} avis · {comments.length} commentaire
+                {comments.length > 1 ? 's' : ''}
+              </p>
 
-        <section className="mt-10 rounded-3xl border border-border/60 bg-white/60 p-6 md:p-8">
-          <h2 className="font-display text-2xl font-bold">
-            Avis clients <span className="text-brand-red">({reviews.length})</span>
-          </h2>
-
-          <div className="mt-6 grid gap-4 rounded-2xl border border-dashed border-brand-red/30 bg-brand-red/5 p-6 md:grid-cols-[auto_1fr_auto] md:items-end">
-            <div>
-              <label className="text-xs font-semibold uppercase text-muted-foreground">Note</label>
-              <select
-                value={reviewNote}
-                onChange={(e) => setReviewNote(Number(e.target.value))}
-                className="mt-1 block rounded-lg border border-border px-3 py-2 text-sm"
-              >
-                {[5, 4, 3, 2, 1].map((n) => (
-                  <option key={n} value={n}>
-                    {n} étoile{n > 1 ? 's' : ''}
-                  </option>
+              <div className="mt-5 space-y-1.5">
+                {reviewStats.distribution.map(({ star, count, percent }) => (
+                  <div key={star} className="flex items-center gap-2">
+                    <span className="w-8 text-xs font-semibold text-muted-foreground">
+                      {star} ★
+                    </span>
+                    <span className="h-2 flex-1 overflow-hidden rounded-full bg-sand">
+                      <span
+                        className="block h-full rounded-full bg-gold transition-all duration-700"
+                        style={{ width: `${percent}%` }}
+                      />
+                    </span>
+                    <span className="w-5 text-right text-xs text-muted-foreground">{count}</span>
+                  </div>
                 ))}
-              </select>
-            </div>
-            <input
-              value={reviewText}
-              onChange={(e) => setReviewText(e.target.value)}
-              placeholder="Votre avis détaillé..."
-              className="rounded-xl border border-border px-4 py-3 text-sm focus:border-brand-red focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={handleReview}
-              className="rounded-xl bg-brand-red px-6 py-3 text-sm font-semibold text-white"
-            >
-              Envoyer un avis
-            </button>
-          </div>
-
-          <div className="mt-8 space-y-4">
-            {reviews.map((r) => (
-              <div key={r.id} className="rounded-2xl border border-border/40 p-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-brand-red">{'★'.repeat(r.note)}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {r.createdAt ? new Date(r.createdAt).toLocaleDateString('fr-FR') : ''}
-                  </span>
-                </div>
-                {r.commentaire && <p className="mt-2 text-sm">{r.commentaire}</p>}
               </div>
-            ))}
+
+              <div className="mt-6 rounded-2xl border border-gold/30 bg-sand p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <ShieldCheck className="h-4 w-4 text-sage" />
+                  Avis vérifiés
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  Chaque avis est relu par notre équipe avant publication.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setFeedbackTab('avis')}
+                  className="mt-3 w-full rounded-full bg-foliage px-4 py-2.5 text-sm font-semibold text-sand transition hover:bg-foliage/90"
+                >
+                  Donner mon avis
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 md:p-8">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <h2 className="font-display text-2xl font-bold text-foreground">
+                  Ce qu&apos;en disent nos clients
+                </h2>
+                <div className="inline-flex rounded-full border border-border bg-beige/40 p-1">
+                  {(
+                    [
+                      { key: 'avis', label: `Avis (${reviews.length})`, icon: Star },
+                      {
+                        key: 'commentaires',
+                        label: `Commentaires (${comments.length})`,
+                        icon: MessageSquare,
+                      },
+                    ] as const
+                  ).map(({ key, label, icon: Icon }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setFeedbackTab(key)}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                        feedbackTab === key
+                          ? 'bg-foliage text-sand shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {feedbackTab === 'avis' ? (
+                <>
+                  <div className="mt-6 rounded-2xl border border-dashed border-gold/45 bg-beige/30 p-5">
+                    <p className="text-sm font-semibold text-foreground">
+                      Notez ce tableau
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-4">
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => setReviewNote(n)}
+                            aria-label={`Noter ${n} étoile${n > 1 ? 's' : ''}`}
+                            className="transition hover:scale-110"
+                          >
+                            <Star
+                              className={`h-6 w-6 ${
+                                n <= reviewNote ? 'fill-gold text-gold' : 'text-beige'
+                              }`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        {reviewNote} étoile{reviewNote > 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                      <input
+                        value={reviewText}
+                        onChange={(e) => setReviewText(e.target.value)}
+                        placeholder="Qualité de l'impression, rendu des couleurs, livraison…"
+                        className="flex-1 rounded-xl border border-border bg-sand px-4 py-3 text-sm focus:border-gold focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleReview}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-6 py-3 text-sm font-semibold text-sand transition hover:brightness-110"
+                      >
+                        <Send className="h-4 w-4" />
+                        Publier mon avis
+                      </button>
+                    </div>
+                  </div>
+
+                  {reviews.length === 0 ? (
+                    <EmptyFeedback
+                      icon={<Star className="h-5 w-5 text-gold" />}
+                      title="Aucun avis pour l'instant"
+                      text="Soyez le premier à noter ce tableau, votre retour aide les autres clients."
+                    />
+                  ) : (
+                    <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                      {reviews.map((r) => (
+                        <article
+                          key={r.id}
+                          className="group flex h-full flex-col gap-3 rounded-2xl border border-border/70 bg-beige/25 p-4 transition hover:-translate-y-0.5 hover:border-gold/50 hover:bg-sand hover:shadow-[0_18px_35px_-28px_rgba(74,93,79,0.9)]"
+                        >
+                          <div className="flex items-center gap-3">
+                            <FeedbackAvatar label={`Client ${r.userId}`} />
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-foreground">
+                                Client #{r.userId}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground">
+                                {formatFeedbackDate(r.createdAt)}
+                              </p>
+                            </div>
+                          </div>
+                          <StarRow value={r.note} />
+                          {r.commentaire && (
+                            <p className="text-sm leading-relaxed text-foreground/85">
+                              {r.commentaire}
+                            </p>
+                          )}
+                          <span className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-full bg-sage/25 px-2.5 py-1 text-[11px] font-semibold text-foreground">
+                            <ShieldCheck className="h-3 w-3" />
+                            Achat vérifié
+                          </span>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="mt-6 flex gap-3 rounded-2xl border border-border bg-beige/30 p-4">
+                    <FeedbackAvatar label={visitor?.nom ?? 'Vous'} />
+                    <div className="flex-1">
+                      <textarea
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        rows={2}
+                        placeholder="Posez une question ou partagez votre expérience…"
+                        className="w-full resize-none rounded-xl border border-border bg-sand px-4 py-3 text-sm focus:border-gold focus:outline-none"
+                      />
+                      <div className="mt-2 flex items-center justify-between">
+                        <span className="text-[11px] text-muted-foreground">
+                          {commentText.length}/500 caractères
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleComment}
+                          disabled={!commentText.trim()}
+                          className="inline-flex items-center gap-2 rounded-full bg-foliage px-5 py-2 text-sm font-semibold text-sand transition hover:bg-foliage/90 disabled:opacity-45"
+                        >
+                          <Send className="h-3.5 w-3.5" />
+                          Publier
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {comments.length === 0 ? (
+                    <EmptyFeedback
+                      icon={<MessageSquare className="h-5 w-5 text-sage" />}
+                      title="Aucun commentaire"
+                      text="Lancez la discussion, notre équipe répond sous 24 h."
+                    />
+                  ) : (
+                    <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                      {comments.map((c) => (
+                        <article
+                          key={c.id}
+                          className="flex h-full flex-col gap-3 rounded-2xl border border-border/70 bg-beige/25 p-4 transition hover:-translate-y-0.5 hover:border-sage/60 hover:bg-sand hover:shadow-[0_18px_35px_-28px_rgba(74,93,79,0.9)]"
+                        >
+                          <div className="flex items-center gap-3">
+                            <FeedbackAvatar label={c.userNom ?? 'Client'} />
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-foreground">
+                                {c.userNom ?? 'Client'}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground">
+                                {formatFeedbackDate(c.createdAt)}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="text-sm leading-relaxed text-foreground/85">{c.contenu}</p>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </section>
 
@@ -525,5 +701,73 @@ function ProductDetailPage() {
       <SiteFooter />
       <ArViewer isOpen={!!arImage} onClose={() => setArImage(null)} imageSrc={arImage} />
     </main>
+  )
+}
+
+function formatFeedbackDate(value?: string) {
+  if (!value) return 'Récemment'
+  return new Date(value).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+function StarRow({
+  value,
+  size = 'sm',
+  className = '',
+}: {
+  value: number
+  size?: 'sm' | 'md'
+  className?: string
+}) {
+  const dimension = size === 'md' ? 'h-5 w-5' : 'h-3.5 w-3.5'
+  return (
+    <div
+      className={`flex items-center gap-0.5 ${className}`}
+      aria-label={`Note de ${value.toFixed(1)} sur 5`}
+    >
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star
+          key={i}
+          className={`${dimension} ${i <= Math.round(value) ? 'fill-gold text-gold' : 'text-beige'}`}
+        />
+      ))}
+    </div>
+  )
+}
+
+function FeedbackAvatar({ label }: { label: string }) {
+  const letters = label
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('')
+
+  return (
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foliage text-xs font-bold text-sand">
+      {letters || 'LA'}
+    </span>
+  )
+}
+
+function EmptyFeedback({
+  icon,
+  title,
+  text,
+}: {
+  icon: React.ReactNode
+  title: string
+  text: string
+}) {
+  return (
+    <div className="mt-6 flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border py-10 text-center">
+      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-beige/60">
+        {icon}
+      </span>
+      <p className="font-display text-base font-bold text-foreground">{title}</p>
+      <p className="max-w-xs text-sm text-muted-foreground">{text}</p>
+    </div>
   )
 }

@@ -37,7 +37,7 @@ export function TermsAcceptanceModal() {
   if (!open || !terms) return null
 
   return (
-    <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/70 p-4">
+    <div className="fixed inset-0 z-[130] flex items-center justify-center bg-foliage/70 p-4">
       <div className="max-h-[85vh] w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
         <div className="border-b border-border px-6 py-4">
           <BrandLogo size="md" className="mb-3" name={boutiqueNom} />

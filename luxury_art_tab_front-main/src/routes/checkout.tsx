@@ -68,14 +68,14 @@ function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <main className="min-h-screen bg-background">
+      <main className="flex min-h-screen flex-col bg-beige/25">
         <SiteNav />
         <div className="mx-auto max-w-lg px-6 py-32 text-center">
           <h1 className="font-display text-3xl font-bold">Panier vide</h1>
           <p className="mt-4 text-muted-foreground">Ajoutez des tableaux depuis la galerie.</p>
           <Link
             to="/products"
-            className="mt-8 inline-block rounded-full bg-brand-red px-8 py-3 font-semibold text-white"
+            className="mt-8 inline-block rounded-full bg-brand-red px-8 py-3 font-semibold text-sand"
           >
             Voir les produits
           </Link>
@@ -86,7 +86,7 @@ function CheckoutPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background font-[Inter,sans-serif]">
+    <main className="flex min-h-screen flex-col bg-beige/25 font-[Inter,sans-serif]">
       <SiteNav />
 
       <div className="mx-auto max-w-5xl px-6 py-16 md:px-10">
@@ -95,7 +95,7 @@ function CheckoutPage() {
         </h1>
 
         <div className="mt-12 grid gap-12 lg:grid-cols-2">
-          <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-border/60 bg-white/70 p-8">
+          <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-border/60 bg-sand/70 p-8">
             <h2 className="font-display text-xl font-bold">Livraison</h2>
             <div className="space-y-2">
               <Label htmlFor="nom">Nom complet</Label>
@@ -148,13 +148,13 @@ function CheckoutPage() {
             </Button>
           </form>
 
-          <div className="rounded-3xl border border-border/60 bg-[#3b2418] p-8 text-[#f7efe2]">
-            <h2 className="font-display text-xl font-bold text-[#f4a15d]">Récapitulatif</h2>
+          <div className="rounded-3xl border border-border/60 bg-foliage p-8 text-sand">
+            <h2 className="font-display text-xl font-bold text-gold">Récapitulatif</h2>
             <ul className="mt-6 space-y-4">
               {items.map((item) => (
                 <li
                   key={`${item.productId}-${item.taille}`}
-                  className="flex gap-4 border-b border-white/10 pb-4"
+                  className="flex gap-4 border-b border-sand/10 pb-4"
                 >
                   <img
                     src={item.imageUrl}
@@ -163,7 +163,7 @@ function CheckoutPage() {
                   />
                   <div className="flex-1">
                     <p className="font-semibold">{item.nom}</p>
-                    <p className="text-xs text-[#f7efe2]/70">
+                    <p className="text-xs text-sand/70">
                       {item.taille} · {item.encadrement.slice(0, 30)}...
                     </p>
                     <p className="text-sm">
@@ -173,7 +173,7 @@ function CheckoutPage() {
                 </li>
               ))}
             </ul>
-            <div className="mt-6 flex justify-between border-t border-white/20 pt-6 text-lg font-bold">
+            <div className="mt-6 flex justify-between border-t border-sand/20 pt-6 text-lg font-bold">
               <span>Total</span>
               <span className="text-accent-green">{formatPrice(total)}</span>
             </div>

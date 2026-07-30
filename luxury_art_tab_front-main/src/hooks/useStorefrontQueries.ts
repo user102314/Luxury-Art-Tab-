@@ -57,6 +57,24 @@ export function useProduct(id: number) {
   })
 }
 
+export function useSiteSettings() {
+  return useQuery({
+    queryKey: queryKeys.siteSettings,
+    queryFn: api.getSiteSettings,
+    staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useActiveTestimonials() {
+  return useQuery({
+    queryKey: queryKeys.testimonialsActive,
+    queryFn: api.getActiveTestimonials,
+    refetchInterval: REFETCH_INTERVAL,
+    placeholderData: keepPreviousData,
+  })
+}
+
 /** Précharge les données au survol des liens de navigation */
 export function prefetchStorefrontRoute(qc: QueryClient, path: string) {
   const opts = { staleTime: 2 * 60_000 }

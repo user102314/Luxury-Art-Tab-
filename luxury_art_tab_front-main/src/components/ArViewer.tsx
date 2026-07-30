@@ -75,7 +75,7 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-foliage">
       {/* Video Background */}
       <video
         ref={videoRef}
@@ -87,11 +87,11 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
 
       {/* Error Message */}
       {error && (
-        <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 rounded-2xl bg-black/80 p-6 text-center text-white backdrop-blur-md">
+        <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 rounded-2xl bg-foliage/80 p-6 text-center text-sand backdrop-blur-md">
           <p className="mb-4 text-sm">{error}</p>
           <button
             onClick={onClose}
-            className="rounded-full bg-brand-red px-6 py-2 text-sm font-bold text-white transition-transform active:scale-95"
+            className="rounded-full bg-brand-red px-6 py-2 text-sm font-bold text-sand transition-transform active:scale-95"
           >
             Fermer
           </button>
@@ -101,12 +101,12 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
       {/* Overlay controls */}
       <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-6">
         <div className="flex items-start justify-between">
-          <div className="rounded-xl bg-black/50 p-3 text-xs font-medium text-white backdrop-blur-md">
+          <div className="rounded-xl bg-foliage/50 p-3 text-xs font-medium text-sand backdrop-blur-md">
             Déplacez l'image pour l'ajuster
           </div>
           <button
             onClick={onClose}
-            className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md transition-transform active:scale-90"
+            className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-foliage/50 text-sand backdrop-blur-md transition-transform active:scale-90"
             aria-label="Close AR view"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -119,7 +119,7 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
         <div className="pointer-events-auto flex justify-center gap-4 pb-8">
           <button
             onClick={() => setScale((s) => Math.max(0.3, s - 0.1))}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md transition-transform active:scale-90"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-foliage/50 text-sand backdrop-blur-md transition-transform active:scale-90"
             aria-label="Zoom out"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -128,7 +128,7 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
           </button>
           <button
             onClick={() => setScale((s) => Math.min(3, s + 0.1))}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md transition-transform active:scale-90"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-foliage/50 text-sand backdrop-blur-md transition-transform active:scale-90"
             aria-label="Zoom in"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -155,7 +155,7 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
           onTouchEnd={handleEnd}
         >
           {/* Border simulating a frame */}
-          <div className="border-8 border-gray-900 bg-white p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+          <div className="border-8 border-gray-900 bg-sand p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
             <img
               src={imageSrc}
               alt="AR Preview"

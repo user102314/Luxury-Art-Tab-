@@ -4,8 +4,21 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { PaintSplash, PaintStroke } from '@/components/ArtDecor'
 import { useCategoryShowcase } from '@/hooks/useStorefrontQueries'
 import { getProductImage } from '@/lib/images'
+import { heroCategories } from '@/data/heroCategories'
 
 const CYCLE_MS = 5000
+
+/** Visuel de repli quand l'image produit est absente ou cassée. */
+function fallbackFor(position: number) {
+  return heroCategories[position % heroCategories.length]?.images[0] ?? '/placeholder-art.svg'
+}
+
+function handleImageError(fallback: string) {
+  return (event: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = event.currentTarget
+    if (img.src !== fallback) img.src = fallback
+  }
+}
 
 export function CategoryShowcaseCarousel() {
   const { data: slides = [], isLoading } = useCategoryShowcase()
@@ -39,7 +52,7 @@ export function CategoryShowcaseCarousel() {
   if (isLoading) {
     return (
       <div className="mt-12 md:mt-16">
-        <div className="h-56 animate-pulse rounded-2xl bg-[#3b2418]/40 md:h-64" />
+        <div className="h-56 animate-pulse rounded-2xl bg-muted md:h-64" />
       </div>
     )
   }
@@ -49,7 +62,24 @@ export function CategoryShowcaseCarousel() {
   const current = slides[index] ?? slides[0]
 
   return (
-    <section className="relative mt-12 max-w-4xl overflow-visible rounded-2xl bg-[#3b2418] text-[#f7efe2] shadow-[0_20px_40px_-24px_rgba(59,36,24,0.5)] md:mt-16 md:mx-auto">
+    <section className="relative mt-12 max-w-4xl overflow-visible rounded-[2rem] text-foreground shadow-[0_30px_70px_-45px_rgba(74,93,79,0.55)] ring-1 ring-gold/35 md:mt-16 md:mx-auto">
+      {/* Panneau lumineux + halo doré : donne du relief sans réintroduire de bloc plein */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 rounded-[2rem]"
+        style={{
+          background:
+            'radial-gradient(120% 90% at 15% 0%, var(--sand) 0%, color-mix(in oklab, var(--beige) 35%, var(--sand)) 55%, var(--beige) 100%)',
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 rounded-[2rem]"
+        style={{
+          background:
+            'radial-gradient(60% 70% at 90% 100%, color-mix(in oklab, var(--accent-orange) 22%, transparent), transparent 70%)',
+        }}
+      />
       <PaintSplash
         color="orange"
         opacity={0.45}
@@ -87,40 +117,54 @@ export function CategoryShowcaseCarousel() {
                       params={{ id: String(slide.product.id) }}
                       className="group relative mx-auto block w-full max-w-[200px] md:mx-0 md:max-w-[220px]"
                     >
-                      <div className="relative z-[1] flex aspect-[3/4] items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-[#2a1a12] p-2.5">
+                      {/* Cadre doré décalé derrière l'œuvre */}
+                      <span
+                        aria-hidden
+                        className="absolute inset-0 translate-x-3 translate-y-3 rounded-xl border-2 border-gold/55 transition-transform duration-500 group-hover:translate-x-4 group-hover:translate-y-4"
+                      />
+                      <div className="relative z-[1] flex aspect-[3/4] items-center justify-center overflow-hidden rounded-xl border border-border bg-sand p-2.5 shadow-[0_22px_44px_-24px_rgba(74,93,79,0.6)] transition duration-500 group-hover:-translate-y-1">
                         <img
                           src={image}
                           alt={slide.product.nom}
-                          className="max-h-full max-w-full object-contain transition duration-500 group-hover:scale-[1.02]"
+                          onError={handleImageError(fallbackFor(i))}
+                          className="h-full w-full rounded-lg object-cover transition duration-500 group-hover:scale-[1.04]"
                         />
                       </div>
                     </Link>
 
                     <div className="relative flex flex-col justify-center pb-1 md:pb-0 md:pr-10">
-                      <div
-                        className="mb-2.5 h-0.5 w-8 rounded-full bg-[#f4a15d]"
-                        aria-hidden
-                      />
-                      <h3 className="font-display text-2xl font-bold tracking-tight text-[#f7efe2] md:text-3xl">
+                      <p className="mb-3 inline-flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.22em] text-gold">
+                        <span aria-hidden className="h-px w-7 bg-gold" />
+                        Nos univers
+                        <span className="text-muted-foreground">
+                          {String(i + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
+                        </span>
+                      </p>
+                      <h3 className="font-display text-3xl font-bold capitalize tracking-tight text-foreground md:text-4xl">
                         {slide.nom}
                       </h3>
                       {slide.description ? (
-                        <p className="mt-2.5 max-w-sm text-sm leading-relaxed text-[#f7efe2]/75 line-clamp-3">
+                        <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground line-clamp-3">
                           {slide.description}
                         </p>
                       ) : (
-                        <p className="mt-2.5 max-w-sm text-sm leading-relaxed text-[#f7efe2]/75">
+                        <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
                           Découvrez nos œuvres de la catégorie {slide.nom}.
                         </p>
                       )}
-                      <div className="mt-4">
+                      <div className="mt-5">
                         <Link
                           to="/products"
                           search={{ category: String(slide.categoryId) }}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-[#f4a15d]/45 bg-[#f4a15d]/15 px-4 py-2 text-sm font-semibold text-[#f4a15d] transition hover:bg-[#f4a15d]/25"
+                          className="group/cta inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-semibold text-sand shadow-[0_14px_28px_-14px_rgba(199,161,88,0.9)] transition hover:brightness-105"
                         >
                           Explorer la catégorie
-                          <span aria-hidden>→</span>
+                          <span
+                            aria-hidden
+                            className="transition-transform duration-300 group-hover/cta:translate-x-1"
+                          >
+                            →
+                          </span>
                         </Link>
                       </div>
                     </div>
@@ -146,7 +190,7 @@ export function CategoryShowcaseCarousel() {
                 type="button"
                 onClick={goPrev}
                 aria-label="Catégorie précédente"
-                className="absolute left-0 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#3b2418] text-[#f7efe2] transition hover:border-[#f4a15d]/50 hover:text-[#f4a15d] md:-left-1"
+                className="absolute left-0 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-gold/40 bg-sand text-foreground shadow-[0_10px_22px_-14px_rgba(74,93,79,0.7)] transition hover:border-gold hover:bg-gold hover:text-sand md:-left-4"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -154,7 +198,7 @@ export function CategoryShowcaseCarousel() {
                 type="button"
                 onClick={goNext}
                 aria-label="Catégorie suivante"
-                className="absolute right-0 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-[#3b2418] text-[#f7efe2] transition hover:border-[#f4a15d]/50 hover:text-[#f4a15d] md:-right-1"
+                className="absolute right-0 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-gold/40 bg-sand text-foreground shadow-[0_10px_22px_-14px_rgba(74,93,79,0.7)] transition hover:border-gold hover:bg-gold hover:text-sand md:-right-4"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -162,14 +206,16 @@ export function CategoryShowcaseCarousel() {
           )}
         </div>
 
-        <div className="mt-5 flex items-center justify-center gap-1.5">
+        <div className="mt-6 flex items-center justify-center gap-2">
           {slides.map((slide, dotIndex) => (
             <button
               key={slide.categoryId}
               type="button"
               onClick={() => goTo(dotIndex)}
-              className={`h-1 rounded-full transition-all duration-300 ${
-                dotIndex === index ? 'w-6 bg-[#f4a15d]' : 'w-1 bg-[#f7efe2]/25'
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                dotIndex === index
+                  ? 'w-8 bg-gold'
+                  : 'w-1.5 bg-foreground/20 hover:bg-gold/50'
               }`}
               aria-label={slide.nom}
             />

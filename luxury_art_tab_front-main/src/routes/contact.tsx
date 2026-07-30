@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { api } from '@/lib/api'
 import { useSiteSettings } from '@/hooks/useStorefrontQueries'
 import { formatShopAddress, whatsappHref } from '@/lib/siteSettings'
+import { Reveal } from '@/components/Reveal'
 
 export const Route = createFileRoute('/contact')({
   component: ContactPage,
@@ -28,6 +29,7 @@ function ContactPage() {
   const contactEmail = settings?.emailContact?.trim()
   const phone = settings?.telephoneContact?.trim()
   const address = formatShopAddress(settings)
+  const mapQuery = address || 'Monastir, Tunisia, 5000'
   const wa = whatsappHref(
     settings?.whatsappNumber || settings?.telephoneContact,
     `Bonjour ${boutiqueNom}, j'aimerais des informations.`,
@@ -55,20 +57,22 @@ function ContactPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background font-[Inter,sans-serif] flex flex-col">
+    <main className="min-h-screen bg-beige/25 font-[Inter,sans-serif] flex flex-col">
       <SiteNav />
-      <div className="flex-1 py-16 px-6 lg:px-8">
-        <div className="mx-auto max-w-5xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            <div className="flex flex-col justify-center animate-word-in">
-              <h1 className="font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl">
+      <div className="flex-1 px-6 py-16 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          {/* Trois colonnes de largeur égale : coordonnées · formulaire · carte */}
+          <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-3 lg:gap-8">
+            {/* 1 — coordonnées */}
+            <Reveal className="flex flex-col justify-center">
+              <h1 className="font-display text-3xl font-bold tracking-tight text-foreground lg:text-5xl">
                 <span className="text-brand-red">Contactez</span>-nous
               </h1>
-              <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
+              <p className="mt-5 leading-relaxed text-muted-foreground">
                 Projet sur mesure, question sur une œuvre ou commande spéciale — notre équipe vous
                 répond sous 24h.
               </p>
-              <div className="mt-12 space-y-6">
+              <div className="mt-8 space-y-5">
                 <div className="rounded-2xl border border-accent-green/30 bg-accent-green/5 p-5">
                   <h3 className="font-display text-lg font-semibold text-accent-green">Réponse rapide</h3>
                   <p className="mt-2 text-sm text-muted-foreground">
@@ -117,19 +121,25 @@ function ContactPage() {
                   </div>
                 )}
 
-                {address && (
-                  <div>
-                    <h3 className="font-display text-xl font-semibold text-foreground">Adresse</h3>
-                    <p className="mt-2 inline-flex items-start gap-2 text-muted-foreground">
-                      <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-                      {address}
-                    </p>
-                  </div>
-                )}
+                <div>
+                  <h3 className="font-display text-xl font-semibold text-foreground">Adresse</h3>
+                  <p className="mt-2 inline-flex items-start gap-2 text-muted-foreground">
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-red" />
+                    <span className="font-medium text-foreground">{mapQuery}</span>
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                    Atelier &amp; showroom au cœur de Monastir — venez découvrir nos tableaux en
+                    vrai, ou commandez en ligne pour une livraison partout en Tunisie.
+                  </p>
+                </div>
               </div>
-            </div>
+            </Reveal>
 
-            <div className="bg-white/60 p-8 rounded-3xl shadow-[0_10px_30px_-18px_rgba(0,0,0,0.4)] border border-black/5 animate-card-rise">
+            {/* 2 — formulaire */}
+            <Reveal
+              delay={120}
+              className="rounded-3xl border border-foliage/5 bg-sand/60 p-5 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.4)] lg:p-7"
+            >
               <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="space-y-2">
                   <Label htmlFor="nom">Nom complet *</Label>
@@ -139,7 +149,7 @@ function ContactPage() {
                     onChange={(e) => setNom(e.target.value)}
                     placeholder="Votre nom"
                     required
-                    className="bg-white/80 border-border/40 focus-visible:ring-brand-red rounded-xl"
+                    className="bg-sand/80 border-border/40 focus-visible:ring-brand-red rounded-xl"
                   />
                 </div>
                 <div className="space-y-2">
@@ -151,7 +161,7 @@ function ContactPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="votre@email.com"
                     required
-                    className="bg-white/80 border-border/40 focus-visible:ring-brand-red rounded-xl"
+                    className="bg-sand/80 border-border/40 focus-visible:ring-brand-red rounded-xl"
                   />
                 </div>
                 <div className="space-y-2">
@@ -162,7 +172,7 @@ function ContactPage() {
                     onChange={(e) => setSujet(e.target.value)}
                     placeholder="Sujet de votre message"
                     required
-                    className="bg-white/80 border-border/40 focus-visible:ring-brand-red rounded-xl"
+                    className="bg-sand/80 border-border/40 focus-visible:ring-brand-red rounded-xl"
                   />
                 </div>
                 <div className="space-y-2">
@@ -173,18 +183,52 @@ function ContactPage() {
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Comment pouvons-nous vous aider ?"
                     required
-                    className="min-h-[150px] bg-white/80 border-border/40 focus-visible:ring-brand-red rounded-xl resize-none"
+                    className="min-h-[150px] bg-sand/80 border-border/40 focus-visible:ring-brand-red rounded-xl resize-none"
                   />
                 </div>
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-brand-red hover:bg-brand-red/90 text-white rounded-xl py-6 text-base font-semibold shadow-md"
+                  className="w-full bg-brand-red hover:bg-brand-red/90 text-sand rounded-xl py-6 text-base font-semibold shadow-md"
                 >
                   {loading ? 'Envoi...' : 'Envoyer le message'}
                 </Button>
               </form>
-            </div>
+            </Reveal>
+
+            {/* 3 — carte, troisième colonne à droite du formulaire */}
+            <Reveal
+              delay={240}
+              className="flex flex-col overflow-hidden rounded-3xl border border-foliage/5 bg-sand/60 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.4)]"
+            >
+              <div className="px-6 pb-4 pt-5">
+                <h3 className="font-display text-lg font-semibold text-foreground">Nous trouver</h3>
+                <p className="mt-1 inline-flex items-center gap-2 text-sm text-muted-foreground">
+                  <MapPin className="h-3.5 w-3.5 shrink-0 text-brand-red" />
+                  {mapQuery}
+                </p>
+              </div>
+              {/* flex-1 : la carte remplit la hauteur laissée par la colonne la plus haute */}
+              <div className="relative min-h-[280px] w-full flex-1 bg-muted">
+                <iframe
+                  title={`Carte — ${mapQuery}`}
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=14&hl=fr&output=embed`}
+                  className="absolute inset-0 h-full w-full border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen
+                />
+              </div>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center gap-1.5 border-t border-foliage/5 py-3 text-xs font-semibold text-foreground transition hover:text-brand-red"
+              >
+                <MapPin className="h-3.5 w-3.5" />
+                Ouvrir dans Maps
+              </a>
+            </Reveal>
           </div>
         </div>
       </div>

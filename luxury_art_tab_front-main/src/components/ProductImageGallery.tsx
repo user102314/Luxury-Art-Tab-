@@ -59,7 +59,7 @@ export function ProductImageGallery({
                 onClick={() => setActive(i)}
                 className={`aspect-square overflow-hidden rounded-lg border-2 transition ${
                   i === active
-                    ? 'border-[#3b2418] ring-1 ring-[#3b2418]/30'
+                    ? 'border-foliage ring-1 ring-foliage/30'
                     : 'border-transparent opacity-80 hover:opacity-100'
                 }`}
                 aria-label={`Image ${i + 1}`}
@@ -83,10 +83,10 @@ export function ProductImageGallery({
               <button
                 type="button"
                 onClick={onLike}
-                className={`absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full border bg-white/90 shadow-sm transition ${
+                className={`absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full border bg-sand/90 shadow-sm transition ${
                   liked
                     ? 'border-brand-red text-brand-red'
-                    : 'border-black/5 text-foreground hover:text-brand-red'
+                    : 'border-foliage/5 text-foreground hover:text-brand-red'
                 }`}
                 aria-label={liked ? 'Retirer des favoris' : 'Ajouter aux favoris'}
               >
@@ -99,7 +99,7 @@ export function ProductImageGallery({
                 <button
                   type="button"
                   onClick={() => go(-1)}
-                  className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-foreground shadow-md transition hover:scale-105"
+                  className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-sand/95 text-foreground shadow-md transition hover:scale-105"
                   aria-label="Image précédente"
                 >
                   <ChevronLeft className="h-5 w-5" />
@@ -107,7 +107,7 @@ export function ProductImageGallery({
                 <button
                   type="button"
                   onClick={() => go(1)}
-                  className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-foreground shadow-md transition hover:scale-105"
+                  className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-sand/95 text-foreground shadow-md transition hover:scale-105"
                   aria-label="Image suivante"
                 >
                   <ChevronRight className="h-5 w-5" />
@@ -119,7 +119,7 @@ export function ProductImageGallery({
               <button
                 type="button"
                 onClick={() => setLightbox(true)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-foreground shadow-md transition hover:scale-105"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-sand/95 text-foreground shadow-md transition hover:scale-105"
                 aria-label="Agrandir"
               >
                 <Expand className="h-4 w-4" />
@@ -128,7 +128,7 @@ export function ProductImageGallery({
                 <button
                   type="button"
                   onClick={() => onAr(current)}
-                  className="flex items-center gap-2 rounded-full bg-accent-green px-4 py-2 text-sm font-semibold text-white shadow-lg hover:opacity-90"
+                  className="flex items-center gap-2 rounded-full bg-accent-green px-4 py-2 text-sm font-semibold text-sand shadow-lg hover:opacity-90"
                 >
                   Voir en AR
                 </button>
@@ -144,7 +144,7 @@ export function ProductImageGallery({
                   type="button"
                   onClick={() => setActive(i)}
                   className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 ${
-                    i === active ? 'border-[#3b2418]' : 'border-transparent opacity-75'
+                    i === active ? 'border-foliage' : 'border-transparent opacity-75'
                   }`}
                 >
                   <img src={src} alt="" className="h-full w-full object-cover" />
@@ -157,12 +157,12 @@ export function ProductImageGallery({
 
       {lightbox && (
         <div
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 p-4"
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-foliage/85 p-4"
           onClick={() => setLightbox(false)}
         >
           <button
             type="button"
-            className="absolute right-4 top-4 rounded-full bg-white/15 px-3 py-1 text-sm text-white hover:bg-white/25"
+            className="absolute right-4 top-4 rounded-full bg-sand/15 px-3 py-1 text-sm text-sand hover:bg-sand/25"
             onClick={() => setLightbox(false)}
           >
             Fermer
@@ -175,7 +175,7 @@ export function ProductImageGallery({
                   e.stopPropagation()
                   go(-1)
                 }}
-                className="absolute left-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-foreground"
+                className="absolute left-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-sand text-foreground"
                 aria-label="Image précédente"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -186,7 +186,7 @@ export function ProductImageGallery({
                   e.stopPropagation()
                   go(1)
                 }}
-                className="absolute right-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-foreground"
+                className="absolute right-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-sand text-foreground"
                 aria-label="Image suivante"
               >
                 <ChevronRight className="h-5 w-5" />

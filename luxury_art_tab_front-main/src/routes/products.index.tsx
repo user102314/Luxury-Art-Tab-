@@ -1,11 +1,20 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMemo, useState, useEffect } from 'react'
+import { Search, SlidersHorizontal, X } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
 import { ProductCard } from '@/components/ProductCard'
 import { ArViewer } from '@/components/ArViewer'
 import { useCategories, useProducts } from '@/hooks/useStorefrontQueries'
 import { Slider } from '@/components/ui/slider'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import {
   Select,
   SelectContent,
@@ -26,13 +35,22 @@ export const Route = createFileRoute('/products/')({
 
 type SortOption = 'price-asc' | 'price-desc' | 'name' | 'stock'
 
+const sortLabels: Record<SortOption, string> = {
+  name: 'Nom A-Z',
+  'price-asc': 'Prix croissant',
+  'price-desc': 'Prix décroissant',
+  stock: 'Disponibilité',
+}
+
 function ProductsPage() {
   const { category: categoryFromUrl } = Route.useSearch()
   const [categoryId, setCategoryId] = useState<string>(categoryFromUrl ?? 'all')
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<SortOption>('name')
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000])
+  const [inStockOnly, setInStockOnly] = useState(false)
   const [arImage, setArImage] = useState<string | null>(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const { data: products = [], isLoading: loadingProducts } = useProducts()
   const { data: categories = [] } = useCategories()
@@ -51,6 +69,12 @@ function ProductsPage() {
     [products],
   )
 
+  const countByCategory = useMemo(() => {
+    const counts: Record<number, number> = {}
+    for (const p of available) counts[p.categoryId] = (counts[p.categoryId] ?? 0) + 1
+    return counts
+  }, [available])
+
   const priceBounds = useMemo(() => {
     if (available.length === 0) return [0, 1000] as [number, number]
     const prices = available.map((p) => Number(p.prix))
@@ -61,16 +85,27 @@ function ProductsPage() {
     setPriceRange(priceBounds)
   }, [priceBounds[0], priceBounds[1]])
 
+  const priceTouched = priceRange[0] !== priceBounds[0] || priceRange[1] !== priceBounds[1]
+  const hasFilters = categoryId !== 'all' || search !== '' || inStockOnly || priceTouched
+
+  const resetFilters = () => {
+    setCategoryId('all')
+    setSearch('')
+    setInStockOnly(false)
+    setPriceRange(priceBounds)
+  }
+
   const filtered = useMemo(() => {
-    let list = available.filter((p) => {
+    const list = available.filter((p) => {
       const price = Number(p.prix)
       if (price < priceRange[0] || price > priceRange[1]) return false
       if (categoryId !== 'all' && p.categoryId !== Number(categoryId)) return false
       if (search && !p.nom.toLowerCase().includes(search.toLowerCase())) return false
+      if (inStockOnly && (p.stock <= 0 || p.statut === 'RUPTURE_STOCK')) return false
       return true
     })
 
-    list = [...list].sort((a, b) => {
+    return list.sort((a, b) => {
       switch (sort) {
         case 'price-asc':
           return Number(a.prix) - Number(b.prix)
@@ -82,147 +117,280 @@ function ProductsPage() {
           return a.nom.localeCompare(b.nom, 'fr')
       }
     })
-    return list
-  }, [available, categoryId, search, sort, priceRange])
+  }, [available, categoryId, search, sort, priceRange, inStockOnly])
+
+  const filterPanel = (
+    <div className="space-y-8">
+      <section>
+        <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-foreground">
+          Catégories
+        </h3>
+        <ul className="space-y-0.5">
+          <li>
+            <FilterRow
+              label="Toutes les catégories"
+              count={available.length}
+              active={categoryId === 'all'}
+              onSelect={() => setCategoryId('all')}
+            />
+          </li>
+          {categories.map((c) => (
+            <li key={c.id}>
+              <FilterRow
+                label={c.nom}
+                count={countByCategory[c.id] ?? 0}
+                active={categoryId === String(c.id)}
+                onSelect={() => setCategoryId(String(c.id))}
+              />
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section>
+        <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.14em] text-foreground">
+          Prix
+        </h3>
+        <Slider
+          min={priceBounds[0]}
+          max={priceBounds[1]}
+          step={10}
+          value={priceRange}
+          onValueChange={(v) => setPriceRange(v as [number, number])}
+        />
+        <div className="mt-4 flex items-center justify-between gap-2">
+          <PriceTag value={priceRange[0]} />
+          <span className="text-xs text-muted-foreground">à</span>
+          <PriceTag value={priceRange[1]} />
+        </div>
+      </section>
+
+      <section>
+        <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-foreground">
+          Disponibilité
+        </h3>
+        <label className="flex cursor-pointer items-center gap-3 text-sm text-muted-foreground transition hover:text-foreground">
+          <Checkbox
+            checked={inStockOnly}
+            onCheckedChange={(v) => setInStockOnly(v === true)}
+          />
+          En stock uniquement
+        </label>
+      </section>
+
+      {hasFilters && (
+        <button
+          type="button"
+          onClick={resetFilters}
+          className="w-full rounded-xl border border-border py-2.5 text-sm font-semibold text-foreground transition hover:bg-secondary"
+        >
+          Effacer les filtres
+        </button>
+      )}
+    </div>
+  )
 
   return (
-    <main className="min-h-screen bg-background font-[Inter,sans-serif]">
+    <main className="flex min-h-screen flex-col bg-beige/25 font-[Inter,sans-serif]">
       <SiteNav />
 
-      <div className="border-b border-border/40 bg-gradient-to-r from-[#3b2418] to-[#2f1b12] px-6 py-16 text-[#f7efe2] md:px-10">
-        <div className="mx-auto max-w-7xl">
-          <p className="font-display text-sm uppercase tracking-[0.25em] text-accent-green">
+      <div className="border-b border-border/40 bg-gradient-to-r from-foliage via-foliage to-taupe px-6 py-14 text-sand md:px-10">
+        <div className="mx-auto max-w-[1600px]">
+          <p className="font-display text-sm uppercase tracking-[0.25em] text-accent">
             Catalogue complet
           </p>
-          <h1 className="mt-3 font-display text-4xl font-bold md:text-5xl lg:text-6xl">
-            Tous nos <em className="text-[#f4a15d]">tableaux</em>
+          <h1 className="mt-3 font-display text-4xl font-bold md:text-5xl">
+            Tous nos <em className="text-gold">tableaux</em>
           </h1>
-          <p className="mt-4 max-w-2xl text-[#f7efe2]/80">
+          <p className="mt-4 max-w-2xl text-sand/80">
             Explorez notre collection, filtrez par catégorie et prix pour trouver la pièce parfaite.
           </p>
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-6 py-12 md:px-10">
-        <div className="mb-10 grid gap-6 rounded-3xl border border-border/60 bg-white/70 p-6 shadow-sm lg:grid-cols-[1fr_auto] lg:items-end">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Recherche
-              </label>
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Nom du tableau..."
-                className="w-full rounded-xl border border-border bg-white px-4 py-2.5 text-sm focus:border-brand-red focus:outline-none focus:ring-2 focus:ring-brand-red/20"
-              />
-            </div>
-            <div>
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Catégorie
-              </label>
-              <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger className="rounded-xl bg-white">
-                  <SelectValue placeholder="Toutes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes les catégories</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.nom}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Trier par
-              </label>
-              <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
-                <SelectTrigger className="rounded-xl bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="name">Nom A-Z</SelectItem>
-                  <SelectItem value="price-asc">Prix croissant</SelectItem>
-                  <SelectItem value="price-desc">Prix décroissant</SelectItem>
-                  <SelectItem value="stock">Disponibilité</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+      {/* Barre d'outils collante : recherche, résultats, tri */}
+      <div className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
+        <div className="mx-auto flex max-w-[1600px] items-center gap-3 px-4 py-3 md:px-10">
+          <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-border bg-sand px-3.5 py-2.5 text-sm font-semibold text-foreground transition hover:bg-secondary lg:hidden"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                Filtrer
+                {hasFilters && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-brand-red" />
+                )}
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[85vw] max-w-sm overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle className="font-display">Filtrer</SheetTitle>
+              </SheetHeader>
+              <div className="mt-6">{filterPanel}</div>
+            </SheetContent>
+          </Sheet>
 
-          <div className="min-w-[240px]">
-            <label className="mb-3 flex justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <span>Prix (DH)</span>
-              <span className="text-brand-red">
-                {priceRange[0]} – {priceRange[1]} DH
-              </span>
-            </label>
-            <Slider
-              min={priceBounds[0]}
-              max={priceBounds[1]}
-              step={10}
-              value={priceRange}
-              onValueChange={(v) => setPriceRange(v as [number, number])}
-              className="mt-2"
+          <div className="relative min-w-0 flex-1">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher un tableau..."
+              className="w-full rounded-xl border border-border bg-sand py-2.5 pl-10 pr-4 text-sm focus:border-brand-red focus:outline-none focus:ring-2 focus:ring-brand-red/20"
             />
           </div>
-        </div>
 
-        <div className="mb-6 flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            <span className="font-semibold text-accent-green">{filtered.length}</span> produit
-            {filtered.length !== 1 ? 's' : ''} trouvé{filtered.length !== 1 ? 's' : ''}
+          <p className="hidden shrink-0 text-sm text-muted-foreground md:block">
+            <span className="font-semibold text-foreground">{filtered.length}</span> résultat
+            {filtered.length !== 1 ? 's' : ''}
           </p>
-          {(categoryId !== 'all' || search) && (
-            <button
-              type="button"
-              onClick={() => {
-                setCategoryId('all')
-                setSearch('')
-                setPriceRange(priceBounds)
-              }}
-              className="text-sm font-semibold text-brand-red hover:underline"
-            >
-              Réinitialiser les filtres
-            </button>
-          )}
-        </div>
 
-        {loadingProducts ? (
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="aspect-[4/5] animate-pulse rounded-3xl bg-muted" />
-            ))}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-border bg-secondary/30 py-20 text-center">
-            <p className="font-display text-xl font-semibold text-foreground">Aucun produit trouvé</p>
-            <p className="mt-2 text-muted-foreground">Essayez d&apos;élargir vos filtres.</p>
-            <Link to="/" className="mt-6 inline-block text-brand-red font-semibold hover:underline">
-              Retour à l&apos;accueil
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((p, i) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                categoryName={categoryMap[p.categoryId]}
-                index={i}
-                onAr={setArImage}
-              />
-            ))}
-          </div>
-        )}
+          <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
+            <SelectTrigger className="w-[150px] shrink-0 rounded-xl bg-sand sm:w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(Object.keys(sortLabels) as SortOption[]).map((key) => (
+                <SelectItem key={key} value={key}>
+                  {sortLabels[key]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="mx-auto flex max-w-[1600px] gap-10 px-4 py-8 md:px-10">
+        <aside className="hidden w-56 shrink-0 lg:block xl:w-64">
+          <div className="sticky top-24">{filterPanel}</div>
+        </aside>
+
+        <section className="min-w-0 flex-1">
+          {hasFilters && (
+            <div className="mb-6 flex flex-wrap items-center gap-2">
+              {categoryId !== 'all' && (
+                <Chip
+                  label={categoryMap[Number(categoryId)] ?? 'Catégorie'}
+                  onClear={() => setCategoryId('all')}
+                />
+              )}
+              {search && <Chip label={`« ${search} »`} onClear={() => setSearch('')} />}
+              {inStockOnly && (
+                <Chip label="En stock" onClear={() => setInStockOnly(false)} />
+              )}
+              {priceTouched && (
+                <Chip
+                  label={`${priceRange[0]} – ${priceRange[1]} DH`}
+                  onClear={() => setPriceRange(priceBounds)}
+                />
+              )}
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="ml-1 text-sm font-semibold text-brand-red hover:underline"
+              >
+                Tout effacer
+              </button>
+            </div>
+          )}
+
+          {loadingProducts ? (
+            <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              {Array.from({ length: 10 }, (_, i) => (
+                <div key={i} className="aspect-[4/5] animate-pulse rounded-2xl bg-muted" />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-border bg-secondary/30 py-20 text-center">
+              <p className="font-display text-xl font-semibold text-foreground">
+                Aucun produit trouvé
+              </p>
+              <p className="mt-2 text-muted-foreground">Essayez d&apos;élargir vos filtres.</p>
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="mt-6 font-semibold text-brand-red hover:underline"
+              >
+                Effacer les filtres
+              </button>
+              <Link to="/" className="mt-6 block text-sm text-muted-foreground hover:underline">
+                Retour à l&apos;accueil
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              {filtered.map((p, i) => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  categoryName={categoryMap[p.categoryId]}
+                  index={i}
+                  onAr={setArImage}
+                  compact
+                />
+              ))}
+            </div>
+          )}
+        </section>
       </div>
 
       <SiteFooter />
       <ArViewer isOpen={!!arImage} onClose={() => setArImage(null)} imageSrc={arImage} />
     </main>
+  )
+}
+
+function FilterRow({
+  label,
+  count,
+  active,
+  onSelect,
+}: {
+  label: string
+  count: number
+  active: boolean
+  onSelect: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={active}
+      className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition ${
+        active
+          ? 'bg-secondary font-semibold text-foreground'
+          : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
+      }`}
+    >
+      <span className="truncate">{label}</span>
+      <span className="shrink-0 text-xs text-muted-foreground">{count}</span>
+    </button>
+  )
+}
+
+function PriceTag({ value }: { value: number }) {
+  return (
+    <span className="rounded-lg border border-border bg-sand px-3 py-1.5 text-sm font-semibold text-foreground">
+      {value} DH
+    </span>
+  )
+}
+
+function Chip({ label, onClear }: { label: string; onClear: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary py-1.5 pl-3 pr-2 text-sm text-foreground">
+      {label}
+      <button
+        type="button"
+        onClick={onClear}
+        aria-label={`Retirer le filtre ${label}`}
+        className="rounded-full p-0.5 text-muted-foreground transition hover:bg-background hover:text-foreground"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </span>
   )
 }

@@ -1,7 +1,10 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { AppProviders } from "@/context/AppProviders";
+import { MaintenancePage } from "@/components/MaintenancePage";
 
 import appCss from "../styles.css?url";
+
+const maintenanceEnabled = import.meta.env.VITE_MAINTENANCE_MODE === "true";
 
 function NotFoundComponent() {
   return (
@@ -30,13 +33,20 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Luxury Art_Tab By Insaf — Tableaux & Décoration" },
+      {
+        title: maintenanceEnabled
+          ? "Maintenance — Luxury Art_Tab By Insaf"
+          : "Luxury Art_Tab By Insaf — Tableaux & Décoration",
+      },
       { name: "description", content: "Galerie d'art murale premium. Tableaux sur mesure, collections cuisine et salon, livraison au Maroc." },
       { name: "author", content: "Luxury Art_Tab By Insaf" },
       { property: "og:title", content: "Luxury Art_Tab By Insaf — Tableaux & Décoration" },
       { property: "og:description", content: "Galerie d'art murale premium. Découvrez nos créations uniques." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      ...(maintenanceEnabled
+        ? [{ name: "robots", content: "noindex, nofollow" }]
+        : []),
     ],
     links: [
       { rel: "icon", type: "image/png", href: "/favicon.png" },
@@ -69,6 +79,12 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  // Le mode maintenance court-circuite les providers, les appels API et les
+  // modales du storefront. L'admin reste disponible dans son application.
+  if (maintenanceEnabled) {
+    return <MaintenancePage />;
+  }
+
   return (
     <AppProviders>
       <Outlet />

@@ -31,7 +31,7 @@ export function ProductShowcase() {
   }, [available, activeCategory])
 
   return (
-    <section id="galerie" className="relative bg-background px-4 py-14 md:px-6 md:py-20">
+    <section id="galerie" className="relative bg-beige/30 px-4 py-14 md:px-6 md:py-20">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 flex flex-col items-start justify-between gap-4 md:mb-10 md:flex-row md:items-end">
           <div>
@@ -53,7 +53,7 @@ export function ProductShowcase() {
               onClick={() => setActiveCategory('all')}
               className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all ${
                 activeCategory === 'all'
-                  ? 'border-accent-green bg-accent-green text-white shadow-md'
+                  ? 'border-accent-green bg-accent-green text-sand shadow-md'
                   : 'border-border bg-background/60 hover:border-accent-green/40'
               }`}
             >
@@ -66,7 +66,7 @@ export function ProductShowcase() {
                 onClick={() => setActiveCategory(String(cat.id))}
                 className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all ${
                   activeCategory === String(cat.id)
-                    ? 'border-brand-red bg-brand-red text-white shadow-md'
+                    ? 'border-brand-red bg-brand-red text-sand shadow-md'
                     : 'border-border bg-background/60 hover:border-brand-red/40'
                 }`}
               >
@@ -104,7 +104,7 @@ export function ProductShowcase() {
         <div className="mt-8 flex justify-center">
           <Link
             to="/products"
-            className="group inline-flex items-center gap-2 rounded-full border-2 border-brand-red bg-brand-red px-6 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-brand-red/90 hover:shadow-xl"
+            className="group inline-flex items-center gap-2 rounded-full border-2 border-brand-red bg-brand-red px-6 py-2.5 text-sm font-bold text-sand shadow-lg transition hover:bg-brand-red/90 hover:shadow-xl"
           >
             Voir tous les produits
             <span className="transition group-hover:translate-x-1">→</span>

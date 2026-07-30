@@ -66,95 +66,114 @@
   --color-accent-orange: var(--accent-orange);
   --color-accent-yellow: var(--accent-yellow);
   --color-accent-purple: var(--accent-purple);
+
+  /* Les six teintes de la charte, utilisables directement : bg-sand, text-gold… */
+  --color-sand: var(--sand);
+  --color-foliage: var(--foliage);
+  --color-sage: var(--sage);
+  --color-beige: var(--beige);
+  --color-taupe: var(--taupe);
+  --color-gold: var(--gold);
+
   --font-display: "Fraunces", Georgia, serif;
+  --font-brand: "Great Vibes", cursive;
 }
 
 :root {
   --radius: 0.625rem;
-  /* Luxe warm palette — cream background, brick red, sandy, sienna */
-  --background: oklch(0.965 0.025 95);
-  /* #F5F5DC beige */
-  --foreground: oklch(0.28 0.06 40);
-  /* deep warm brown */
-  --brand-red: oklch(0.62 0.18 30);
-  /* #E35336 brick */
-  --accent-green: oklch(0.5 0.13 50);
-  /* #A0522D sienna (reused as deep accent) */
-  --accent-blue: oklch(0.5 0.13 50);
-  /* sienna */
-  --accent-pink: oklch(0.62 0.18 30);
-  /* brick */
-  --accent-orange: oklch(0.76 0.14 60);
-  /* #F4A460 sandy */
-  --accent-yellow: oklch(0.76 0.14 60);
-  /* sandy */
-  --accent-purple: oklch(0.5 0.13 50);
-  /* sienna */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.93 0.03 80);
-  --secondary-foreground: oklch(0.28 0.06 40);
-  --muted: oklch(0.92 0.03 80);
-  --muted-foreground: oklch(0.45 0.05 45);
-  --accent: oklch(0.92 0.04 70);
-  --accent-foreground: oklch(0.28 0.06 40);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.86 0.04 75);
-  --input: oklch(0.88 0.04 75);
-  --ring: oklch(0.62 0.18 30);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+
+  /*
+   * Charte « feuillage & doré » — six teintes, aucune couleur hors palette.
+   *   #FDF7EC sand    : fond principal
+   *   #4A5D4F foliage : accent feuillage (titres, aplats, boutons primaires)
+   *   #97B099 sage    : accent secondaire (icônes, filets)
+   *   #D4CFC2 beige   : fond de section, bordures, états inactifs
+   *   #756D60 taupe   : texte de corps
+   *   #C7A158 gold    : accent premium (CTA, badges)
+   */
+  --sand: oklch(0.978 0.016 82.8);
+  --foliage: oklch(0.458 0.032 153.1);
+  --sage: oklch(0.732 0.043 147.3);
+  --beige: oklch(0.855 0.019 89.4);
+  --taupe: oklch(0.538 0.022 80);
+  --gold: oklch(0.728 0.102 82.3);
+
+  --background: var(--sand);
+  --foreground: var(--foliage);
+  --brand-red: var(--gold);
+  --accent-green: var(--foliage);
+  --accent-blue: var(--sage);
+  --accent-pink: var(--gold);
+  --accent-orange: var(--gold);
+  --accent-yellow: var(--gold);
+  --accent-purple: var(--taupe);
+  --card: var(--sand);
+  --card-foreground: var(--foliage);
+  --popover: var(--sand);
+  --popover-foreground: var(--foliage);
+  --primary: var(--foliage);
+  --primary-foreground: var(--sand);
+  --secondary: var(--beige);
+  --secondary-foreground: var(--foliage);
+  --muted: var(--beige);
+  --muted-foreground: var(--taupe);
+  --accent: var(--sage);
+  --accent-foreground: var(--foliage);
+  /* Erreurs et suppressions : taupe soutenu, pour rester dans la charte. */
+  --destructive: var(--taupe);
+  --destructive-foreground: var(--sand);
+  --border: var(--beige);
+  --input: var(--beige);
+  --ring: var(--gold);
+  --chart-1: var(--foliage);
+  --chart-2: var(--sage);
+  --chart-3: var(--gold);
+  --chart-4: var(--taupe);
+  --chart-5: var(--beige);
+  --sidebar: var(--sand);
+  --sidebar-foreground: var(--foliage);
+  --sidebar-primary: var(--foliage);
+  --sidebar-primary-foreground: var(--sand);
+  --sidebar-accent: var(--beige);
+  --sidebar-accent-foreground: var(--foliage);
+  --sidebar-border: var(--beige);
+  --sidebar-ring: var(--gold);
 }
 
+/* Mode sombre : même charte, le feuillage devient le fond et le crème le texte. */
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --background: var(--foliage);
+  --foreground: var(--sand);
+  --card: color-mix(in oklab, var(--foliage) 88%, var(--taupe));
+  --card-foreground: var(--sand);
+  --popover: color-mix(in oklab, var(--foliage) 88%, var(--taupe));
+  --popover-foreground: var(--sand);
+  --primary: var(--gold);
+  --primary-foreground: var(--foliage);
+  --secondary: color-mix(in oklab, var(--foliage) 80%, var(--sand));
+  --secondary-foreground: var(--sand);
+  --muted: color-mix(in oklab, var(--foliage) 80%, var(--sand));
+  --muted-foreground: var(--beige);
+  --accent: var(--sage);
+  --accent-foreground: var(--foliage);
+  --destructive: var(--beige);
+  --destructive-foreground: var(--foliage);
+  --border: color-mix(in oklab, var(--sand) 18%, transparent);
+  --input: color-mix(in oklab, var(--sand) 22%, transparent);
+  --ring: var(--gold);
+  --chart-1: var(--sage);
+  --chart-2: var(--gold);
+  --chart-3: var(--beige);
+  --chart-4: var(--taupe);
+  --chart-5: var(--sand);
+  --sidebar: var(--foliage);
+  --sidebar-foreground: var(--sand);
+  --sidebar-primary: var(--gold);
+  --sidebar-primary-foreground: var(--foliage);
+  --sidebar-accent: color-mix(in oklab, var(--foliage) 80%, var(--sand));
+  --sidebar-accent-foreground: var(--sand);
+  --sidebar-border: color-mix(in oklab, var(--sand) 18%, transparent);
+  --sidebar-ring: var(--gold);
 }
 
 @layer base {
@@ -169,6 +188,21 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+  }
+}
+
+/* Wordmark Luxury Art_Tab — même rendu que le dashboard admin */
+@layer components {
+  .brand-gold-text {
+    background-image: linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--sand) 70%, var(--gold)) 0%,
+      var(--gold) 40%,
+      color-mix(in oklab, var(--gold) 70%, var(--taupe)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 }
 
@@ -228,6 +262,76 @@
     100% {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+
+  /* Révélation au scroll : le bloc arrive flou et décalé, puis se met net */
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px) scale(0.985);
+    filter: blur(14px);
+    transition:
+      opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+      filter 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform, filter;
+  }
+
+  /* `none` (et non blur(0)) : sinon le bloc reste un conteneur de référence
+     et les descendants en position fixed se caleraient sur lui. */
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    will-change: auto;
+  }
+
+  /* Sans JavaScript, le contenu doit rester lisible */
+  @media (scripting: none) {
+    .reveal {
+      opacity: 1;
+      transform: none;
+      filter: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal {
+      opacity: 1;
+      transform: none;
+      filter: none;
+      transition: none;
+    }
+  }
+
+  /* Flottement continu des vignettes de la hero */
+  @keyframes card-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .animate-card-float {
+    animation: card-float 6s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-card-float {
+      animation: none;
+    }
+  }
+
+  @keyframes twinkle {
+    0%,
+    100% {
+      opacity: var(--twinkle-min, 0.2);
+    }
+    50% {
+      opacity: 1;
     }
   }
 

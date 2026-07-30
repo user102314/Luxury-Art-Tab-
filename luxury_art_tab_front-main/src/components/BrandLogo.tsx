@@ -26,7 +26,7 @@ export function BrandLogo({
   onDark = false,
 }: BrandLogoProps) {
   const parts = parseBoutiqueName(name)
-  const tabColor = onDark ? 'text-[#eadcc9]' : 'text-[#2c2c2c]'
+  const tabColor = onDark ? 'text-sand' : 'text-foliage'
 
   return (
     <span

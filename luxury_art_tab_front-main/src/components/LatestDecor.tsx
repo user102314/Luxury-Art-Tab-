@@ -6,7 +6,7 @@ export function LatestDecor() {
   return (
     <section
       id="nouveautes"
-      className="relative overflow-hidden px-6 py-20 md:py-28"
+      className="relative scroll-mt-24 overflow-hidden px-6 py-20 md:py-28"
       style={{
         background:
           'linear-gradient(180deg, var(--background) 0%, color-mix(in oklab, var(--brand-red) 5%, var(--background)) 60%, var(--background) 100%)',
@@ -65,7 +65,7 @@ export function LatestDecor() {
           <div className="mt-8 flex flex-wrap gap-3">
             <a
               href="#galerie"
-              className="rounded-full bg-brand-red px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+              className="rounded-full bg-brand-red px-6 py-3 text-sm font-semibold text-sand transition hover:opacity-90"
             >
               Voir la galerie
             </a>
@@ -91,18 +91,18 @@ export function LatestDecor() {
             rotate={-10}
             className="-bottom-1 -left-12 h-12 w-48"
           />
-          <div className="relative overflow-hidden rounded-3xl border border-foreground/10 bg-white/40 p-2.5 shadow-[0_30px_60px_-25px_rgba(50,20,0,0.35)] backdrop-blur-sm">
+          <div className="relative overflow-hidden rounded-3xl border border-foreground/10 bg-sand/40 p-2.5 shadow-[0_30px_60px_-25px_rgba(50,20,0,0.35)] backdrop-blur-sm">
             <img
               src={atelierProcess}
               alt="Application de peinture à l'atelier"
               className="h-[320px] w-full rounded-2xl object-cover md:h-[420px]"
               loading="lazy"
             />
-            <div className="absolute inset-x-0 bottom-0 rounded-b-2xl bg-gradient-to-t from-[#3b2418]/80 to-transparent p-5 pt-16">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#f4a15d]">
+            <div className="absolute inset-x-0 bottom-0 rounded-b-2xl bg-gradient-to-t from-foliage/80 to-transparent p-5 pt-16">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">
                 L&apos;atelier
               </p>
-              <p className="mt-1 font-display text-lg font-bold text-[#f7efe2]">
+              <p className="mt-1 font-display text-lg font-bold text-sand">
                 Chaque geste compte
               </p>
             </div>

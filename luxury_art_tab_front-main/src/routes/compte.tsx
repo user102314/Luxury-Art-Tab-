@@ -15,7 +15,7 @@ function ComptePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-background">
+      <main className="flex min-h-screen flex-col bg-beige/25">
         <SiteNav />
         <div className="px-6 py-32 text-center text-muted-foreground">Chargement…</div>
       </main>
@@ -24,7 +24,7 @@ function ComptePage() {
 
   if (!client) {
     return (
-      <main className="min-h-screen bg-background">
+      <main className="flex min-h-screen flex-col bg-beige/25">
         <SiteNav />
         <div className="mx-auto max-w-md px-6 py-32 text-center">
           <p className="text-muted-foreground">Connectez-vous pour voir votre profil fidélité</p>
@@ -47,7 +47,7 @@ function ComptePage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="flex min-h-screen flex-col bg-beige/25">
       <SiteNav />
       <div className="mx-auto max-w-2xl px-6 py-16">
         <div className="flex items-start justify-between gap-4">
@@ -61,9 +61,9 @@ function ComptePage() {
           </button>
         </div>
 
-        <div className="mt-8 rounded-2xl border border-[#f4a15d]/30 bg-gradient-to-br from-[#3b2418] to-[#2f1b12] p-6 text-[#f7efe2]">
+        <div className="mt-8 rounded-2xl border border-gold/30 bg-gradient-to-br from-foliage via-foliage to-taupe p-6 text-sand">
           <div className="flex items-center gap-3">
-            <Gift className="h-8 w-8 text-[#f4a15d]" />
+            <Gift className="h-8 w-8 text-gold" />
             <div>
               <p className="text-sm opacity-80">Programme actif</p>
               <p className="font-display text-xl font-bold">{client.programmeNom ?? 'Fidélité Luxury Art'}</p>
@@ -74,8 +74,8 @@ function ComptePage() {
               <span>Progression vers la prochaine récompense</span>
               <span>{client.commandesCycle ?? 0} / {client.commandesRequises ?? '—'} commandes livrées</span>
             </div>
-            <div className="h-3 overflow-hidden rounded-full bg-black/30">
-              <div className="h-full rounded-full bg-[#f4a15d] transition-all" style={{ width: `${progress}%` }} />
+            <div className="h-3 overflow-hidden rounded-full bg-foliage/30">
+              <div className="h-full rounded-full bg-gold transition-all" style={{ width: `${progress}%` }} />
             </div>
           </div>
         </div>

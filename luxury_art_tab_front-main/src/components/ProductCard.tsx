@@ -66,7 +66,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
 
           {outOfStock && (
             <span
-              className={`absolute left-3 top-3 rounded-full bg-brand-red font-bold uppercase tracking-wider text-white ${
+              className={`absolute left-3 top-3 rounded-full bg-brand-red font-bold uppercase tracking-wider text-sand ${
                 compact ? 'px-2 py-0.5 text-[10px]' : 'left-4 top-4 px-3 py-1 text-xs'
               }`}
             >
@@ -75,7 +75,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
           )}
           {!outOfStock && product.stock <= 5 && (
             <span
-              className={`absolute rounded-full bg-accent-green font-bold uppercase tracking-wider text-white ${
+              className={`absolute rounded-full bg-accent-green font-bold uppercase tracking-wider text-sand ${
                 compact ? 'left-3 top-3 px-2 py-0.5 text-[10px]' : 'left-4 top-4 px-3 py-1 text-xs'
               }`}
             >
@@ -91,7 +91,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
               compact ? 'right-2.5 top-2.5 h-8 w-8' : 'right-4 top-4 h-10 w-10'
             } ${
               liked
-                ? 'scale-110 bg-brand-red text-white'
+                ? 'scale-110 bg-brand-red text-sand'
                 : 'bg-background/80 text-foreground hover:bg-background'
             }`}
           >
@@ -115,7 +115,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
                 e.stopPropagation()
                 onAr(image)
               }}
-              className={`absolute flex items-center justify-center rounded-full bg-accent-green text-white transition hover:opacity-90 ${
+              className={`absolute flex items-center justify-center rounded-full bg-accent-green text-sand transition hover:opacity-90 ${
                 compact ? 'bottom-2.5 right-2.5 h-8 w-8' : 'bottom-4 right-4 h-10 w-10'
               }`}
               aria-label="Tester en AR"

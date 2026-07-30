@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
+import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CompteRouteImport } from './routes/compte'
 import { Route as CheckoutRouteImport } from './routes/checkout'
@@ -28,6 +29,11 @@ const SignupRoute = SignupRouteImport.update({
 const SigninRoute = SigninRouteImport.update({
   id: '/signin',
   path: '/signin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaintenanceRoute = MaintenanceRouteImport.update({
+  id: '/maintenance',
+  path: '/maintenance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof CheckoutRoute
   '/compte': typeof CompteRoute
   '/contact': typeof ContactRoute
+  '/maintenance': typeof MaintenanceRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/compte': typeof CompteRoute
   '/contact': typeof ContactRoute
+  '/maintenance': typeof MaintenanceRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/checkout': typeof CheckoutRoute
   '/compte': typeof CompteRoute
   '/contact': typeof ContactRoute
+  '/maintenance': typeof MaintenanceRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/compte'
     | '/contact'
+    | '/maintenance'
     | '/signin'
     | '/signup'
     | '/category/$slug'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/compte'
     | '/contact'
+    | '/maintenance'
     | '/signin'
     | '/signup'
     | '/category/$slug'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/compte'
     | '/contact'
+    | '/maintenance'
     | '/signin'
     | '/signup'
     | '/category/$slug'
@@ -153,6 +165,7 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRoute
   CompteRoute: typeof CompteRoute
   ContactRoute: typeof ContactRoute
+  MaintenanceRoute: typeof MaintenanceRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
   CategorySlugRoute: typeof CategorySlugRoute
@@ -174,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '/signin'
       fullPath: '/signin'
       preLoaderRoute: typeof SigninRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/maintenance': {
+      id: '/maintenance'
+      path: '/maintenance'
+      fullPath: '/maintenance'
+      preLoaderRoute: typeof MaintenanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -241,6 +261,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRoute,
   CompteRoute: CompteRoute,
   ContactRoute: ContactRoute,
+  MaintenanceRoute: MaintenanceRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
   CategorySlugRoute: CategorySlugRoute,

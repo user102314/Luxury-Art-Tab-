@@ -1,24 +1,53 @@
 // Shared hero categories for the home slider and category pages.
-import cuisine1 from "@/assets/Cuisine/WhatsApp Image 2026-04-19 at 23.02.14 (1).jpeg";
-import cuisine2 from "@/assets/Cuisine/WhatsApp Image 2026-04-19 at 23.02.15.jpeg";
-import cuisine3 from "@/assets/Cuisine/WhatsApp Image 2026-04-19 at 23.02.18.jpeg";
-import cuisine4 from "@/assets/Cuisine/WhatsApp Image 2026-04-19 at 23.02.19.jpeg";
-import cuisine5 from "@/assets/Cuisine/WhatsApp Image 2026-04-19 at 23.02.20.jpeg";
-import cuisine6 from "@/assets/Cuisine/WhatsApp Image 2026-04-19 at 23.02.14.jpeg";
-import cuisine7 from "@/assets/Cuisine/WhatsApp Image 2026-04-19 at 23.02.22.jpeg";
-import cuisine8 from "@/assets/Cuisine/WhatsApp Image 2026-04-19 at 23.09.39.jpeg";
-import cuisine9 from "@/assets/Cuisine/WhatsApp Image 2026-04-19 at 23.09.40.jpeg";
-import cuisine10 from "@/assets/Cuisine/WhatsApp Image 2026-04-19 at 23.02.21.jpeg";
-import salon1 from "@/assets/salon/art-abstract-warm.jpg";
-import salon2 from "@/assets/salon/art-botanical.jpg";
-import salon3 from "@/assets/salon/art-desert.jpg";
-import salon4 from "@/assets/salon/art-figure.jpg";
-import salon5 from "@/assets/salon/art-geometric.jpg";
-import salon6 from "@/assets/salon/art-vintage.jpg";
-import salon7 from "@/assets/salon/art-abstract-warm.jpg";
-import salon8 from "@/assets/salon/art-botanical.jpg";
-import salon9 from "@/assets/salon/art-desert.jpg";
-import salon10 from "@/assets/salon/art-figure.jpg";
+
+const cuisineModules = import.meta.glob("../assets/Cuisine/*.jpeg", {
+  eager: true,
+  import: "default",
+}) as Record<string, string>;
+
+const salonModules = import.meta.glob("../assets/salon/*.jpg", {
+  eager: true,
+  import: "default",
+}) as Record<string, string>;
+
+function toSortedPool(modules: Record<string, string>): string[] {
+  return Object.keys(modules)
+    .sort((a, b) => a.localeCompare(b))
+    .map((key) => modules[key]);
+}
+
+const cuisinePool = toSortedPool(cuisineModules);
+const salonPool = toSortedPool(salonModules);
+
+/** Alterne les deux collections pour éviter les murs monotones. */
+function interleave(a: string[], b: string[]): string[] {
+  const out: string[] = [];
+  const max = Math.max(a.length, b.length);
+  for (let i = 0; i < max; i += 1) {
+    if (i < a.length) out.push(a[i]);
+    if (i < b.length) out.push(b[i]);
+  }
+  return out;
+}
+
+const mixedPool = interleave(salonPool, cuisinePool);
+
+export const HERO_IMAGES_PER_CATEGORY = 10;
+
+function pickImages(pool: string[], offset: number, stride: number): string[] {
+  const unique = Array.from(new Set(pool));
+  if (unique.length === 0) return [];
+
+  const picked: string[] = [];
+  for (let i = 0; picked.length < HERO_IMAGES_PER_CATEGORY && i < unique.length * 3; i += 1) {
+    const src = unique[(offset + i * stride) % unique.length];
+    if (!picked.includes(src)) picked.push(src);
+  }
+  while (picked.length < HERO_IMAGES_PER_CATEGORY) {
+    picked.push(unique[picked.length % unique.length]);
+  }
+  return picked;
+}
 
 export type HeroCategory = {
   slug: string;
@@ -32,48 +61,48 @@ export const heroCategories: HeroCategory[] = [
     slug: "enfants",
     word: "enfants",
     color: "text-accent-orange",
-    images: [cuisine1, cuisine2, cuisine3, cuisine4, cuisine5],
+    images: pickImages(cuisinePool, 0, 7),
   },
   {
     slug: "femmes",
     word: "femmes",
     color: "text-accent-green",
-    images: [salon1, salon2, salon3, salon4, salon5],
+    images: pickImages(mixedPool, 0, 5),
   },
   {
     slug: "cuisine",
     word: "cuisine",
     color: "text-accent-blue",
-    images: [cuisine6, cuisine7, cuisine8, cuisine9, cuisine10],
+    images: pickImages(cuisinePool, 11, 5),
   },
   {
     slug: "animaux",
     word: "animaux",
     color: "text-brand-red",
-    images: [salon6, salon7, salon8, salon9, salon10],
+    images: pickImages(mixedPool, 3, 9),
   },
   {
     slug: "moderne-abstrait",
     word: "moderne abstrait",
     color: "text-accent-orange",
-    images: [salon1, salon3, salon5, salon6, salon8],
+    images: pickImages(mixedPool, 1, 11),
   },
   {
     slug: "florale",
     word: "florale",
     color: "text-accent-green",
-    images: [salon2, salon8, cuisine2, cuisine7, cuisine10],
+    images: pickImages(cuisinePool, 23, 3),
   },
   {
     slug: "calligraphie-et-islamique",
     word: "calligraphie et islamique",
     color: "text-accent-blue",
-    images: [cuisine1, cuisine4, cuisine6, cuisine8, cuisine9],
+    images: pickImages(cuisinePool, 41, 6),
   },
   {
     slug: "traditionnel-orientale-mediterraneenne",
     word: "traditionnel, orientale et mediterraneenne",
     color: "text-brand-red",
-    images: [cuisine3, cuisine5, cuisine7, cuisine9, cuisine10],
+    images: pickImages(mixedPool, 7, 13),
   },
 ];
