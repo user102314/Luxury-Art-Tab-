@@ -61,6 +61,16 @@
     </dependencies>
 
     <build>
+        <!-- Secrets locaux : jamais dans le JAR déployé sur le VPS -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>application-local.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

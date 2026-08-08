@@ -1,5 +1,5 @@
 # Copier vers application-local.properties (non versionné) et renseigner le mot de passe.
-# spring.profiles.active=local est déjà défini dans application.properties
+# Profil local activé par défaut via spring.profiles.default=local
 
 spring.datasource.password=VOTRE_MOT_DE_PASSE
 

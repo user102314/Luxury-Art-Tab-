@@ -1,0 +1,15 @@
+[Unit]
+Description=Luxury Art Backend
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/luxury-art
+ExecStart=/opt/luxury-art/start.sh
+SuccessExitStatus=143
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
