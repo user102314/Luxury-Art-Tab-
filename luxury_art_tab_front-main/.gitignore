@@ -29,6 +29,9 @@ lerna-debug.log*
 # Wrangler / Cloudflare
 .wrangler/
 
+# Vercel
+.vercel/
+
 # Editor / OS
 .vscode/*
 !.vscode/extensions.json

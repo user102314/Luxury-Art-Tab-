@@ -1,7 +1,9 @@
 {
+  // Optional Cloudflare Workers config only.
+  // Production target is Vercel (Nitro). This file is unused by the Vercel build.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "tanstack-start-app",
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry",
+  "main": "@tanstack/react-start/server-entry"
 }
