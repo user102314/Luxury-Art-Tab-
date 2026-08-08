@@ -16,10 +16,29 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CompteRouteImport } from './routes/compte'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ActualitesRouteImport } from './routes/actualites'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsIndexRouteImport } from './routes/products.index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProductsIdRouteImport } from './routes/products.$id'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminAppRouteRouteImport } from './routes/admin/_app/route'
+import { Route as AdminAppWhatsappOrdersRouteImport } from './routes/admin/_app/whatsapp-orders'
+import { Route as AdminAppTrackingRouteImport } from './routes/admin/_app/tracking'
+import { Route as AdminAppTestimonialsRouteImport } from './routes/admin/_app/testimonials'
+import { Route as AdminAppSettingsRouteImport } from './routes/admin/_app/settings'
+import { Route as AdminAppRevenueRouteImport } from './routes/admin/_app/revenue'
+import { Route as AdminAppProductsRouteImport } from './routes/admin/_app/products'
+import { Route as AdminAppOrdersRouteImport } from './routes/admin/_app/orders'
+import { Route as AdminAppNotificationsRouteImport } from './routes/admin/_app/notifications'
+import { Route as AdminAppNewsRouteImport } from './routes/admin/_app/news'
+import { Route as AdminAppModerationRouteImport } from './routes/admin/_app/moderation'
+import { Route as AdminAppLoyaltyRouteImport } from './routes/admin/_app/loyalty'
+import { Route as AdminAppInstagramOrdersRouteImport } from './routes/admin/_app/instagram-orders'
+import { Route as AdminAppFacebookOrdersRouteImport } from './routes/admin/_app/facebook-orders'
+import { Route as AdminAppClientsRouteImport } from './routes/admin/_app/clients'
+import { Route as AdminAppAnalyticsRouteImport } from './routes/admin/_app/analytics'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -56,6 +75,11 @@ const ActualitesRoute = ActualitesRouteImport.update({
   path: '/actualites',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -65,6 +89,11 @@ const ProductsIndexRoute = ProductsIndexRouteImport.update({
   id: '/products/',
   path: '/products/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const ProductsIdRoute = ProductsIdRouteImport.update({
   id: '/products/$id',
@@ -76,9 +105,94 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminAppRouteRoute = AdminAppRouteRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminAppWhatsappOrdersRoute = AdminAppWhatsappOrdersRouteImport.update({
+  id: '/whatsapp-orders',
+  path: '/whatsapp-orders',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
+const AdminAppTrackingRoute = AdminAppTrackingRouteImport.update({
+  id: '/tracking',
+  path: '/tracking',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
+const AdminAppTestimonialsRoute = AdminAppTestimonialsRouteImport.update({
+  id: '/testimonials',
+  path: '/testimonials',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
+const AdminAppSettingsRoute = AdminAppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
+const AdminAppRevenueRoute = AdminAppRevenueRouteImport.update({
+  id: '/revenue',
+  path: '/revenue',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
+const AdminAppProductsRoute = AdminAppProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
+const AdminAppOrdersRoute = AdminAppOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
+const AdminAppNotificationsRoute = AdminAppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
+const AdminAppNewsRoute = AdminAppNewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
+const AdminAppModerationRoute = AdminAppModerationRouteImport.update({
+  id: '/moderation',
+  path: '/moderation',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
+const AdminAppLoyaltyRoute = AdminAppLoyaltyRouteImport.update({
+  id: '/loyalty',
+  path: '/loyalty',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
+const AdminAppInstagramOrdersRoute = AdminAppInstagramOrdersRouteImport.update({
+  id: '/instagram-orders',
+  path: '/instagram-orders',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
+const AdminAppFacebookOrdersRoute = AdminAppFacebookOrdersRouteImport.update({
+  id: '/facebook-orders',
+  path: '/facebook-orders',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
+const AdminAppClientsRoute = AdminAppClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
+const AdminAppAnalyticsRoute = AdminAppAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminAppRouteRouteWithChildren
   '/actualites': typeof ActualitesRoute
   '/checkout': typeof CheckoutRoute
   '/compte': typeof CompteRoute
@@ -86,9 +200,26 @@ export interface FileRoutesByFullPath {
   '/maintenance': typeof MaintenanceRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/admin/login': typeof AdminLoginRoute
   '/category/$slug': typeof CategorySlugRoute
   '/products/$id': typeof ProductsIdRoute
+  '/admin/': typeof AdminIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/admin/analytics': typeof AdminAppAnalyticsRoute
+  '/admin/clients': typeof AdminAppClientsRoute
+  '/admin/facebook-orders': typeof AdminAppFacebookOrdersRoute
+  '/admin/instagram-orders': typeof AdminAppInstagramOrdersRoute
+  '/admin/loyalty': typeof AdminAppLoyaltyRoute
+  '/admin/moderation': typeof AdminAppModerationRoute
+  '/admin/news': typeof AdminAppNewsRoute
+  '/admin/notifications': typeof AdminAppNotificationsRoute
+  '/admin/orders': typeof AdminAppOrdersRoute
+  '/admin/products': typeof AdminAppProductsRoute
+  '/admin/revenue': typeof AdminAppRevenueRoute
+  '/admin/settings': typeof AdminAppSettingsRoute
+  '/admin/testimonials': typeof AdminAppTestimonialsRoute
+  '/admin/tracking': typeof AdminAppTrackingRoute
+  '/admin/whatsapp-orders': typeof AdminAppWhatsappOrdersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -99,13 +230,31 @@ export interface FileRoutesByTo {
   '/maintenance': typeof MaintenanceRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/admin': typeof AdminIndexRoute
+  '/admin/login': typeof AdminLoginRoute
   '/category/$slug': typeof CategorySlugRoute
   '/products/$id': typeof ProductsIdRoute
   '/products': typeof ProductsIndexRoute
+  '/admin/analytics': typeof AdminAppAnalyticsRoute
+  '/admin/clients': typeof AdminAppClientsRoute
+  '/admin/facebook-orders': typeof AdminAppFacebookOrdersRoute
+  '/admin/instagram-orders': typeof AdminAppInstagramOrdersRoute
+  '/admin/loyalty': typeof AdminAppLoyaltyRoute
+  '/admin/moderation': typeof AdminAppModerationRoute
+  '/admin/news': typeof AdminAppNewsRoute
+  '/admin/notifications': typeof AdminAppNotificationsRoute
+  '/admin/orders': typeof AdminAppOrdersRoute
+  '/admin/products': typeof AdminAppProductsRoute
+  '/admin/revenue': typeof AdminAppRevenueRoute
+  '/admin/settings': typeof AdminAppSettingsRoute
+  '/admin/testimonials': typeof AdminAppTestimonialsRoute
+  '/admin/tracking': typeof AdminAppTrackingRoute
+  '/admin/whatsapp-orders': typeof AdminAppWhatsappOrdersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
   '/actualites': typeof ActualitesRoute
   '/checkout': typeof CheckoutRoute
   '/compte': typeof CompteRoute
@@ -113,14 +262,33 @@ export interface FileRoutesById {
   '/maintenance': typeof MaintenanceRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/admin/_app': typeof AdminAppRouteRouteWithChildren
+  '/admin/login': typeof AdminLoginRoute
   '/category/$slug': typeof CategorySlugRoute
   '/products/$id': typeof ProductsIdRoute
+  '/admin/': typeof AdminIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/admin/_app/analytics': typeof AdminAppAnalyticsRoute
+  '/admin/_app/clients': typeof AdminAppClientsRoute
+  '/admin/_app/facebook-orders': typeof AdminAppFacebookOrdersRoute
+  '/admin/_app/instagram-orders': typeof AdminAppInstagramOrdersRoute
+  '/admin/_app/loyalty': typeof AdminAppLoyaltyRoute
+  '/admin/_app/moderation': typeof AdminAppModerationRoute
+  '/admin/_app/news': typeof AdminAppNewsRoute
+  '/admin/_app/notifications': typeof AdminAppNotificationsRoute
+  '/admin/_app/orders': typeof AdminAppOrdersRoute
+  '/admin/_app/products': typeof AdminAppProductsRoute
+  '/admin/_app/revenue': typeof AdminAppRevenueRoute
+  '/admin/_app/settings': typeof AdminAppSettingsRoute
+  '/admin/_app/testimonials': typeof AdminAppTestimonialsRoute
+  '/admin/_app/tracking': typeof AdminAppTrackingRoute
+  '/admin/_app/whatsapp-orders': typeof AdminAppWhatsappOrdersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/actualites'
     | '/checkout'
     | '/compte'
@@ -128,9 +296,26 @@ export interface FileRouteTypes {
     | '/maintenance'
     | '/signin'
     | '/signup'
+    | '/admin/login'
     | '/category/$slug'
     | '/products/$id'
+    | '/admin/'
     | '/products/'
+    | '/admin/analytics'
+    | '/admin/clients'
+    | '/admin/facebook-orders'
+    | '/admin/instagram-orders'
+    | '/admin/loyalty'
+    | '/admin/moderation'
+    | '/admin/news'
+    | '/admin/notifications'
+    | '/admin/orders'
+    | '/admin/products'
+    | '/admin/revenue'
+    | '/admin/settings'
+    | '/admin/testimonials'
+    | '/admin/tracking'
+    | '/admin/whatsapp-orders'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -141,12 +326,30 @@ export interface FileRouteTypes {
     | '/maintenance'
     | '/signin'
     | '/signup'
+    | '/admin'
+    | '/admin/login'
     | '/category/$slug'
     | '/products/$id'
     | '/products'
+    | '/admin/analytics'
+    | '/admin/clients'
+    | '/admin/facebook-orders'
+    | '/admin/instagram-orders'
+    | '/admin/loyalty'
+    | '/admin/moderation'
+    | '/admin/news'
+    | '/admin/notifications'
+    | '/admin/orders'
+    | '/admin/products'
+    | '/admin/revenue'
+    | '/admin/settings'
+    | '/admin/testimonials'
+    | '/admin/tracking'
+    | '/admin/whatsapp-orders'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/actualites'
     | '/checkout'
     | '/compte'
@@ -154,13 +357,32 @@ export interface FileRouteTypes {
     | '/maintenance'
     | '/signin'
     | '/signup'
+    | '/admin/_app'
+    | '/admin/login'
     | '/category/$slug'
     | '/products/$id'
+    | '/admin/'
     | '/products/'
+    | '/admin/_app/analytics'
+    | '/admin/_app/clients'
+    | '/admin/_app/facebook-orders'
+    | '/admin/_app/instagram-orders'
+    | '/admin/_app/loyalty'
+    | '/admin/_app/moderation'
+    | '/admin/_app/news'
+    | '/admin/_app/notifications'
+    | '/admin/_app/orders'
+    | '/admin/_app/products'
+    | '/admin/_app/revenue'
+    | '/admin/_app/settings'
+    | '/admin/_app/testimonials'
+    | '/admin/_app/tracking'
+    | '/admin/_app/whatsapp-orders'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
   ActualitesRoute: typeof ActualitesRoute
   CheckoutRoute: typeof CheckoutRoute
   CompteRoute: typeof CompteRoute
@@ -224,6 +446,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ActualitesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -237,6 +466,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/products/'
       preLoaderRoute: typeof ProductsIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/products/$id': {
       id: '/products/$id'
@@ -252,11 +488,187 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/_app': {
+      id: '/admin/_app'
+      path: ''
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminAppRouteRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/_app/whatsapp-orders': {
+      id: '/admin/_app/whatsapp-orders'
+      path: '/whatsapp-orders'
+      fullPath: '/admin/whatsapp-orders'
+      preLoaderRoute: typeof AdminAppWhatsappOrdersRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
+    '/admin/_app/tracking': {
+      id: '/admin/_app/tracking'
+      path: '/tracking'
+      fullPath: '/admin/tracking'
+      preLoaderRoute: typeof AdminAppTrackingRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
+    '/admin/_app/testimonials': {
+      id: '/admin/_app/testimonials'
+      path: '/testimonials'
+      fullPath: '/admin/testimonials'
+      preLoaderRoute: typeof AdminAppTestimonialsRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
+    '/admin/_app/settings': {
+      id: '/admin/_app/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminAppSettingsRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
+    '/admin/_app/revenue': {
+      id: '/admin/_app/revenue'
+      path: '/revenue'
+      fullPath: '/admin/revenue'
+      preLoaderRoute: typeof AdminAppRevenueRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
+    '/admin/_app/products': {
+      id: '/admin/_app/products'
+      path: '/products'
+      fullPath: '/admin/products'
+      preLoaderRoute: typeof AdminAppProductsRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
+    '/admin/_app/orders': {
+      id: '/admin/_app/orders'
+      path: '/orders'
+      fullPath: '/admin/orders'
+      preLoaderRoute: typeof AdminAppOrdersRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
+    '/admin/_app/notifications': {
+      id: '/admin/_app/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminAppNotificationsRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
+    '/admin/_app/news': {
+      id: '/admin/_app/news'
+      path: '/news'
+      fullPath: '/admin/news'
+      preLoaderRoute: typeof AdminAppNewsRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
+    '/admin/_app/moderation': {
+      id: '/admin/_app/moderation'
+      path: '/moderation'
+      fullPath: '/admin/moderation'
+      preLoaderRoute: typeof AdminAppModerationRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
+    '/admin/_app/loyalty': {
+      id: '/admin/_app/loyalty'
+      path: '/loyalty'
+      fullPath: '/admin/loyalty'
+      preLoaderRoute: typeof AdminAppLoyaltyRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
+    '/admin/_app/instagram-orders': {
+      id: '/admin/_app/instagram-orders'
+      path: '/instagram-orders'
+      fullPath: '/admin/instagram-orders'
+      preLoaderRoute: typeof AdminAppInstagramOrdersRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
+    '/admin/_app/facebook-orders': {
+      id: '/admin/_app/facebook-orders'
+      path: '/facebook-orders'
+      fullPath: '/admin/facebook-orders'
+      preLoaderRoute: typeof AdminAppFacebookOrdersRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
+    '/admin/_app/clients': {
+      id: '/admin/_app/clients'
+      path: '/clients'
+      fullPath: '/admin/clients'
+      preLoaderRoute: typeof AdminAppClientsRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
+    '/admin/_app/analytics': {
+      id: '/admin/_app/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAppAnalyticsRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
   }
 }
 
+interface AdminAppRouteRouteChildren {
+  AdminAppAnalyticsRoute: typeof AdminAppAnalyticsRoute
+  AdminAppClientsRoute: typeof AdminAppClientsRoute
+  AdminAppFacebookOrdersRoute: typeof AdminAppFacebookOrdersRoute
+  AdminAppInstagramOrdersRoute: typeof AdminAppInstagramOrdersRoute
+  AdminAppLoyaltyRoute: typeof AdminAppLoyaltyRoute
+  AdminAppModerationRoute: typeof AdminAppModerationRoute
+  AdminAppNewsRoute: typeof AdminAppNewsRoute
+  AdminAppNotificationsRoute: typeof AdminAppNotificationsRoute
+  AdminAppOrdersRoute: typeof AdminAppOrdersRoute
+  AdminAppProductsRoute: typeof AdminAppProductsRoute
+  AdminAppRevenueRoute: typeof AdminAppRevenueRoute
+  AdminAppSettingsRoute: typeof AdminAppSettingsRoute
+  AdminAppTestimonialsRoute: typeof AdminAppTestimonialsRoute
+  AdminAppTrackingRoute: typeof AdminAppTrackingRoute
+  AdminAppWhatsappOrdersRoute: typeof AdminAppWhatsappOrdersRoute
+}
+
+const AdminAppRouteRouteChildren: AdminAppRouteRouteChildren = {
+  AdminAppAnalyticsRoute: AdminAppAnalyticsRoute,
+  AdminAppClientsRoute: AdminAppClientsRoute,
+  AdminAppFacebookOrdersRoute: AdminAppFacebookOrdersRoute,
+  AdminAppInstagramOrdersRoute: AdminAppInstagramOrdersRoute,
+  AdminAppLoyaltyRoute: AdminAppLoyaltyRoute,
+  AdminAppModerationRoute: AdminAppModerationRoute,
+  AdminAppNewsRoute: AdminAppNewsRoute,
+  AdminAppNotificationsRoute: AdminAppNotificationsRoute,
+  AdminAppOrdersRoute: AdminAppOrdersRoute,
+  AdminAppProductsRoute: AdminAppProductsRoute,
+  AdminAppRevenueRoute: AdminAppRevenueRoute,
+  AdminAppSettingsRoute: AdminAppSettingsRoute,
+  AdminAppTestimonialsRoute: AdminAppTestimonialsRoute,
+  AdminAppTrackingRoute: AdminAppTrackingRoute,
+  AdminAppWhatsappOrdersRoute: AdminAppWhatsappOrdersRoute,
+}
+
+const AdminAppRouteRouteWithChildren = AdminAppRouteRoute._addFileChildren(
+  AdminAppRouteRouteChildren,
+)
+
+interface AdminRouteRouteChildren {
+  AdminAppRouteRoute: typeof AdminAppRouteRouteWithChildren
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminAppRouteRoute: AdminAppRouteRouteWithChildren,
+  AdminLoginRoute: AdminLoginRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
   ActualitesRoute: ActualitesRoute,
   CheckoutRoute: CheckoutRoute,
   CompteRoute: CompteRoute,
