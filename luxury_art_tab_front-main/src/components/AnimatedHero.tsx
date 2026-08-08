@@ -1,8 +1,14 @@
-import { useMemo } from "react";
-import { ArrowRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { heroCategories } from "@/data/heroCategories";
 import { useCategoryShowcase } from "@/hooks/useStorefrontQueries";
 import { getProductImage } from "@/lib/images";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 
 type HeroCard = {
   key: string;
@@ -43,6 +49,8 @@ function placeCard(index: number, count: number) {
 
 export function AnimatedHero() {
   const { data: showcase = [] } = useCategoryShowcase();
+  const [mobileApi, setMobileApi] = useState<CarouselApi>();
+  const [mobileIndex, setMobileIndex] = useState(0);
 
   const cards = useMemo<HeroCard[]>(() => {
     if (showcase.length > 0) {
@@ -68,6 +76,18 @@ export function AnimatedHero() {
       href: `/category/${category.slug}`,
     }));
   }, [showcase]);
+
+  useEffect(() => {
+    if (!mobileApi) return;
+    const onSelect = () => setMobileIndex(mobileApi.selectedScrollSnap());
+    onSelect();
+    mobileApi.on("select", onSelect);
+    mobileApi.on("reInit", onSelect);
+    return () => {
+      mobileApi.off("select", onSelect);
+      mobileApi.off("reInit", onSelect);
+    };
+  }, [mobileApi]);
 
   return (
     <section className="relative isolate flex min-h-[calc(100svh-69px)] flex-col overflow-hidden bg-background md:min-h-[calc(100svh-73px)]">
@@ -231,35 +251,93 @@ export function AnimatedHero() {
         })}
       </div>
 
-      {/* Éventail de catégories — version mobile en grille */}
-      <div className="relative min-h-0 flex-1 px-4 pt-5 md:hidden">
-        <div className="grid grid-cols-5 gap-2">
-          {cards.map((card, index) => (
-            <a
-              key={card.key}
-              href={card.href}
-              className="group block"
-              style={{
-                transform: `rotate(${index % 2 === 0 ? -1.5 : 1.5}deg)`,
-              }}
+      {/* Catégories mobile — carrousel swipe avec aperçu des voisines */}
+      <div className="relative min-h-0 flex-1 pt-4 md:hidden">
+        <Carousel
+          setApi={setMobileApi}
+          opts={{ align: "center", loop: true, dragFree: false }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-3">
+            {cards.map((card, index) => (
+              <CarouselItem key={card.key} className="basis-[68%] pl-3 sm:basis-[58%]">
+                <a href={card.href} className="group block">
+                  <div
+                    className={[
+                      "overflow-hidden rounded-2xl bg-sand p-1.5 shadow-[0_18px_40px_-22px_rgba(74,93,79,0.55)] ring-1 ring-foliage/[0.06] transition duration-500",
+                      index === mobileIndex
+                        ? "scale-100 opacity-100"
+                        : "scale-[0.92] opacity-70",
+                    ].join(" ")}
+                  >
+                    <div className="relative overflow-hidden rounded-xl bg-muted">
+                      <img
+                        src={card.image}
+                        alt={card.label}
+                        loading={index < 3 ? "eager" : "lazy"}
+                        onError={handleImageError(card.fallback)}
+                        className="aspect-[3/4] w-full object-cover transition duration-700 group-active:scale-[1.03]"
+                      />
+                      <span
+                        aria-hidden
+                        className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-foliage/80 via-foliage/30 to-transparent"
+                      />
+                      <span className="pointer-events-none absolute inset-x-2 bottom-2 flex flex-col items-center gap-1 rounded-lg bg-sand/15 px-2.5 py-2 ring-1 ring-inset ring-sand/30 backdrop-blur-md">
+                        <span
+                          aria-hidden
+                          className="h-px w-8 rounded-full"
+                          style={{ backgroundColor: "var(--accent-orange)" }}
+                        />
+                        <span className="w-full truncate text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-sand">
+                          {card.label}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                </a>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+
+          <div className="mt-4 flex items-center justify-center gap-3 px-4">
+            <button
+              type="button"
+              aria-label="Catégorie précédente"
+              onClick={() => mobileApi?.scrollPrev()}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-sand text-foreground shadow-sm transition active:scale-95"
             >
-              <div className="overflow-hidden rounded-xl bg-sand p-1 shadow-[0_12px_26px_-18px_rgba(74,93,79,0.5)] ring-1 ring-foliage/[0.04]">
-                <div className="overflow-hidden rounded-lg bg-muted">
-                  <img
-                    src={card.image}
-                    alt={card.label}
-                    loading={index < 5 ? "eager" : "lazy"}
-                    onError={handleImageError(card.fallback)}
-                    className="aspect-[3/4] w-full object-cover"
-                  />
-                </div>
-              </div>
-              <span className="mt-1 block truncate text-center text-[8px] font-semibold uppercase tracking-wide text-muted-foreground">
-                {card.label}
-              </span>
-            </a>
-          ))}
-        </div>
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            <div className="flex items-center gap-1.5" role="tablist" aria-label="Catégories">
+              {cards.map((card, index) => (
+                <button
+                  key={card.key}
+                  type="button"
+                  role="tab"
+                  aria-label={card.label}
+                  aria-selected={index === mobileIndex}
+                  onClick={() => mobileApi?.scrollTo(index)}
+                  className={[
+                    "h-1.5 rounded-full transition-all duration-300",
+                    index === mobileIndex
+                      ? "w-5 bg-foreground"
+                      : "w-1.5 bg-foreground/25",
+                  ].join(" ")}
+                />
+              ))}
+            </div>
+
+            <button
+              type="button"
+              aria-label="Catégorie suivante"
+              onClick={() => mobileApi?.scrollNext()}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-sand text-foreground shadow-sm transition active:scale-95"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </Carousel>
       </div>
 
       {/* Bloc éditorial — dans le flux sur mobile, centré dans le dôme sur desktop */}
