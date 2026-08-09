@@ -10,6 +10,16 @@ import { playNewOrderSound, unlockNotificationAudio } from '../lib/notificationS
 const WS_PATH = '/ws/admin/orders'
 
 function buildWsUrl(): string {
+  const apiBase = import.meta.env.VITE_API_URL as string | undefined
+  if (apiBase && /^https?:\/\//i.test(apiBase)) {
+    try {
+      const origin = new URL(apiBase).origin
+      const proto = origin.startsWith('https') ? 'wss:' : 'ws:'
+      return `${proto}//${origin.replace(/^https?:\/\//, '')}${WS_PATH}`
+    } catch {
+      /* fallthrough */
+    }
+  }
   const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   return `${proto}//${window.location.host}${WS_PATH}`
 }
