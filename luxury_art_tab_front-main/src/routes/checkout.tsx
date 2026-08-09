@@ -76,6 +76,7 @@ function CheckoutPage() {
           <p className="mt-4 text-muted-foreground">Ajoutez des tableaux depuis la galerie.</p>
           <Link
             to="/products"
+            search={{ category: undefined }}
             className="mt-8 inline-block rounded-full bg-brand-red px-8 py-3 font-semibold text-sand"
           >
             Voir les produits

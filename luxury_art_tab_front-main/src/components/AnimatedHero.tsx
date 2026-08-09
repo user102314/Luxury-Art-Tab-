@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { heroCategories } from "@/data/heroCategories";
 import { useCategoryShowcase } from "@/hooks/useStorefrontQueries";
@@ -47,17 +47,41 @@ function placeCard(index: number, count: number) {
   };
 }
 
+// Static cards built from local assets — zero API wait, available on first render.
+// This is what the browser paints immediately, eliminating LCP API-delay.
+const staticCards: HeroCard[] = heroCategories.map((category) => ({
+  key: category.slug,
+  label: category.word,
+  image: category.images[0],
+  fallback: category.images[0],
+  href: `/category/${category.slug}`,
+}));
+
 export function AnimatedHero() {
   const { data: showcase = [] } = useCategoryShowcase();
   const [mobileApi, setMobileApi] = useState<CarouselApi>();
   const [mobileIndex, setMobileIndex] = useState(0);
+  const preloadedRef = useRef(false);
+
+  // Inject a <link rel=preload> for the LCP image so Chrome's preload scanner
+  // fetches it in parallel with JS parsing — before React even mounts.
+  useEffect(() => {
+    if (preloadedRef.current) return;
+    preloadedRef.current = true;
+    const firstSrc = staticCards[0]?.image;
+    if (!firstSrc) return;
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = firstSrc;
+    link.setAttribute('fetchpriority', 'high');
+    document.head.prepend(link);
+  }, []);
 
   const cards = useMemo<HeroCard[]>(() => {
     if (showcase.length > 0) {
       return showcase.map((slide, index) => {
         const image = getProductImage(slide.product);
-        // Œuvre maison utilisée si la catégorie n'a pas de visuel produit
-        // valide (placeholder ou URL cassée gérée via onError).
         const fallback = heroCategories[index % heroCategories.length].images[0];
         return {
           key: `cat-${slide.categoryId}`,
@@ -68,13 +92,8 @@ export function AnimatedHero() {
         };
       });
     }
-    return heroCategories.map((category) => ({
-      key: category.slug,
-      label: category.word,
-      image: category.images[0],
-      fallback: category.images[0],
-      href: `/category/${category.slug}`,
-    }));
+    // Use static cards as fallback (already rendered on first paint)
+    return staticCards;
   }, [showcase]);
 
   useEffect(() => {
@@ -215,7 +234,9 @@ export function AnimatedHero() {
                       <img
                         src={card.image}
                         alt={card.label}
-                        loading={index < 6 ? "eager" : "lazy"}
+                        loading={index < 2 ? "eager" : "lazy"}
+                        fetchPriority={index === 0 ? "high" : "auto"}
+                        decoding="async"
                         onError={handleImageError(card.fallback)}
                         className="aspect-[3/4] w-full object-cover transition duration-700 group-hover:scale-[1.07]"
                       />
@@ -274,7 +295,9 @@ export function AnimatedHero() {
                       <img
                         src={card.image}
                         alt={card.label}
-                        loading={index < 3 ? "eager" : "lazy"}
+                        loading={index < 2 ? "eager" : "lazy"}
+                        fetchPriority={index === 0 ? "high" : "auto"}
+                        decoding="async"
                         onError={handleImageError(card.fallback)}
                         className="aspect-[3/4] w-full object-cover transition duration-700 group-active:scale-[1.03]"
                       />

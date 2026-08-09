@@ -104,6 +104,7 @@ export function ProductShowcase() {
         <div className="mt-8 flex justify-center">
           <Link
             to="/products"
+            search={{ category: undefined }}
             className="group inline-flex items-center gap-2 rounded-full border-2 border-brand-red bg-brand-red px-6 py-2.5 text-sm font-bold text-sand shadow-lg transition hover:bg-brand-red/90 hover:shadow-xl"
           >
             Voir tous les produits

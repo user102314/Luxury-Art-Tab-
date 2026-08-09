@@ -60,6 +60,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
               src={image}
               alt={product.nom}
               loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
             />
           </div>

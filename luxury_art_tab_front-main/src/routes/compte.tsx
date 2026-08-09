@@ -99,7 +99,7 @@ function ComptePage() {
           Les récompenses sont créditées automatiquement quand vos commandes passent au statut <strong>livrée</strong>.
         </p>
         <div className="mt-4 text-center">
-          <Link to="/products" className="text-brand-red font-semibold hover:underline">Continuer mes achats →</Link>
+          <Link to="/products" search={{ category: undefined }} className="text-brand-red font-semibold hover:underline">Continuer mes achats →</Link>
         </div>
       </div>
       <SiteFooter />
