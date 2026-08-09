@@ -33,6 +33,54 @@ import { useVisitor } from '@/context/VisitorContext'
 import { ProductCard } from '@/components/ProductCard'
 
 export const Route = createFileRoute('/products/$id')({
+  loader: async ({ params }) => {
+    try {
+      const product = await api.getProduct(Number(params.id))
+      return { product }
+    } catch {
+      return { product: null }
+    }
+  },
+  head: ({ loaderData }) => {
+    const product = loaderData?.product
+    if (!product) {
+      return {
+        meta: [{ title: 'Produit introuvable - Luxury Art_Tab' }]
+      }
+    }
+    
+    // Auto-generate description if missing
+    const description = product.description 
+      ? product.description.slice(0, 150) + (product.description.length > 150 ? '...' : '')
+      : `Achetez le tableau ${product.nom}. Décoration murale haut de gamme pour sublimer votre intérieur. Art de luxe contemporain.`
+    
+    return {
+      meta: [
+        { title: `${product.nom} | Tableau Décoration Luxe` },
+        { name: 'description', content: description },
+        { property: 'og:title', content: `${product.nom} | Tableau Décoration Luxe` },
+        { property: 'og:description', content: description },
+      ],
+      scripts: [
+        {
+          type: 'application/ld+json',
+          children: JSON.stringify({
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": product.nom,
+            "description": description,
+            "offers": {
+              "@type": "Offer",
+              "priceCurrency": "MAD",
+              "price": product.prix,
+              "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+              "url": `https://luxuryarttab.com/products/${product.id}`
+            }
+          })
+        }
+      ]
+    }
+  },
   component: ProductDetailPage,
 })
 
@@ -44,7 +92,7 @@ function ProductDetailPage() {
   const { isFavorite, toggleFavorite } = useFavorites()
   const { ensureVisitor, loading: visitorLoading, visitor } = useVisitor()
 
-  const [size, setSize] = useState(dimensionOptions[2].value)
+  const [size, setSize] = useState<typeof dimensionOptions[number]['value']>(dimensionOptions[2].value)
   const [frame, setFrame] = useState(frameOptions[0])
   const [qty, setQty] = useState(1)
   const [arImage, setArImage] = useState<string | null>(null)
@@ -84,7 +132,7 @@ function ProductDetailPage() {
   })
 
   const { data: likeSummary } = useQuery({
-    queryKey: queryKeys.productLikes(productId, visitor?.id ?? null),
+    queryKey: queryKeys.productLikes(productId, visitor?.id != null ? String(visitor.id) : null),
     queryFn: () => api.getLikeSummary(productId, visitor?.id),
     enabled: !Number.isNaN(productId) && !visitorLoading,
     refetchInterval: REFETCH_INTERVAL,
@@ -144,7 +192,7 @@ function ProductDetailPage() {
         <SiteNav />
         <div className="mx-auto max-w-7xl px-6 py-32 text-center">
           <p className="text-muted-foreground">Produit introuvable</p>
-          <Link to="/products" className="mt-4 inline-block text-brand-red hover:underline">
+          <Link to="/products" search={{ category: undefined }} className="mt-4 inline-block text-brand-red hover:underline">
             Retour à la galerie
           </Link>
         </div>
@@ -229,7 +277,7 @@ function ProductDetailPage() {
     try {
       await toggleFavorite(product.id)
       queryClient.invalidateQueries({
-        queryKey: queryKeys.productLikes(productId, visitor?.id ?? null),
+        queryKey: queryKeys.productLikes(productId, visitor?.id != null ? String(visitor.id) : null),
       })
     } catch {
       toast.error("Impossible de mettre à jour le j'aime")
@@ -241,16 +289,24 @@ function ProductDetailPage() {
       <SiteNav />
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:px-10 md:py-10">
-        <nav className="mb-6 text-sm text-muted-foreground">
+        <nav className="mb-6 flex flex-wrap items-center text-sm text-muted-foreground" aria-label="Fil d'Ariane">
           <Link to="/" className="hover:text-brand-red">
             Accueil
           </Link>
           <span className="mx-2">/</span>
-          <Link to="/products" className="hover:text-brand-red">
+          <Link to="/products" search={{ category: undefined }} className="hover:text-brand-red">
             Produits
           </Link>
+          {categoryName && (
+            <>
+              <span className="mx-2">/</span>
+              <Link to="/products" search={{ category: String(product.categoryId) }} className="hover:text-brand-red">
+                {categoryName}
+              </Link>
+            </>
+          )}
           <span className="mx-2">/</span>
-          <span className="font-medium text-foreground">{product.nom}</span>
+          <span className="font-medium text-foreground" aria-current="page">{product.nom}</span>
         </nav>
 
         <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,420px)] lg:gap-12">
@@ -318,7 +374,7 @@ function ProductDetailPage() {
                 <select
                   id="size-select"
                   value={size}
-                  onChange={(e) => setSize(e.target.value)}
+                  onChange={(e) => setSize(e.target.value as typeof dimensionOptions[number]['value'])}
                   className="w-full rounded-xl border border-border bg-sand px-4 py-3 text-sm font-medium outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/20"
                 >
                   {dimensionOptions.map((dim) => (

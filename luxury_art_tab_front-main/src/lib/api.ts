@@ -259,11 +259,4 @@ export const api = {
       userId: userId ?? null,
     }),
 }
-
-interface Category {
-  id: number
-  nom: string
-  description?: string
-}
-
 export type { CartItem }

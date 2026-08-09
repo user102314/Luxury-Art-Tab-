@@ -2,6 +2,24 @@ import { createFileRoute } from "@tanstack/react-router";
 import { heroCategories } from "@/data/heroCategories";
 
 export const Route = createFileRoute("/category/$slug")({
+  loader: ({ params }) => {
+    return { category: heroCategories.find((item) => item.slug === params.slug) || null }
+  },
+  head: ({ loaderData }) => {
+    const category = loaderData?.category
+    if (!category) {
+      return { meta: [{ title: 'Catégorie introuvable - Luxury Art_Tab' }] }
+    }
+    
+    return {
+      meta: [
+        { title: `Tableaux pour ${category.word} | Décoration Luxe` },
+        { name: 'description', content: `Découvrez notre collection exclusive de tableaux pour ${category.word}. Toiles haut de gamme pour sublimer votre intérieur.` },
+        { property: 'og:title', content: `Tableaux pour ${category.word} | Décoration Luxe` },
+        { property: 'og:description', content: `Découvrez notre collection exclusive de tableaux pour ${category.word}. Toiles haut de gamme pour sublimer votre intérieur.` }
+      ]
+    }
+  },
   component: CategoryPage,
 });
 
@@ -24,7 +42,13 @@ function CategoryPage() {
   return (
     <main className="min-h-screen bg-beige/25 px-6 py-12 md:py-16">
       <div className="mx-auto max-w-7xl">
-        <a href="/" className="text-sm font-semibold text-brand-red hover:underline">Retour</a>
+        <nav className="mb-4 flex flex-wrap items-center text-sm text-muted-foreground" aria-label="Fil d'Ariane">
+          <a href="/" className="hover:text-brand-red">Accueil</a>
+          <span className="mx-2">/</span>
+          <a href="/products" className="hover:text-brand-red">Produits</a>
+          <span className="mx-2">/</span>
+          <span className="font-medium text-foreground" aria-current="page">{category.word}</span>
+        </nav>
 
         <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl">
           Categorie: <span className={category.color}>{category.word}</span>
