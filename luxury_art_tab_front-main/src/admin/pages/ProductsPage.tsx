@@ -52,19 +52,13 @@ const emptyForm = {
 type Tab = 'catalogue' | 'stats' | 'detail'
 type ProductSortKey = 'nom' | 'prix' | 'stock' | 'category'
 
+import { resolveImageSrc as resolveMediaUrl } from '@/lib/images'
+
 function resolveImageSrc(url?: string) {
   if (!url) return undefined
-  if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url
-  const path = url.startsWith('/') ? url : `/${url}`
-  const apiBase = import.meta.env.VITE_API_URL as string | undefined
-  if (apiBase && /^https?:\/\//i.test(apiBase)) {
-    try {
-      return `${new URL(apiBase).origin}${path}`
-    } catch {
-      /* fallthrough */
-    }
-  }
-  return path
+  if (url.startsWith('blob:') || url.startsWith('data:')) return url
+  const resolved = resolveMediaUrl(url)
+  return resolved === '/placeholder-art.svg' && !url ? undefined : resolved
 }
 
 function parseStock(raw: string): number | null {

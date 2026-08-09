@@ -2,9 +2,18 @@ import { getApiBase, getApiOrigin } from '@/lib/apiBase'
 
 export { getApiBase, getApiOrigin } from '@/lib/apiBase'
 
+/**
+ * Résout une URL média backend (`/uploads/...`) vers l'origine API HTTPS.
+ * Les blob:/data:/http(s): restent inchangées.
+ */
 export function resolveImageSrc(url?: string | null): string {
   if (!url) return '/placeholder-art.svg'
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:') || url.startsWith('data:')) {
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('blob:') ||
+    url.startsWith('data:')
+  ) {
     return url
   }
   const path = url.startsWith('/') ? url : `/${url}`
@@ -12,6 +21,7 @@ export function resolveImageSrc(url?: string | null): string {
   if (origin && (path.startsWith('/uploads') || path.startsWith('/api'))) {
     return `${origin}${path}`
   }
+  // Dev local avec proxy Vite : garder le chemin relatif (/uploads → proxy)
   return path
 }
 

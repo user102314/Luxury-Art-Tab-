@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { ArrowRight, CalendarDays, Megaphone } from 'lucide-react'
 import { usePublishedNews } from '@/hooks/useStorefrontQueries'
 import { PaintSplash, PaintStroke } from '@/components/ArtDecor'
+import { RemoteImage } from '@/components/RemoteImage'
 
 function formatDate(value?: string) {
   if (!value) return null
@@ -73,9 +74,10 @@ export function NewsSection() {
             <div className="grid items-stretch md:grid-cols-2">
               {featured.imageUrl && (
                 <div className="relative min-h-[240px] overflow-hidden md:min-h-[380px]">
-                  <img
+                  <RemoteImage
                     src={featured.imageUrl}
                     alt={featured.titre}
+                    priority
                     className="absolute inset-0 h-full w-full object-cover transition duration-[900ms] group-hover:scale-105"
                   />
                   <span

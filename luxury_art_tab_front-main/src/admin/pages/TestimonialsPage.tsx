@@ -6,6 +6,7 @@ import { ListToolbar } from '../components/ListToolbar'
 import { useInvalidateAdmin, useTestimonials } from '../hooks/useAdminQueries'
 import { compareNumbers, compareStrings, matchesSearch, type SortDir } from '../lib/listUtils'
 import type { Testimonial, TestimonialPlateforme } from '../types'
+import { resolveImageSrc } from '@/lib/images'
 
 const PLATEFORMES: { value: TestimonialPlateforme; label: string }[] = [
   { value: 'MESSENGER', label: 'Messenger' },
@@ -14,12 +15,6 @@ const PLATEFORMES: { value: TestimonialPlateforme; label: string }[] = [
   { value: 'FACEBOOK', label: 'Facebook' },
   { value: 'AUTRE', label: 'Autre' },
 ]
-
-function resolveImageSrc(url?: string) {
-  if (!url) return undefined
-  if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url
-  return url.startsWith('/') ? url : `/${url}`
-}
 
 export default function TestimonialsPage() {
   const { data: items = [], isLoading, isFetching } = useTestimonials()

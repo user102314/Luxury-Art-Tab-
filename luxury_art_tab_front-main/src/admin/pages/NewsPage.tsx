@@ -7,12 +7,7 @@ import { ListToolbar } from '../components/ListToolbar'
 import { useInvalidateAdmin, useNews } from '../hooks/useAdminQueries'
 import { compareDates, compareStrings, matchesSearch, type SortDir } from '../lib/listUtils'
 import type { News } from '../types'
-
-function resolveImageSrc(url?: string) {
-  if (!url) return undefined
-  if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url
-  return url.startsWith('/') ? url : `/${url}`
-}
+import { resolveImageSrc } from '@/lib/images'
 
 export default function NewsPage() {
   const { user } = useAdminAuth()

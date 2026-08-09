@@ -11,6 +11,7 @@ import { useCart } from '@/context/CartContext'
 import { useAuth } from '@/context/AuthContext'
 import { useVisitor } from '@/context/VisitorContext'
 import { api, getVisitorKey } from '@/lib/api'
+import { resolveImageSrc } from '@/lib/images'
 import { formatPrice } from '@/lib/pricing'
 
 export const Route = createFileRoute('/checkout')({
@@ -157,8 +158,10 @@ function CheckoutPage() {
                   className="flex gap-4 border-b border-sand/10 pb-4"
                 >
                   <img
-                    src={item.imageUrl}
+                    src={resolveImageSrc(item.imageUrl)}
                     alt={item.nom}
+                    loading="lazy"
+                    decoding="async"
                     className="h-16 w-16 rounded-lg object-cover"
                   />
                   <div className="flex-1">

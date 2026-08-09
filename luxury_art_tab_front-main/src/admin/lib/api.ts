@@ -167,7 +167,7 @@ export const api = {
   uploadNewsImage: async (newsId: number, file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    const res = await fetch(`/api/news/${newsId}/image`, { method: 'POST', body: formData })
+    const res = await fetch(`${BASE}/news/${newsId}/image`, { method: 'POST', body: formData })
     if (!res.ok) {
       const err = await res.json().catch(() => ({ message: 'Erreur upload' }))
       throw new Error(err.message ?? `Erreur ${res.status}`)
@@ -191,7 +191,7 @@ export const api = {
   uploadTestimonialImage: async (id: number, file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    const res = await fetch(`/api/testimonials/${id}/image`, { method: 'POST', body: formData })
+    const res = await fetch(`${BASE}/testimonials/${id}/image`, { method: 'POST', body: formData })
     if (!res.ok) {
       const err = await res.json().catch(() => ({ message: 'Erreur upload' }))
       throw new Error(err.message ?? `Erreur ${res.status}`)

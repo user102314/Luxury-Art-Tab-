@@ -425,7 +425,7 @@ export function SiteNav() {
                         key={`${item.productId}-${item.taille}`}
                         className="flex gap-3 border-b border-border/40 pb-4"
                       >
-                        <img src={item.imageUrl} alt="" className="h-14 w-14 rounded-lg object-cover" />
+                        <img src={getProductImage({ imageUrl: item.imageUrl })} alt="" className="h-14 w-14 rounded-lg object-cover" loading="lazy" decoding="async" />
                         <div className="flex-1">
                           <p className="text-sm font-semibold">{item.nom}</p>
                           <p className="text-xs text-muted-foreground">{item.taille}</p>

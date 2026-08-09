@@ -7,6 +7,7 @@ import { TestimonialsSection } from '@/components/TestimonialsSection'
 import { AboutBand } from '@/components/AboutBand'
 import { usePublishedNews } from '@/hooks/useStorefrontQueries'
 import { Reveal } from '@/components/Reveal'
+import { RemoteImage } from '@/components/RemoteImage'
 import type { News } from '@/types/api'
 
 export const Route = createFileRoute('/actualites')({
@@ -125,9 +126,10 @@ function FeaturedArticle({ article, isLatest }: { article: News; isLatest: boole
     <article className="overflow-hidden rounded-[2rem] bg-sand/70 shadow-[0_30px_60px_-40px_rgba(74,93,79,0.75)] ring-1 ring-gold/35">
       {article.imageUrl && (
         <div className="relative aspect-[16/9] overflow-hidden">
-          <img
+          <RemoteImage
             src={article.imageUrl}
             alt={article.titre}
+            priority
             className="h-full w-full object-cover"
           />
           <span className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full bg-gold px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-sand shadow-lg">
@@ -181,11 +183,10 @@ function SummaryCard({ article, onSelect }: { article: News; onSelect: () => voi
       className="group flex w-full gap-4 rounded-2xl border border-border/60 bg-sand/60 p-3 text-left transition hover:border-gold/60 hover:bg-sand"
     >
       {article.imageUrl ? (
-        <img
+        <RemoteImage
           src={article.imageUrl}
           alt=""
           aria-hidden
-          loading="lazy"
           className="h-20 w-20 shrink-0 rounded-xl object-cover"
         />
       ) : (

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Heart, MessageCircle } from 'lucide-react'
 import { PaintSplash, PaintStroke } from '@/components/ArtDecor'
+import { RemoteImage } from '@/components/RemoteImage'
 import { useActiveTestimonials } from '@/hooks/useStorefrontQueries'
+import { resolveImageSrc } from '@/lib/images'
 import type { Testimonial, TestimonialPlateforme } from '@/types/api'
 
 /** Chaque plateforme reçoit une teinte de la charte, jamais sa couleur de marque. */
@@ -38,8 +40,7 @@ const PLATFORM_STYLE: Record<
 
 function resolveSrc(url?: string) {
   if (!url) return undefined
-  if (url.startsWith('http') || url.startsWith('data:')) return url
-  return url.startsWith('/') ? url : `/${url}`
+  return resolveImageSrc(url)
 }
 
 function initials(name: string) {
@@ -240,7 +241,7 @@ function TestimonialCard({
       <div className="flex flex-col items-center gap-2 border-b border-sand/10 px-4 py-4 text-center">
         <div className="relative">
           {avatar ? (
-            <img src={avatar} alt="" className="h-12 w-12 rounded-full object-cover" />
+            <RemoteImage src={item.avatarUrl} alt="" className="h-12 w-12 rounded-full object-cover" />
           ) : (
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gold/20 text-sm font-bold text-gold">
               {initials(item.clientNom)}
@@ -267,11 +268,10 @@ function TestimonialCard({
           onClick={() => onOpenImage(image)}
           aria-label="Agrandir la capture"
         >
-          <img
-            src={image}
+          <RemoteImage
+            src={item.imageUrl}
             alt={`Avis de ${item.clientNom}`}
             className="mx-auto max-h-[380px] w-auto max-w-full rounded-xl object-contain transition hover:opacity-95"
-            loading="lazy"
           />
         </button>
       )}
