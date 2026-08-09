@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf'
 import type { Order } from '../types'
 import { ORDER_CANAL_LABELS, ORDER_STATUS_LABELS } from './api'
+import { getApiBase } from '@/lib/apiBase'
 
 /** Infos vendeur affichées sur la facture (colis client). */
 export const INVOICE_SELLER = {
@@ -35,7 +36,7 @@ export function invoiceFileName(order: Order): string {
   return `facture-commande-${order.id}.pdf`
 }
 
-const BASE = import.meta.env.VITE_API_URL ?? '/api'
+const BASE = getApiBase()
 
 async function downloadColissimoInvoice(orderId: number, fileName: string): Promise<boolean> {
   const res = await fetch(`${BASE}/colissimo/orders/${orderId}/invoice`)

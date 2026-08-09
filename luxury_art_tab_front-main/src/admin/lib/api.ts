@@ -32,6 +32,7 @@ import type {
   ColissimoTracking,
   ColissimoTrackingSummary,
 } from '../types'
+import { getApiBase } from '@/lib/apiBase'
 
 /** Commandes comptabilisées dans le chiffre d'affaires (livrées uniquement) */
 export const REVENUE_ORDER_STATUSES: OrderStatut[] = ['LIVREE']
@@ -51,7 +52,7 @@ export function orderAmount(order: Order) {
   return Number(order.total) || 0
 }
 
-const BASE = import.meta.env.VITE_API_URL ?? '/api'
+const BASE = getApiBase()
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {

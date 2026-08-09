@@ -6,12 +6,13 @@ import type { AdminNotification } from '../types'
 import { queryKeys } from '../lib/queryKeys'
 import { api } from '../lib/api'
 import { playNewOrderSound, unlockNotificationAudio } from '../lib/notificationSound'
+import { getApiBase } from '@/lib/apiBase'
 
 const WS_PATH = '/ws/admin/orders'
 
 function buildWsUrl(): string {
-  const apiBase = import.meta.env.VITE_API_URL as string | undefined
-  if (apiBase && /^https?:\/\//i.test(apiBase)) {
+  const apiBase = getApiBase()
+  if (/^https?:\/\//i.test(apiBase)) {
     try {
       const origin = new URL(apiBase).origin
       const proto = origin.startsWith('https') ? 'wss:' : 'ws:'

@@ -13,7 +13,9 @@ import type {
   Visitor,
 } from '@/types/api'
 
-const BASE = import.meta.env.VITE_API_URL ?? '/api'
+import { getApiBase } from '@/lib/apiBase'
+
+const BASE = getApiBase()
 
 export function getVisitorKey(): string {
   const KEY = 'luxart_visitor_key'
