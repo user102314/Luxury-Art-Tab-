@@ -77,7 +77,7 @@ function normalize(s: string) {
 }
 
 function formatDh(n: number) {
-  return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(n)} DH`
+  return `${new Intl.NumberFormat('fr-TN', { maximumFractionDigits: 0 }).format(n)} TND`
 }
 
 function stockLabel(stock: number, statut: string) {
@@ -279,7 +279,7 @@ export function processChatMessage(
   // Livraison / paiement
   if (lower.includes('livraison') || lower.includes('delai') || lower.includes('délai')) {
     return {
-      text: 'Livraison au Maroc en 3 à 7 jours ouvrés. Paiement à la livraison ou virement. Pour une commande sur mesure, utilisez WhatsApp.',
+      text: 'Livraison en Tunisie en 3 à 7 jours ouvrés. Paiement à la livraison ou virement. Pour une commande sur mesure, utilisez WhatsApp.',
     }
   }
   if (lower.includes('paiement') || lower.includes('payer')) {

@@ -3,10 +3,11 @@ import { ArrowRight, CalendarDays, Megaphone } from 'lucide-react'
 import { usePublishedNews } from '@/hooks/useStorefrontQueries'
 import { PaintSplash, PaintStroke } from '@/components/ArtDecor'
 import { RemoteImage } from '@/components/RemoteImage'
+import type { News } from '@/types/api'
 
 function formatDate(value?: string) {
   if (!value) return null
-  return new Date(value).toLocaleDateString('fr-FR', {
+  return new Date(value).toLocaleDateString('fr-TN', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -18,8 +19,8 @@ function formatDate(value?: string) {
  * Seule la dernière publication est mise en avant, le reste renvoie vers
  * la page Actualités.
  */
-export function NewsSection() {
-  const { data: news = [], isLoading } = usePublishedNews()
+export function NewsSection({ initialNews }: { initialNews?: News[] } = {}) {
+  const { data: news = [], isLoading } = usePublishedNews({ initialData: initialNews })
 
   const featured = news[0]
   const othersCount = Math.max(news.length - 1, 0)

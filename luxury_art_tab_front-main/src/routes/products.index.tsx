@@ -22,6 +22,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { api } from '@/lib/api'
+import {
+  PAGE_COPY,
+  buildSeoHead,
+  preferredCategorySlug,
+  resolveCategoryBySlug,
+} from '@/lib/seo'
 
 export const Route = createFileRoute('/products/')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -30,6 +37,33 @@ export const Route = createFileRoute('/products/')({
         ? search.category
         : undefined,
   }),
+  loader: async () => {
+    const [products, categories] = await Promise.all([
+      api.getProducts().catch(() => []),
+      api.getCategories().catch(() => []),
+    ])
+    return { products, categories }
+  },
+  head: ({ loaderData, match }) => {
+    const categoryParam = (match.search as { category?: string }).category
+    const categories = loaderData?.categories ?? []
+    let canonicalPath = '/products'
+    if (categoryParam) {
+      const byId = categories.find((c) => String(c.id) === categoryParam)
+      if (byId) {
+        canonicalPath = `/category/${preferredCategorySlug(byId)}`
+      } else {
+        const bySlug = resolveCategoryBySlug(categoryParam, categories)
+        if (bySlug) canonicalPath = `/category/${preferredCategorySlug(bySlug)}`
+      }
+    }
+    return buildSeoHead({
+      title: PAGE_COPY.products.title,
+      description: PAGE_COPY.products.description,
+      path: '/products',
+      canonical: canonicalPath,
+    })
+  },
   component: ProductsPage,
 })
 
@@ -43,6 +77,7 @@ const sortLabels: Record<SortOption, string> = {
 }
 
 function ProductsPage() {
+  const { products: seededProducts, categories: seededCategories } = Route.useLoaderData()
   const { category: categoryFromUrl } = Route.useSearch()
   const [categoryId, setCategoryId] = useState<string>(categoryFromUrl ?? 'all')
   const [search, setSearch] = useState('')
@@ -52,8 +87,10 @@ function ProductsPage() {
   const [arImage, setArImage] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
 
-  const { data: products = [], isLoading: loadingProducts } = useProducts()
-  const { data: categories = [] } = useCategories()
+  const { data: products = [], isLoading: loadingProducts } = useProducts({
+    initialData: seededProducts,
+  })
+  const { data: categories = [] } = useCategories({ initialData: seededCategories })
 
   useEffect(() => {
     setCategoryId(categoryFromUrl ?? 'all')
@@ -200,10 +237,10 @@ function ProductsPage() {
             Catalogue complet
           </p>
           <h1 className="mt-3 font-display text-4xl font-bold md:text-5xl">
-            Tous nos <em className="text-gold">tableaux</em>
+            Nos tableaux et <em className="text-gold">décorations murales</em>
           </h1>
           <p className="mt-4 max-w-2xl text-sand/80">
-            Explorez notre collection, filtrez par catégorie et prix pour trouver la pièce parfaite.
+            Explorez notre collection en Tunisie — filtrez par catégorie et prix pour trouver la pièce parfaite.
           </p>
         </div>
       </div>
@@ -283,7 +320,7 @@ function ProductsPage() {
               )}
               {priceTouched && (
                 <Chip
-                  label={`${priceRange[0]} – ${priceRange[1]} DH`}
+                  label={`${priceRange[0]} – ${priceRange[1]} TND`}
                   onClear={() => setPriceRange(priceBounds)}
                 />
               )}
@@ -374,7 +411,7 @@ function FilterRow({
 function PriceTag({ value }: { value: number }) {
   return (
     <span className="rounded-lg border border-border bg-sand px-3 py-1.5 text-sm font-semibold text-foreground">
-      {value} DH
+      {value} TND
     </span>
   )
 }

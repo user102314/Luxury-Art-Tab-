@@ -1,74 +1,155 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { heroCategories } from "@/data/heroCategories";
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { SiteNav } from '@/components/SiteNav'
+import { SiteFooter } from '@/components/SiteFooter'
+import { ProductCard } from '@/components/ProductCard'
+import { api } from '@/lib/api'
+import { getProductImage } from '@/lib/images'
+import type { Category, Product } from '@/types/api'
+import { heroCategories } from '@/data/heroCategories'
+import {
+  buildSeoHead,
+  categorySeoDescription,
+  resolveCategoryBySlug,
+  preferredCategorySlug,
+  breadcrumbSchema,
+} from '@/lib/seo'
 
-export const Route = createFileRoute("/category/$slug")({
-  loader: ({ params }) => {
-    return { category: heroCategories.find((item) => item.slug === params.slug) || null }
+type CategoryLoaderData = {
+  slug: string
+  category: Category | null
+  products: Product[]
+  hero: (typeof heroCategories)[number] | null
+}
+
+export const Route = createFileRoute('/category/$slug')({
+  loader: async ({ params }): Promise<CategoryLoaderData> => {
+    const [categories, products] = await Promise.all([
+      api.getCategories().catch(() => []),
+      api.getProducts().catch(() => []),
+    ])
+    const category = resolveCategoryBySlug(params.slug, categories)
+    const categoryProducts = category
+      ? products.filter((p) => p.categoryId === category.id && p.statut !== 'ARCHIVE')
+      : []
+    const hero = heroCategories.find((item) => item.slug === params.slug) ?? null
+    return {
+      slug: params.slug,
+      category,
+      products: categoryProducts,
+      hero,
+    }
   },
   head: ({ loaderData }) => {
     const category = loaderData?.category
-    if (!category) {
-      return { meta: [{ title: 'Catégorie introuvable - Luxury Art_Tab' }] }
-    }
-    
-    return {
-      meta: [
-        { title: `Tableaux pour ${category.word} | Décoration Luxe` },
-        { name: 'description', content: `Découvrez notre collection exclusive de tableaux pour ${category.word}. Toiles haut de gamme pour sublimer votre intérieur.` },
-        { property: 'og:title', content: `Tableaux pour ${category.word} | Décoration Luxe` },
-        { property: 'og:description', content: `Découvrez notre collection exclusive de tableaux pour ${category.word}. Toiles haut de gamme pour sublimer votre intérieur.` }
-      ]
-    }
+    const products = loaderData?.products ?? []
+    const slug = loaderData?.slug ?? ''
+    const hero = loaderData?.hero
+    const label = category?.nom ?? hero?.word ?? slug
+    const indexable = !!category && products.length > 0
+    const image = products[0] ? getProductImage(products[0]) : hero?.images[0]
+
+    return buildSeoHead({
+      title: `Tableaux ${label} | Luxury Art_Tab`,
+      description: categorySeoDescription(label, products.length),
+      path: `/category/${slug}`,
+      image,
+      robots: indexable ? 'index, follow' : 'noindex, follow',
+      jsonLd: indexable
+        ? [
+            breadcrumbSchema([
+              { name: 'Accueil', path: '/' },
+              { name: 'Produits', path: '/products' },
+              { name: label, path: `/category/${preferredCategorySlug(category!)}` },
+            ]),
+          ]
+        : undefined,
+    })
   },
   component: CategoryPage,
-});
+})
 
 function CategoryPage() {
-  const { slug } = Route.useParams();
-  const category = heroCategories.find((item) => item.slug === slug);
+  const data = Route.useLoaderData() as CategoryLoaderData
+  const { slug, category, products, hero } = data
+  const label = category?.nom ?? hero?.word ?? slug
+  const indexable = !!category && products.length > 0
 
-  if (!category) {
+  if (!category && !hero) {
     return (
       <main className="mx-auto min-h-screen max-w-6xl px-6 py-16">
-        <h1 className="font-display text-4xl font-bold text-foreground">Categorie introuvable</h1>
-        <p className="mt-3 text-muted-foreground">Cette categorie n'existe pas.</p>
-        <a href="/" className="mt-6 inline-flex rounded-full bg-brand-red px-5 py-2.5 text-sm font-semibold text-sand">
-          Retour a l'accueil
-        </a>
+        <SiteNav />
+        <h1 className="mt-10 font-display text-4xl font-bold text-foreground">
+          Catégorie introuvable
+        </h1>
+        <p className="mt-3 text-muted-foreground">Cette catégorie n&apos;existe pas.</p>
+        <Link
+          to="/products"
+          search={{ category: undefined }}
+          className="mt-6 inline-flex rounded-full bg-brand-red px-5 py-2.5 text-sm font-semibold text-sand"
+        >
+          Voir le catalogue
+        </Link>
       </main>
-    );
+    )
   }
 
   return (
-    <main className="min-h-screen bg-beige/25 px-6 py-12 md:py-16">
-      <div className="mx-auto max-w-7xl">
+    <main className="flex min-h-screen flex-col bg-beige/25">
+      <SiteNav />
+      <div className="mx-auto w-full max-w-7xl px-6 py-12 md:py-16">
         <nav className="mb-4 flex flex-wrap items-center text-sm text-muted-foreground" aria-label="Fil d'Ariane">
-          <a href="/" className="hover:text-brand-red">Accueil</a>
+          <Link to="/" className="hover:text-brand-red">
+            Accueil
+          </Link>
           <span className="mx-2">/</span>
-          <a href="/products" className="hover:text-brand-red">Produits</a>
+          <Link to="/products" search={{ category: undefined }} className="hover:text-brand-red">
+            Produits
+          </Link>
           <span className="mx-2">/</span>
-          <span className="font-medium text-foreground" aria-current="page">{category.word}</span>
+          <span className="font-medium text-foreground" aria-current="page">
+            {label}
+          </span>
         </nav>
 
         <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-          Categorie: <span className={category.color}>{category.word}</span>
+          Tableaux pour <span className={hero?.color ?? 'text-brand-red'}>{label}</span>
         </h1>
 
         <p className="mt-3 max-w-2xl text-muted-foreground">
-          Tous les produits de cette categorie.
+          {category?.description?.trim() ||
+            (indexable
+              ? `Sélection de tableaux ${label.toLowerCase()} disponibles chez Luxury Art_Tab, livrés en Tunisie.`
+              : `Cette collection sera bientôt enrichie. Découvrez en attendant tout le catalogue.`)}
         </p>
 
-        <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-          {category.images.map((src, i) => (
-            <article key={`${category.slug}-${i}`} className="overflow-hidden rounded-2xl border border-foliage/5 bg-sand/40 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.4)]">
-              <img src={src} alt={`${category.word} ${i + 1}`} loading="lazy" className="h-64 w-full object-cover" />
-              <div className="px-3 py-2">
-                <p className="text-sm font-semibold text-foreground">Produit {i + 1}</p>
-              </div>
-            </article>
-          ))}
-        </div>
+        {indexable ? (
+          <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {products.map((product, i) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                categoryName={category?.nom}
+                index={i}
+                compact
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-10 rounded-2xl border border-dashed border-border px-6 py-12 text-center">
+            <p className="font-display text-xl font-semibold text-foreground">
+              Aucun produit dans cette catégorie pour le moment
+            </p>
+            <Link
+              to="/products"
+              search={{ category: undefined }}
+              className="mt-4 inline-block font-semibold text-brand-red hover:underline"
+            >
+              Parcourir tous les tableaux →
+            </Link>
+          </div>
+        )}
       </div>
+      <SiteFooter />
     </main>
-  );
+  )
 }

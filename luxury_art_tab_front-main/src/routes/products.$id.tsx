@@ -31,61 +31,83 @@ import { useCart } from '@/context/CartContext'
 import { useFavorites } from '@/context/FavoritesContext'
 import { useVisitor } from '@/context/VisitorContext'
 import { ProductCard } from '@/components/ProductCard'
+import type { Category } from '@/types/api'
+import {
+  buildSeoHead,
+  productSeoDescription,
+  productSchema,
+  breadcrumbSchema,
+  preferredCategorySlug,
+} from '@/lib/seo'
 
 export const Route = createFileRoute('/products/$id')({
   loader: async ({ params }) => {
     try {
-      const product = await api.getProduct(Number(params.id))
-      return { product }
+      const [product, categories] = await Promise.all([
+        api.getProduct(Number(params.id)),
+        api.getCategories().catch(() => []),
+      ])
+      return { product, categories }
     } catch {
-      return { product: null }
+      return { product: null, categories: [] }
     }
   },
   head: ({ loaderData }) => {
     const product = loaderData?.product
+    const categories = loaderData?.categories ?? []
     if (!product) {
-      return {
-        meta: [{ title: 'Produit introuvable - Luxury Art_Tab' }]
-      }
+      return buildSeoHead({
+        title: 'Produit introuvable | Luxury Art_Tab',
+        description: 'Ce tableau n’est plus disponible.',
+        path: '/products',
+        robots: 'noindex, nofollow',
+      })
     }
-    
-    // Auto-generate description if missing
-    const description = product.description 
-      ? product.description.slice(0, 150) + (product.description.length > 150 ? '...' : '')
-      : `Achetez le tableau ${product.nom}. Décoration murale haut de gamme pour sublimer votre intérieur. Art de luxe contemporain.`
-    
-    return {
-      meta: [
-        { title: `${product.nom} | Tableau Décoration Luxe` },
-        { name: 'description', content: description },
-        { property: 'og:title', content: `${product.nom} | Tableau Décoration Luxe` },
-        { property: 'og:description', content: description },
+
+    const category = categories.find((c) => c.id === product.categoryId)
+    const description = productSeoDescription({
+      nom: product.nom,
+      description: product.description,
+      categoryName: category?.nom,
+    })
+    const image = getProductImage(product)
+    const crumbs = [
+      { name: 'Accueil', path: '/' },
+      { name: 'Produits', path: '/products' },
+    ]
+    if (category) {
+      crumbs.push({
+        name: category.nom,
+        path: `/category/${preferredCategorySlug(category)}`,
+      })
+    }
+    crumbs.push({ name: product.nom, path: `/products/${product.id}` })
+
+    return buildSeoHead({
+      title: `${product.nom} | Tableau et décoration | Luxury Art_Tab`,
+      description,
+      path: `/products/${product.id}`,
+      image,
+      type: 'product',
+      jsonLd: [
+        productSchema({
+          id: product.id,
+          nom: product.nom,
+          description,
+          image,
+          prix: product.prix,
+          stock: product.stock,
+        }),
+        breadcrumbSchema(crumbs),
       ],
-      scripts: [
-        {
-          type: 'application/ld+json',
-          children: JSON.stringify({
-            "@context": "https://schema.org/",
-            "@type": "Product",
-            "name": product.nom,
-            "description": description,
-            "offers": {
-              "@type": "Offer",
-              "priceCurrency": "MAD",
-              "price": product.prix,
-              "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-              "url": `https://luxuryarttab.com/products/${product.id}`
-            }
-          })
-        }
-      ]
-    }
+    })
   },
   component: ProductDetailPage,
 })
 
 function ProductDetailPage() {
   const { id } = Route.useParams()
+  const { product: seededProduct, categories: seededCategories } = Route.useLoaderData()
   const productId = Number(id)
   const queryClient = useQueryClient()
   const { addItem } = useCart()
@@ -102,7 +124,9 @@ function ProductDetailPage() {
   const [detailsOpen, setDetailsOpen] = useState(true)
   const [feedbackTab, setFeedbackTab] = useState<'avis' | 'commentaires'>('avis')
 
-  const { data: product, isLoading } = useProduct(productId)
+  const { data: product, isLoading } = useProduct(productId, {
+    initialData: seededProduct,
+  })
   const { data: allProducts = [] } = useProducts()
   const { trackClick } = useProductTracking(
     !Number.isNaN(productId) && productId > 0 ? productId : null,
@@ -112,6 +136,7 @@ function ProductDetailPage() {
     queryKey: queryKeys.categories,
     queryFn: api.getCategories,
     staleTime: 5 * 60_000,
+    initialData: seededCategories,
     placeholderData: keepPreviousData,
   })
 
@@ -200,7 +225,11 @@ function ProductDetailPage() {
     )
   }
 
-  const categoryName = categories.find((c) => c.id === product.categoryId)?.nom
+  const categoryMeta = categories.find((c: Category) => c.id === product.categoryId)
+  const categoryName = categoryMeta?.nom
+  const categoryPath = categoryMeta
+    ? `/category/${preferredCategorySlug(categoryMeta)}`
+    : null
   const image = getProductImage(product)
   const unitPrice = getPrice(Number(product.prix), size)
   const liked = isFavorite(product.id)
@@ -297,10 +326,10 @@ function ProductDetailPage() {
           <Link to="/products" search={{ category: undefined }} className="hover:text-brand-red">
             Produits
           </Link>
-          {categoryName && (
+          {categoryName && categoryPath && (
             <>
               <span className="mx-2">/</span>
-              <Link to="/products" search={{ category: String(product.categoryId) }} className="hover:text-brand-red">
+              <Link to="/category/$slug" params={{ slug: preferredCategorySlug(categoryMeta!) }} className="hover:text-brand-red">
                 {categoryName}
               </Link>
             </>
@@ -726,13 +755,23 @@ function ProductDetailPage() {
                     : 'Dans la même catégorie'}
                 </p>
               </div>
-              <Link
-                to="/products"
-                search={{ category: String(product.categoryId) }}
-                className="text-sm font-semibold text-brand-red hover:underline"
-              >
-                Voir plus →
-              </Link>
+              {categoryMeta ? (
+                <Link
+                  to="/category/$slug"
+                  params={{ slug: preferredCategorySlug(categoryMeta) }}
+                  className="text-sm font-semibold text-brand-red hover:underline"
+                >
+                  Voir toute la catégorie →
+                </Link>
+              ) : (
+                <Link
+                  to="/products"
+                  search={{ category: String(product.categoryId) }}
+                  className="text-sm font-semibold text-brand-red hover:underline"
+                >
+                  Voir plus →
+                </Link>
+              )}
             </div>
 
             <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-3 snap-x snap-mandatory">

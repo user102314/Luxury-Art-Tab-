@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+﻿import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import {
   AreaChart,
@@ -161,7 +161,7 @@ export default function RevenuePage() {
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
               <XAxis dataKey="name" stroke="#71717a" fontSize={12} />
-              <YAxis stroke="#71717a" fontSize={12} tickFormatter={(v) => `${v} DH`} />
+              <YAxis stroke="#71717a" fontSize={12} tickFormatter={(v) => `${v} TND`} />
               <Tooltip
                 contentStyle={{ background: '#1a1a1f', border: '1px solid #ffffff20', borderRadius: '12px' }}
                 formatter={(v: number, name: string) =>
@@ -206,7 +206,7 @@ export default function RevenuePage() {
             <BarChart data={breakdownData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
               <XAxis dataKey="name" stroke="#71717a" fontSize={12} />
-              <YAxis stroke="#71717a" fontSize={12} tickFormatter={(v) => `${v} DH`} />
+              <YAxis stroke="#71717a" fontSize={12} tickFormatter={(v) => `${v} TND`} />
               <Tooltip contentStyle={{ background: '#1a1a1f', border: '1px solid #ffffff20', borderRadius: '12px' }} formatter={(v: number, name: string) => name === 'montant' ? [formatCurrency(v), 'Montant'] : [v, 'Commandes']} />
               <Bar dataKey="montant" fill="#b8873a" radius={[6, 6, 0, 0]} name="montant" />
             </BarChart>

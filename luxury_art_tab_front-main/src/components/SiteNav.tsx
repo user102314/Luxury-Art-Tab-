@@ -36,9 +36,9 @@ export function SiteNav() {
 
   const prefetch = (path: string) => prefetchStorefrontRoute(queryClient, path)
 
-  const { data: allProducts = [] } = useProducts(
-    openPanel === 'favoris' && favoriteIds.length > 0,
-  )
+  const { data: allProducts = [] } = useProducts({
+    enabled: openPanel === 'favoris' && favoriteIds.length > 0,
+  })
 
   const favoriteProducts = allProducts.filter((p) => favoriteIds.includes(p.id))
 

@@ -4,8 +4,16 @@ import { toast } from 'sonner'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
 import { useAuth } from '@/context/AuthContext'
+import { buildSeoHead, SITE } from '@/lib/seo'
 
 export const Route = createFileRoute('/signin')({
+  head: () =>
+    buildSeoHead({
+      title: `Connexion | ${SITE.name}`,
+      description: 'Espace client Luxury Art_Tab.',
+      path: '/signin',
+      robots: 'noindex, nofollow',
+    }),
   component: SignInPage,
 })
 

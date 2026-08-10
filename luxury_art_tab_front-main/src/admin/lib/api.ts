@@ -327,7 +327,7 @@ export function revenueByDay(orders: Order[]) {
 }
 
 export function formatCurrency(n: number) {
-  return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(n)} DH`
+  return `${new Intl.NumberFormat('fr-TN', { maximumFractionDigits: 0 }).format(n)} TND`
 }
 
 export function formatDate(iso: string) {

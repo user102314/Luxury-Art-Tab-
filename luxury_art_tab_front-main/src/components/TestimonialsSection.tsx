@@ -70,8 +70,12 @@ function usePerView() {
   return perView
 }
 
-export function TestimonialsSection() {
-  const { data: items = [], isLoading } = useActiveTestimonials()
+export function TestimonialsSection({
+  initialTestimonials,
+}: { initialTestimonials?: Testimonial[] } = {}) {
+  const { data: items = [], isLoading } = useActiveTestimonials({
+    initialData: initialTestimonials,
+  })
   const [lightbox, setLightbox] = useState<string | null>(null)
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)

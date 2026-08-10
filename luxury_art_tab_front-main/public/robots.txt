@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /checkout
+Disallow: /compte
+Disallow: /signin
+Disallow: /signup
+Disallow: /maintenance
+
+Sitemap: https://luxury-art.tn/sitemap.xml

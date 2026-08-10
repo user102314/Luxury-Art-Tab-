@@ -370,14 +370,14 @@ export function AnimatedHero() {
         </span>
 
         <h1 className="mt-4 font-display text-[1.9rem] font-bold leading-[1.1] tracking-tight text-foreground md:text-[2.75rem]">
-          Dix univers pour vos murs
+          Tableaux et décoration murale en Tunisie
           <br />
-          <span className="text-muted-foreground">reunis en un seul regard</span>
+          <span className="text-muted-foreground">dix univers pour vos murs</span>
         </h1>
 
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground md:text-[0.95rem]">
           Cuisine, florale, calligraphie, animaux… choisissez la collection qui
-          habillera votre interieur.
+          habillera votre intérieur. Livraison en Tunisie.
         </p>
 
         <a

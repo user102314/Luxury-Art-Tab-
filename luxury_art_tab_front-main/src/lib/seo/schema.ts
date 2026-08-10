@@ -1,0 +1,77 @@
+import { SITE, absoluteUrl, absoluteImageUrl } from './site'
+
+export function organizationSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: SITE.fullName,
+    url: SITE.url,
+    logo: absoluteImageUrl(SITE.defaultOgImage),
+    email: SITE.email,
+    areaServed: {
+      '@type': 'Country',
+      name: 'Tunisie',
+    },
+  }
+}
+
+export function websiteSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE.name,
+    url: SITE.url,
+    inLanguage: 'fr-TN',
+    publisher: {
+      '@type': 'Organization',
+      name: SITE.fullName,
+    },
+  }
+}
+
+export function productSchema(input: {
+  id: number
+  nom: string
+  description: string
+  image?: string | null
+  prix: number
+  stock: number
+  sku?: string
+}) {
+  const url = absoluteUrl(`/products/${input.id}`)
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: input.nom,
+    description: input.description,
+    image: input.image ? [absoluteImageUrl(input.image)] : undefined,
+    sku: input.sku ?? String(input.id),
+    brand: {
+      '@type': 'Brand',
+      name: SITE.name,
+    },
+    offers: {
+      '@type': 'Offer',
+      url,
+      priceCurrency: SITE.currency,
+      price: Number(input.prix),
+      availability:
+        input.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    },
+  }
+}
+
+export function breadcrumbSchema(
+  items: { name: string; path: string }[],
+) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      item: absoluteUrl(item.path),
+    })),
+  }
+}

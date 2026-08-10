@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { Facebook, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import StatCard, { formatCurrency, TrendingUp } from '../components/StatCard'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
@@ -266,7 +266,7 @@ export default function FacebookOrdersPage() {
                     <option value="">Choisir…</option>
                     {products.filter((p) => p.statut !== 'ARCHIVE').map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.nom} — stock: {p.stock} — {p.prix} DH
+                        {p.nom} — stock: {p.stock} — {p.prix} TND
                       </option>
                     ))}
                   </select>

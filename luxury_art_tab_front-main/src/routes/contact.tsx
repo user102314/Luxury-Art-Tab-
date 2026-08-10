@@ -12,8 +12,22 @@ import { api } from '@/lib/api'
 import { useSiteSettings } from '@/hooks/useStorefrontQueries'
 import { formatShopAddress, whatsappHref } from '@/lib/siteSettings'
 import { Reveal } from '@/components/Reveal'
+import { PAGE_COPY, buildSeoHead, SITE } from '@/lib/seo'
 
 export const Route = createFileRoute('/contact')({
+  head: () =>
+    buildSeoHead({
+      title: PAGE_COPY.contact.title,
+      description: PAGE_COPY.contact.description,
+      path: '/contact',
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'ContactPage',
+        name: PAGE_COPY.contact.title,
+        url: `${SITE.url}/contact`,
+        isPartOf: { '@type': 'WebSite', name: SITE.name, url: SITE.url },
+      },
+    }),
   component: ContactPage,
 })
 
@@ -29,7 +43,8 @@ function ContactPage() {
   const contactEmail = settings?.emailContact?.trim()
   const phone = settings?.telephoneContact?.trim()
   const address = formatShopAddress(settings)
-  const mapQuery = address || 'Monastir, Tunisia, 5000'
+  const mapQuery = address || 'Tunisie'
+
   const wa = whatsappHref(
     settings?.whatsappNumber || settings?.telephoneContact,
     `Bonjour ${boutiqueNom}, j'aimerais des informations.`,

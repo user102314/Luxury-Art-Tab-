@@ -4,8 +4,16 @@ import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
 import { useAuth } from '@/context/AuthContext'
 import { formatPrice } from '@/lib/pricing'
+import { buildSeoHead, SITE } from '@/lib/seo'
 
 export const Route = createFileRoute('/compte')({
+  head: () =>
+    buildSeoHead({
+      title: `Mon compte | ${SITE.name}`,
+      description: 'Espace client Luxury Art_Tab.',
+      path: '/compte',
+      robots: 'noindex, nofollow',
+    }),
   component: ComptePage,
 })
 

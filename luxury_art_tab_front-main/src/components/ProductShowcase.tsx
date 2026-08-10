@@ -4,13 +4,22 @@ import { ArViewer } from '@/components/ArViewer'
 import { CategoryShowcaseCarousel } from '@/components/CategoryShowcaseCarousel'
 import { ProductCard } from '@/components/ProductCard'
 import { useCategories, useProducts } from '@/hooks/useStorefrontQueries'
+import type { Category, Product } from '@/types/api'
 
-export function ProductShowcase() {
+type ProductShowcaseProps = {
+  initialProducts?: Product[]
+  initialCategories?: Category[]
+}
+
+export function ProductShowcase({
+  initialProducts,
+  initialCategories,
+}: ProductShowcaseProps = {}) {
   const [activeCategory, setActiveCategory] = useState<string>('all')
   const [arImage, setArImage] = useState<string | null>(null)
 
-  const { data: products = [], isLoading } = useProducts()
-  const { data: categories = [] } = useCategories()
+  const { data: products = [], isLoading } = useProducts({ initialData: initialProducts })
+  const { data: categories = [] } = useCategories({ initialData: initialCategories })
 
   const categoryMap = useMemo(
     () => Object.fromEntries(categories.map((c) => [c.id, c.nom])),

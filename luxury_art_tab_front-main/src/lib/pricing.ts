@@ -22,5 +22,5 @@ export function getPrice(basePrice: number, size: string): number {
 }
 
 export function formatPrice(amount: number): string {
-  return `${amount.toLocaleString('fr-FR')} DH`
+  return `${amount.toLocaleString('fr-TN')} TND`
 }

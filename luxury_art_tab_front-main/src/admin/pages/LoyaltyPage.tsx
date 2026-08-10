@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { Gift, Plus, RefreshCw, Star, Users } from 'lucide-react'
 import StatCard, { formatCurrency } from '../components/StatCard'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
@@ -116,7 +116,7 @@ export default function LoyaltyPage() {
           Forfait actif : <strong>{active.nom}</strong> — {active.commandesRequises} commandes livrées →{' '}
           {active.typeRecompense === 'FREE_TABLEAU'
             ? `${active.valeurRecompense} tableau(x) gratuit(s)`
-            : `${active.valeurRecompense} DH de réduction`}
+            : `${active.valeurRecompense} TND de réduction`}
         </div>
       )}
 
@@ -169,7 +169,7 @@ export default function LoyaltyPage() {
             </div>
           </div>
           <div>
-            <label className="label">Valeur (nb tableaux ou montant DH)</label>
+            <label className="label">Valeur (nb tableaux ou montant TND)</label>
             <input
               type="number"
               min={1}
@@ -201,7 +201,7 @@ export default function LoyaltyPage() {
                     <p className="font-medium text-white">{p.nom}</p>
                     <p className="text-xs text-zinc-500">
                       {p.commandesRequises} cmd. →{' '}
-                      {p.typeRecompense === 'FREE_TABLEAU' ? 'tableau' : `${p.valeurRecompense} DH`}
+                      {p.typeRecompense === 'FREE_TABLEAU' ? 'tableau' : `${p.valeurRecompense} TND`}
                     </p>
                   </div>
                   {p.actif ? (

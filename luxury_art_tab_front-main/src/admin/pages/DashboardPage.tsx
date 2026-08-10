@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+﻿import { Link } from '@tanstack/react-router'
 import {
   BarChart,
   Bar,
@@ -118,7 +118,7 @@ export default function DashboardPage() {
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
               <XAxis dataKey="name" stroke="#71717a" fontSize={12} />
-              <YAxis stroke="#71717a" fontSize={12} tickFormatter={(v) => `${v} DH`} />
+              <YAxis stroke="#71717a" fontSize={12} tickFormatter={(v) => `${v} TND`} />
               <Tooltip
                 contentStyle={{
                   background: '#1a1a1f',

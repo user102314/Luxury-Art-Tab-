@@ -24,8 +24,7 @@ export function SiteFooter() {
             <BrandLogo size="md" onDark showByline />
           </Link>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-beige">
-            Tableaux décoratifs pour salon et cuisine, imprimés avec soin pour un rendu élégant et
-            durable.
+            Tableaux décoratifs pour salon et cuisine, imprimés avec soin. Livraison en Tunisie.
           </p>
         </div>
 
@@ -39,9 +38,13 @@ export function SiteFooter() {
             >
               Tous les produits
             </Link>
-            <a href="/#nouveautes" className="text-beige transition hover:text-gold">
-              About Me
-            </a>
+            <Link
+              to="/category/$slug"
+              params={{ slug: 'cuisine' }}
+              className="text-beige transition hover:text-gold"
+            >
+              Tableaux cuisine
+            </Link>
             <Link to="/actualites" className="text-beige transition hover:text-gold">
               Actualités
             </Link>

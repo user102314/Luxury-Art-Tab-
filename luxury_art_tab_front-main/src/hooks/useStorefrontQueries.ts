@@ -6,26 +6,29 @@ import {
 import { api } from '@/lib/api'
 import { REFETCH_INTERVAL } from '@/lib/queryClient'
 import { queryKeys } from '@/lib/queryKeys'
+import type { Category, News, Product, Testimonial } from '@/types/api'
 
 const listOptions = {
   refetchInterval: REFETCH_INTERVAL,
   placeholderData: keepPreviousData,
 }
 
-export function useProducts(enabled = true) {
+export function useProducts(options?: { initialData?: Product[]; enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.products,
     queryFn: api.getProducts,
-    enabled,
+    enabled: options?.enabled ?? true,
+    initialData: options?.initialData,
     ...listOptions,
   })
 }
 
-export function useCategories() {
+export function useCategories(options?: { initialData?: Category[] }) {
   return useQuery({
     queryKey: queryKeys.categories,
     queryFn: api.getCategories,
     staleTime: 5 * 60_000,
+    initialData: options?.initialData,
     placeholderData: keepPreviousData,
   })
 }
@@ -39,20 +42,22 @@ export function useCategoryShowcase() {
   })
 }
 
-export function usePublishedNews() {
+export function usePublishedNews(options?: { initialData?: News[] }) {
   return useQuery({
     queryKey: queryKeys.newsPublished,
     queryFn: api.getPublishedNews,
     refetchInterval: REFETCH_INTERVAL,
+    initialData: options?.initialData,
     placeholderData: keepPreviousData,
   })
 }
 
-export function useProduct(id: number) {
+export function useProduct(id: number, options?: { initialData?: Product | null }) {
   return useQuery({
     queryKey: queryKeys.product(id),
     queryFn: () => api.getProduct(id),
     enabled: !Number.isNaN(id),
+    initialData: options?.initialData ?? undefined,
     placeholderData: keepPreviousData,
   })
 }
@@ -66,11 +71,12 @@ export function useSiteSettings() {
   })
 }
 
-export function useActiveTestimonials() {
+export function useActiveTestimonials(options?: { initialData?: Testimonial[] }) {
   return useQuery({
     queryKey: queryKeys.testimonialsActive,
     queryFn: api.getActiveTestimonials,
     refetchInterval: REFETCH_INTERVAL,
+    initialData: options?.initialData,
     placeholderData: keepPreviousData,
   })
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { Instagram, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import StatCard, { formatCurrency, TrendingUp } from '../components/StatCard'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
@@ -294,7 +294,7 @@ export default function InstagramOrdersPage() {
                       .filter((p) => p.statut !== 'ARCHIVE')
                       .map((p) => (
                         <option key={p.id} value={p.id}>
-                          {p.nom} — stock: {p.stock} — {p.prix} DH
+                          {p.nom} — stock: {p.stock} — {p.prix} TND
                         </option>
                       ))}
                   </select>

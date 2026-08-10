@@ -3,9 +3,14 @@ import { lazy, Suspense } from "react";
 import { AnimatedHero } from "@/components/AnimatedHero";
 import { SiteNav } from "@/components/SiteNav";
 import { Reveal } from "@/components/Reveal";
+import { api } from "@/lib/api";
+import {
+  PAGE_COPY,
+  buildSeoHead,
+  organizationSchema,
+  websiteSchema,
+} from "@/lib/seo";
 
-// Below-the-fold sections are lazy-loaded to reduce the initial JS bundle
-// and improve First Contentful Paint + Time to Interactive.
 const ProductShowcase = lazy(() =>
   import("@/components/ProductShowcase").then((m) => ({ default: m.ProductShowcase }))
 );
@@ -23,6 +28,22 @@ const SiteFooter = lazy(() =>
 );
 
 export const Route = createFileRoute("/")({
+  loader: async () => {
+    const [products, categories, news, testimonials] = await Promise.all([
+      api.getProducts().catch(() => []),
+      api.getCategories().catch(() => []),
+      api.getPublishedNews().catch(() => []),
+      api.getActiveTestimonials().catch(() => []),
+    ]);
+    return { products, categories, news, testimonials };
+  },
+  head: () =>
+    buildSeoHead({
+      title: PAGE_COPY.home.title,
+      description: PAGE_COPY.home.description,
+      path: "/",
+      jsonLd: [organizationSchema(), websiteSchema()],
+    }),
   component: Index,
 });
 
@@ -31,23 +52,25 @@ function SectionSkeleton() {
 }
 
 function Index() {
+  const { products, categories, news, testimonials } = Route.useLoaderData();
+
   return (
     <main className="flex min-h-screen flex-col bg-background font-[Inter,sans-serif]">
       <SiteNav />
       <AnimatedHero />
       <Suspense fallback={<SectionSkeleton />}>
         <Reveal>
-          <ProductShowcase />
+          <ProductShowcase initialProducts={products} initialCategories={categories} />
         </Reveal>
       </Suspense>
       <Suspense fallback={<SectionSkeleton />}>
         <Reveal>
-          <TestimonialsSection />
+          <TestimonialsSection initialTestimonials={testimonials} />
         </Reveal>
       </Suspense>
       <Suspense fallback={<SectionSkeleton />}>
         <Reveal>
-          <NewsSection />
+          <NewsSection initialNews={news} />
         </Reveal>
       </Suspense>
       <Suspense fallback={<SectionSkeleton />}>

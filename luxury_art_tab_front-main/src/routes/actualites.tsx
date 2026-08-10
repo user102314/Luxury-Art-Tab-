@@ -9,8 +9,26 @@ import { usePublishedNews } from '@/hooks/useStorefrontQueries'
 import { Reveal } from '@/components/Reveal'
 import { RemoteImage } from '@/components/RemoteImage'
 import type { News } from '@/types/api'
+import { api } from '@/lib/api'
+import { PAGE_COPY, buildSeoHead, absoluteImageUrl } from '@/lib/seo'
+import { resolveImageSrc } from '@/lib/images'
 
 export const Route = createFileRoute('/actualites')({
+  loader: async () => {
+    const news = await api.getPublishedNews().catch(() => [])
+    return { news }
+  },
+  head: ({ loaderData }) => {
+    const featured = loaderData?.news?.[0]
+    const image = featured?.imageUrl ? resolveImageSrc(featured.imageUrl) : undefined
+    return buildSeoHead({
+      title: PAGE_COPY.actualites.title,
+      description: PAGE_COPY.actualites.description,
+      path: '/actualites',
+      image: image ? absoluteImageUrl(image) : undefined,
+      type: featured ? 'article' : 'website',
+    })
+  },
   component: ActualitesPage,
 })
 
@@ -24,7 +42,8 @@ function formatDate(value?: string) {
 }
 
 function ActualitesPage() {
-  const { data: news = [], isLoading } = usePublishedNews()
+  const { news: seededNews } = Route.useLoaderData()
+  const { data: news = [], isLoading } = usePublishedNews({ initialData: seededNews })
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const featuredRef = useRef<HTMLDivElement>(null)
 
@@ -49,11 +68,11 @@ function ActualitesPage() {
             Soldes &amp; informations
           </p>
           <h1 className="mt-3 font-display text-4xl font-bold md:text-5xl">
-            Actualités <em className="text-gold">Luxury Art</em>
+            Actualités décoration et tableaux
           </h1>
           <p className="mt-4 max-w-2xl text-sand/80">
             Promotions, nouvelles collections et annonces de la boutique — tout ce qu&apos;il ne
-            faut pas manquer.
+            faut pas manquer en Tunisie.
           </p>
         </div>
       </div>

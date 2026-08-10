@@ -7,13 +7,13 @@ import { getApiBase } from '@/lib/apiBase'
 export const INVOICE_SELLER = {
   nom: 'Luxury Art_Tab',
   slogan: 'By Insaf — Art & Décoration',
-  email: 'contact@luxart.com',
-  telephone: '+212 600 000 000',
-  adresse: 'Maroc',
+  email: 'contact@luxuryart.tn',
+  telephone: '+216 00 000 000',
+  adresse: 'Tunisie',
 }
 
 function money(n: number): string {
-  return `${n.toFixed(2)} DH`
+  return `${n.toFixed(2)} TND`
 }
 
 function formatInvoiceDate(iso: string): string {

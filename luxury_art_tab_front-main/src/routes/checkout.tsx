@@ -13,8 +13,16 @@ import { useVisitor } from '@/context/VisitorContext'
 import { api, getVisitorKey } from '@/lib/api'
 import { resolveImageSrc } from '@/lib/images'
 import { formatPrice } from '@/lib/pricing'
+import { buildSeoHead, SITE } from '@/lib/seo'
 
 export const Route = createFileRoute('/checkout')({
+  head: () =>
+    buildSeoHead({
+      title: `Panier & commande | ${SITE.name}`,
+      description: 'Finalisez votre commande Luxury Art_Tab.',
+      path: '/checkout',
+      robots: 'noindex, nofollow',
+    }),
   component: CheckoutPage,
 })
 
