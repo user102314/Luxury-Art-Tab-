@@ -29,6 +29,16 @@ import { api, formatCurrency, formatDate } from '../lib/api'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
 import { ListToolbar } from '../components/ListToolbar'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../../components/ui/alert-dialog'
+import {
   useBestSellers,
   useCategories,
   useInvalidateAdmin,
@@ -101,6 +111,18 @@ export default function ProductsPage() {
   const [existingImages, setExistingImages] = useState<ProductImage[]>([])
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean
+    title: string
+    description: string
+    onConfirm: () => void
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    onConfirm: () => {},
+  })
 
   const [showCategoryForm, setShowCategoryForm] = useState(false)
   const [showCategoryManager, setShowCategoryManager] = useState(false)
@@ -256,25 +278,31 @@ export default function ProductsPage() {
     }
   }
 
-  const handleDeleteCategory = async (id: number) => {
+  const handleDeleteCategory = (id: number) => {
     const used = products.some((p) => p.categoryId === id)
     if (used) {
       alert('Impossible de supprimer : des produits utilisent cette catégorie.')
       return
     }
-    if (!confirm('Supprimer cette catégorie ?')) return
-    try {
-      await api.deleteCategory(id)
-      await invalidate.categories()
-      if (form.categoryId === String(id)) {
-        setForm((prev) => ({
-          ...prev,
-          categoryId: categories.find((c) => c.id !== id)?.id?.toString() ?? '',
-        }))
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Supprimer cette catégorie ?',
+      description: 'Êtes-vous sûr de vouloir supprimer cette catégorie ?',
+      onConfirm: async () => {
+        try {
+          await api.deleteCategory(id)
+          await invalidate.categories()
+          if (form.categoryId === String(id)) {
+            setForm((prev) => ({
+              ...prev,
+              categoryId: categories.find((c) => c.id !== id)?.id?.toString() ?? '',
+            }))
+          }
+        } catch (err) {
+          alert(err instanceof Error ? err.message : 'Suppression impossible')
+        }
       }
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Suppression impossible')
-    }
+    })
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -293,11 +321,17 @@ export default function ProductsPage() {
     setPendingFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const removeExistingImage = async (imageId: number) => {
-    if (!confirm('Supprimer cette image ?')) return
-    await api.deleteProductImage(imageId)
-    setExistingImages((prev) => prev.filter((img) => img.id !== imageId))
-    await refreshProducts()
+  const removeExistingImage = (imageId: number) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Supprimer cette image ?',
+      description: 'Cette action est irréversible et supprimera définitivement l\'image.',
+      onConfirm: async () => {
+        await api.deleteProductImage(imageId)
+        setExistingImages((prev) => prev.filter((img) => img.id !== imageId))
+        await refreshProducts()
+      }
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -371,14 +405,20 @@ export default function ProductsPage() {
     }
   }
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Supprimer ce produit ?')) return
-    await api.deleteProduct(id)
-    if (selected?.productId === id) {
-      setSelected(null)
-      setTab('catalogue')
-    }
-    await refreshProducts()
+  const handleDelete = (id: number) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Supprimer ce produit ?',
+      description: 'Êtes-vous sûr de vouloir supprimer définitivement ce produit ?',
+      onConfirm: async () => {
+        await api.deleteProduct(id)
+        if (selected?.productId === id) {
+          setSelected(null)
+          setTab('catalogue')
+        }
+        await refreshProducts()
+      }
+    })
   }
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -1089,6 +1129,34 @@ export default function ProductsPage() {
           )}
         </div>
       )}
+
+      <AlertDialog
+        open={confirmDialog.isOpen}
+        onOpenChange={(open) => !open && setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
+      >
+        <AlertDialogContent className="border-white/10 bg-ink-900 text-white sm:rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400">
+              {confirmDialog.description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-white/10 bg-ink-800 text-white hover:bg-ink-700 hover:text-white">
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-500/90 text-white hover:bg-red-500"
+              onClick={() => {
+                confirmDialog.onConfirm()
+                setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+              }}
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

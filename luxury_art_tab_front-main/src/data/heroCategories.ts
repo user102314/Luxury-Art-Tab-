@@ -5,7 +5,7 @@ const cuisineModules = import.meta.glob("../assets/Cuisine/*.jpeg", {
   import: "default",
 }) as Record<string, string>;
 
-const salonModules = import.meta.glob("../assets/salon/*.jpg", {
+const salonModules = import.meta.glob("../assets/salon/*.webp", {
   eager: true,
   import: "default",
 }) as Record<string, string>;
