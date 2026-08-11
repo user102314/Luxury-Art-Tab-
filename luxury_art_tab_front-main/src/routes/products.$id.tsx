@@ -493,13 +493,8 @@ function ProductDetailPage() {
               </button>
               {detailsOpen && (
                 <div className="space-y-3 pb-5 text-sm leading-relaxed text-muted-foreground">
-                  {product.description ? (
-                    <p className="whitespace-pre-wrap text-foreground/80">{product.description}</p>
-                  ) : (
-                    <p>
-                      Tableau décoratif Luxury Art_Tab — rendu élégant pour salon, cuisine ou
-                      chambre. Choisissez la taille et l&apos;encadrement adaptés à votre intérieur.
-                    </p>
+                  {product.description?.trim() && (
+                    <p className="whitespace-pre-wrap text-foreground/80">{product.description.trim()}</p>
                   )}
                   <ul className="list-inside list-disc space-y-1">
                     {product.ref && <li>Référence : {product.ref}</li>}

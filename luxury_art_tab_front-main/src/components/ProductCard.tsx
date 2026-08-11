@@ -161,6 +161,11 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
                 {categoryName}
               </p>
             )}
+            {!compact && product.description?.trim() && (
+              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                {product.description.trim()}
+              </p>
+            )}
           </div>
           <p
             className={`shrink-0 whitespace-nowrap font-display font-semibold text-accent-green ${

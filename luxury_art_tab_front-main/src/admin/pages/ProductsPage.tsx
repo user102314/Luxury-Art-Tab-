@@ -355,7 +355,7 @@ export default function ProductsPage() {
     const payload = {
       ref: form.ref.trim(),
       nom: form.nom.trim(),
-      description: form.description,
+      description: form.description.trim() || undefined,
       prix: Number(form.prix),
       stock,
       categoryId,
@@ -527,7 +527,7 @@ export default function ProductsPage() {
             <div className="space-y-4">
               <Field label="Réf. produit" value={form.ref} onChange={(v) => setForm({ ...form, ref: v })} required placeholder="Ex. TAB-001" />
               <Field label="Nom" value={form.nom} onChange={(v) => setForm({ ...form, nom: v })} required />
-              <Field label="Description" value={form.description} onChange={(v) => setForm({ ...form, description: v })} textarea />
+              <Field label="Description (optionnel)" value={form.description} onChange={(v) => setForm({ ...form, description: v })} textarea />
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Prix (DH)" value={form.prix} onChange={(v) => setForm({ ...form, prix: v })} type="number" step="0.01" required />
                 <Field
