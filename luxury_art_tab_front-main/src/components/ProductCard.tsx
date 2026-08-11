@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import type { Product } from '@/types/api'
-import { getProductImage } from '@/lib/images'
+import { getProductImage, getSimulationImage, hasSimulationImage } from '@/lib/images'
 import { formatPrice } from '@/lib/pricing'
 import { useFavorites } from '@/context/FavoritesContext'
 import { api, getTrackingSessionId } from '@/lib/api'
@@ -20,6 +20,8 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
   const { client } = useAuth()
   const liked = isFavorite(product.id)
   const image = getProductImage(product)
+  const simulationImage = getSimulationImage(product)
+  const canSimulate = hasSimulationImage(product)
   const outOfStock = product.statut === 'RUPTURE_STOCK' || product.stock <= 0
 
   const handleProductClick = () => {
@@ -108,13 +110,13 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
             </svg>
           </button>
 
-          {onAr && (
+          {onAr && canSimulate && simulationImage && (
             <button
               type="button"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                onAr(image)
+                onAr(simulationImage)
               }}
               className={`absolute flex items-center justify-center rounded-full bg-accent-green text-sand transition hover:opacity-90 ${
                 compact ? 'bottom-2.5 right-2.5 h-8 w-8' : 'bottom-4 right-4 h-10 w-10'

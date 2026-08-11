@@ -45,3 +45,19 @@ export function getProductImage(product: {
 }): string {
   return getProductImages(product)[0]
 }
+
+/** Image 2 (ordre=1) — détourée pour la simulation AR sur le mur */
+export function hasSimulationImage(product: {
+  imageUrl?: string
+  images?: { url: string; ordre?: number }[]
+}): boolean {
+  return getProductImages(product).length > 1
+}
+
+export function getSimulationImage(product: {
+  imageUrl?: string
+  images?: { url: string; ordre?: number }[]
+}): string | null {
+  const images = getProductImages(product)
+  return images.length > 1 ? images[1] : null
+}

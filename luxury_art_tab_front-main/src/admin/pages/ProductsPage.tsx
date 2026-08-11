@@ -51,6 +51,7 @@ import { compareNumbers, compareStrings, matchesSearch, type SortDir } from '../
 const STATUTS: ProductStatut[] = ['DISPONIBLE', 'RUPTURE_STOCK', 'ARCHIVE']
 
 const emptyForm = {
+  ref: '',
   nom: '',
   description: '',
   prix: '',
@@ -144,7 +145,7 @@ export default function ProductsPage() {
     let list = products.filter((p) => {
       if (categoryFilter !== 'ALL' && String(p.categoryId) !== categoryFilter) return false
       if (statutFilter !== 'ALL' && p.statut !== statutFilter) return false
-      if (!matchesSearch(search, [p.nom, p.description, categoryMap[p.categoryId]])) return false
+      if (!matchesSearch(search, [p.ref, p.nom, p.description, categoryMap[p.categoryId]])) return false
       return true
     })
     list = [...list].sort((a, b) => {
@@ -204,6 +205,7 @@ export default function ProductsPage() {
     setCategoryDesc('')
     setCategoryError('')
     setForm({
+      ref: p.ref ?? '',
       nom: p.nom,
       description: p.description ?? '',
       prix: String(p.prix),
@@ -351,12 +353,18 @@ export default function ProductsPage() {
       return
     }
     const payload = {
+      ref: form.ref.trim(),
       nom: form.nom.trim(),
       description: form.description,
       prix: Number(form.prix),
       stock,
       categoryId,
       statut: form.statut,
+    }
+    if (!payload.ref) {
+      setError('La référence produit est obligatoire')
+      setUploading(false)
+      return
     }
     if (!Number.isFinite(payload.prix) || payload.prix <= 0) {
       setError('Prix invalide')
@@ -517,6 +525,7 @@ export default function ProductsPage() {
               </button>
             </div>
             <div className="space-y-4">
+              <Field label="Réf. produit" value={form.ref} onChange={(v) => setForm({ ...form, ref: v })} required placeholder="Ex. TAB-001" />
               <Field label="Nom" value={form.nom} onChange={(v) => setForm({ ...form, nom: v })} required />
               <Field label="Description" value={form.description} onChange={(v) => setForm({ ...form, description: v })} textarea />
               <div className="grid grid-cols-2 gap-4">
@@ -534,7 +543,7 @@ export default function ProductsPage() {
               <div>
                 <label className="label">Images produit</label>
                 <p className="mb-2 text-xs text-zinc-500">
-                  Sélectionnez une ou plusieurs images — aperçu immédiat avant enregistrement
+                  Image 1 = catalogue · Image 2 = simulation AR (sans fond, obligatoire pour la caméra)
                 </p>
 
                 <input
@@ -564,7 +573,10 @@ export default function ProductsPage() {
 
                 {(existingImages.length > 0 || pendingFiles.length > 0) && (
                   <div className="mt-3 grid grid-cols-3 gap-2">
-                    {existingImages.map((img) => (
+                    {existingImages
+                      .slice()
+                      .sort((a, b) => a.ordre - b.ordre)
+                      .map((img) => (
                       <div key={img.id} className="group relative aspect-square overflow-hidden rounded-lg bg-ink-800">
                         <img
                           src={resolveImageSrc(img.url)}
@@ -574,6 +586,9 @@ export default function ProductsPage() {
                             e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23333" width="100" height="100"/></svg>'
                           }}
                         />
+                        <span className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                          {img.ordre === 1 ? 'Img 2 · AR' : img.ordre === 0 ? 'Img 1' : `Img ${img.ordre + 1}`}
+                        </span>
                         <button
                           type="button"
                           onClick={() => removeExistingImage(img.id)}
@@ -889,6 +904,7 @@ export default function ProductsPage() {
               <thead>
                 <tr className="border-b border-white/10 text-xs uppercase text-zinc-500">
                   <th className="px-6 py-4">Image</th>
+                  <th className="px-6 py-4">Réf.</th>
                   <th className="px-6 py-4">Produit</th>
                   <th className="px-6 py-4">Catégorie</th>
                   <th className="px-6 py-4">Prix</th>
@@ -916,6 +932,7 @@ export default function ProductsPage() {
                         <span className="mt-1 block text-[10px] text-zinc-500">+{p.images!.length - 1} img</span>
                       )}
                     </td>
+                    <td className="px-6 py-4 font-mono text-xs text-gold-400">{p.ref ?? '—'}</td>
                     <td className="px-6 py-4">
                       <p className="font-medium text-white">{p.nom}</p>
                       <p className="max-w-xs truncate text-xs text-zinc-500">{p.description}</p>

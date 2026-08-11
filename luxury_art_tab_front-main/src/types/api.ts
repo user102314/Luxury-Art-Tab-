@@ -14,6 +14,7 @@ export interface ProductImage {
 
 export interface Product {
   id: number
+  ref?: string
   nom: string
   description?: string
   prix: number

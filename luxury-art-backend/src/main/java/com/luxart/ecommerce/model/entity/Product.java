@@ -24,6 +24,10 @@ public class Product {
     @Column(nullable = false)
     private String nom;
 
+    /** Référence produit (identifiant catalogue) */
+    @Column(length = 100, unique = true)
+    private String ref;
+
     @Column(length = 2000)
     private String description;
 

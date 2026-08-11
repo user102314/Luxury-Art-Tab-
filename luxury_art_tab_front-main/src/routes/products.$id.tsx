@@ -20,7 +20,7 @@ import { queryKeys } from '@/lib/queryKeys'
 import { REFETCH_INTERVAL } from '@/lib/queryClient'
 import { useProduct, useProducts } from '@/hooks/useStorefrontQueries'
 import { useProductTracking } from '@/hooks/useProductTracking'
-import { getProductImage, getProductImages } from '@/lib/images'
+import { getProductImage, getProductImages, getSimulationImage } from '@/lib/images'
 import {
   dimensionOptions,
   frameOptions,
@@ -165,6 +165,11 @@ function ProductDetailPage() {
 
   const galleryImages = useMemo(
     () => (product ? getProductImages(product) : []),
+    [product],
+  )
+
+  const simulationImage = useMemo(
+    () => (product ? getSimulationImage(product) : null),
     [product],
   )
 
@@ -344,6 +349,7 @@ function ProductDetailPage() {
             alt={product.nom}
             liked={liked}
             onLike={handleLike}
+            simulationImageUrl={simulationImage}
             onAr={setArImage}
           />
 
@@ -366,6 +372,11 @@ function ProductDetailPage() {
             <h1 className="mt-5 font-display text-2xl font-bold leading-snug text-foreground md:text-3xl">
               {product.nom}
             </h1>
+            {product.ref && (
+              <p className="mt-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Réf. {product.ref}
+              </p>
+            )}
 
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
               {categoryName && (
@@ -491,6 +502,7 @@ function ProductDetailPage() {
                     </p>
                   )}
                   <ul className="list-inside list-disc space-y-1">
+                    {product.ref && <li>Référence : {product.ref}</li>}
                     <li>Catégorie : {categoryName ?? '—'}</li>
                     <li>Taille sélectionnée : {size}</li>
                     <li>Encadrement : {frame}</li>

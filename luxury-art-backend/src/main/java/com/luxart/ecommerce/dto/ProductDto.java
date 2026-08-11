@@ -22,6 +22,9 @@ public class ProductDto {
     @NotBlank
     private String nom;
 
+    @NotBlank
+    private String ref;
+
     private String description;
 
     @NotNull

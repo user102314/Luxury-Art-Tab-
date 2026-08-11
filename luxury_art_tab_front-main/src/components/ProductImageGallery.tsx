@@ -6,6 +6,8 @@ type ProductImageGalleryProps = {
   alt: string
   liked?: boolean
   onLike?: () => void
+  /** URL image 2 (simulation) — le bouton AR n'apparaît que si définie */
+  simulationImageUrl?: string | null
   onAr?: (imageUrl: string) => void
 }
 
@@ -14,6 +16,7 @@ export function ProductImageGallery({
   alt,
   liked = false,
   onLike,
+  simulationImageUrl,
   onAr,
 }: ProductImageGalleryProps) {
   const gallery = images.length > 0 ? images : ['/placeholder-art.svg']
@@ -124,10 +127,10 @@ export function ProductImageGallery({
               >
                 <Expand className="h-4 w-4" />
               </button>
-              {onAr && (
+              {simulationImageUrl && onAr && (
                 <button
                   type="button"
-                  onClick={() => onAr(current)}
+                  onClick={() => onAr(simulationImageUrl)}
                   className="flex items-center gap-2 rounded-full bg-accent-green px-4 py-2 text-sm font-semibold text-sand shadow-lg hover:opacity-90"
                 >
                   Voir en AR
