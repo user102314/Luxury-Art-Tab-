@@ -51,12 +51,19 @@ import { compareNumbers, compareStrings, matchesSearch, type SortDir } from '../
 const STATUTS: ProductStatut[] = ['DISPONIBLE', 'RUPTURE_STOCK', 'ARCHIVE']
 
 const emptyForm = {
-  ref: '',
+  ref: 'B',
   description: '',
-  prix: '',
-  stock: '',
+  prix: '100',
+  stock: '10',
   categoryId: '',
   statut: 'DISPONIBLE' as ProductStatut,
+}
+
+function defaultTraditionCategoryId(categories: Category[]): string {
+  const match = categories.find((c) =>
+    c.nom.toLowerCase().includes('traditionnel'),
+  )
+  return String(match?.id ?? categories[0]?.id ?? '')
 }
 
 type Tab = 'catalogue' | 'stats' | 'detail'
@@ -173,9 +180,10 @@ export default function ProductsPage() {
     return () => urls.forEach((url) => URL.revokeObjectURL(url))
   }, [pendingFiles])
 
-  const refreshProducts = async () => {
-    await invalidate.products()
-    await invalidate.bestSellers()
+  /** Rafraîchit la liste sans bloquer l'UI (best-sellers en arrière-plan). */
+  const refreshProducts = () => {
+    void invalidate.products()
+    void invalidate.bestSellers()
   }
 
   const openCreate = () => {
@@ -189,7 +197,7 @@ export default function ProductsPage() {
     setCategoryError('')
     setForm({
       ...emptyForm,
-      categoryId: categories[0]?.id?.toString() ?? '',
+      categoryId: defaultTraditionCategoryId(categories),
     })
     setShowForm(true)
     setError('')
@@ -386,23 +394,25 @@ export default function ProductsPage() {
         )
       }
 
-      if (pendingFiles.length > 0) {
+      // Fermer le formulaire dès que le produit est sauvé — l'upload peut continuer
+      // sans bloquer le bouton « Enregistrer » plus longtemps que nécessaire.
+      const filesToUpload = [...pendingFiles]
+      setShowForm(false)
+      setPendingFiles([])
+      refreshProducts()
+
+      if (filesToUpload.length > 0) {
         try {
-          await api.uploadProductImages(productId, pendingFiles)
+          await api.uploadProductImages(productId, filesToUpload)
+          refreshProducts()
         } catch (uploadErr) {
           setError(
             `Produit enregistré, mais erreur upload images: ${
               uploadErr instanceof Error ? uploadErr.message : 'Erreur inconnue'
-            }`
+            }`,
           )
-          await refreshProducts()
-          return
         }
       }
-
-      setShowForm(false)
-      setPendingFiles([])
-      await refreshProducts()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors de l\'enregistrement')
     } finally {
