@@ -152,7 +152,7 @@ public class DashboardServiceImpl implements DashboardService {
     private ProductStatsDto emptyStats(Product product) {
         return ProductStatsDto.builder()
                 .productId(product.getId())
-                .productName(product.getNom())
+                .productName(product.getRef())
                 .totalViews(0)
                 .totalClicks(0)
                 .totalAddToCart(0)

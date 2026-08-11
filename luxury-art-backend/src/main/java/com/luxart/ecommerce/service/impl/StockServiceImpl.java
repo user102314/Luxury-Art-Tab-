@@ -23,7 +23,7 @@ public class StockServiceImpl implements StockService {
         Product product = getProductOrThrow(productId);
         if (product.getStock() < quantity) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Stock insuffisant pour « " + product.getNom() + " » (reste: " + product.getStock() + ")");
+                    "Stock insuffisant pour « " + product.getRef() + " » (reste: " + product.getStock() + ")");
         }
         product.setStock(product.getStock() - quantity);
         if (product.getStock() == 0 && product.getStatut() == ProductStatut.DISPONIBLE) {

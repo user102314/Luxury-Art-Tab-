@@ -551,7 +551,7 @@ public class OrderServiceImpl implements OrderService {
                         .id(item.getId())
                         .orderId(order.getId())
                         .productId(item.getProduct().getId())
-                        .productNom(item.getProduct().getNom())
+                        .productNom(item.getProduct().getRef())
                         .quantite(item.getQuantite())
                         .prixUnitaire(item.getPrixUnitaire())
                         .build()).toList())

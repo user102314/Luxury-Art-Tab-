@@ -17,14 +17,14 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
     @Query("""
             SELECT oi.product.id,
-                   oi.product.nom,
+                   oi.product.ref,
                    COALESCE(SUM(oi.quantite), 0),
                    COALESCE(SUM(oi.prixUnitaire * oi.quantite), 0)
             FROM OrderItem oi
             WHERE oi.order.dateCommande >= :from
               AND oi.order.dateCommande < :to
               AND oi.order.statut <> com.luxart.ecommerce.model.enums.OrderStatut.ANNULEE
-            GROUP BY oi.product.id, oi.product.nom
+            GROUP BY oi.product.id, oi.product.ref
             ORDER BY SUM(oi.quantite) DESC
             """)
     List<Object[]> findTopProductsBySales(

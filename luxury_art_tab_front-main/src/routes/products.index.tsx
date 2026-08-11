@@ -137,7 +137,7 @@ function ProductsPage() {
       const price = Number(p.prix)
       if (price < priceRange[0] || price > priceRange[1]) return false
       if (categoryId !== 'all' && p.categoryId !== Number(categoryId)) return false
-      if (search && !p.nom.toLowerCase().includes(search.toLowerCase())) return false
+      if (search && !p.ref.toLowerCase().includes(search.toLowerCase())) return false
       if (inStockOnly && (p.stock <= 0 || p.statut === 'RUPTURE_STOCK')) return false
       return true
     })
@@ -151,7 +151,7 @@ function ProductsPage() {
         case 'stock':
           return b.stock - a.stock
         default:
-          return a.nom.localeCompare(b.nom, 'fr')
+          return a.ref.localeCompare(b.ref, 'fr')
       }
     })
   }, [available, categoryId, search, sort, priceRange, inStockOnly])

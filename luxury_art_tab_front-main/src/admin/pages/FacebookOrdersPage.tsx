@@ -93,7 +93,7 @@ export default function FacebookOrdersPage() {
     for (const line of validLines) {
       const p = productMap[line.productId]
       if (p && p.stock < line.quantite) {
-        setError(`Stock insuffisant pour « ${p.nom} » (reste: ${p.stock})`)
+        setError(`Stock insuffisant pour « ${p.ref} » (reste: ${p.stock})`)
         return
       }
     }
@@ -266,7 +266,7 @@ export default function FacebookOrdersPage() {
                     <option value="">Choisir…</option>
                     {products.filter((p) => p.statut !== 'ARCHIVE').map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.nom} — stock: {p.stock} — {p.prix} TND
+                        {p.ref} — stock: {p.stock} — {p.prix} TND
                       </option>
                     ))}
                   </select>

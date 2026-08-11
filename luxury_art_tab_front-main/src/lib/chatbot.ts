@@ -4,7 +4,7 @@ export type ChatLink = { label: string; to: string }
 
 export type ChatProductCard = {
   id: number
-  nom: string
+  ref: string
   prix: number
   stock: number
   categoryName?: string
@@ -94,7 +94,7 @@ function availableProducts(products: Product[]) {
 function toCard(p: Product, categoryMap: Record<number, string>): ChatProductCard {
   return {
     id: p.id,
-    nom: p.nom,
+    ref: p.ref,
     prix: Number(p.prix),
     stock: p.stock,
     categoryName: categoryMap[p.categoryId],
@@ -110,7 +110,7 @@ function matchProducts(query: string, products: Product[], categoryMap: Record<n
   return list
     .map((p) => {
       const cat = categoryMap[p.categoryId] ?? ''
-      const hay = normalize(`${p.nom} ${p.description ?? ''} ${cat}`)
+      const hay = normalize(`${p.ref} ${p.description ?? ''} ${cat}`)
       let score = 0
       for (const t of tokens) {
         if (hay.includes(t)) score += 2
@@ -316,5 +316,5 @@ export function processChatMessage(
 }
 
 export function formatProductLine(card: ChatProductCard): string {
-  return `${card.nom} — ${formatDh(card.prix)} — ${stockLabel(card.stock, card.statut)}${card.categoryName ? ` (${card.categoryName})` : ''}`
+  return `${card.ref} — ${formatDh(card.prix)} — ${stockLabel(card.stock, card.statut)}${card.categoryName ? ` (${card.categoryName})` : ''}`
 }

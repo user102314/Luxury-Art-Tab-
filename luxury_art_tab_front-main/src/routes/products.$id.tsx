@@ -66,7 +66,7 @@ export const Route = createFileRoute('/products/$id')({
 
     const category = categories.find((c) => c.id === product.categoryId)
     const description = productSeoDescription({
-      nom: product.nom,
+      ref: product.ref,
       description: product.description,
       categoryName: category?.nom,
     })
@@ -81,10 +81,10 @@ export const Route = createFileRoute('/products/$id')({
         path: `/category/${preferredCategorySlug(category)}`,
       })
     }
-    crumbs.push({ name: product.nom, path: `/products/${product.id}` })
+    crumbs.push({ name: product.ref, path: `/products/${product.id}` })
 
     return buildSeoHead({
-      title: `${product.nom} | Tableau et décoration | Luxury Art_Tab`,
+      title: `${product.ref} | Tableau et décoration | Luxury Art_Tab`,
       description,
       path: `/products/${product.id}`,
       image,
@@ -92,7 +92,7 @@ export const Route = createFileRoute('/products/$id')({
       jsonLd: [
         productSchema({
           id: product.id,
-          nom: product.nom,
+          ref: product.ref,
           description,
           image,
           prix: product.prix,
@@ -259,7 +259,7 @@ function ProductDetailPage() {
     trackClick('ADD_TO_CART')
     addItem({
       productId: product.id,
-      nom: product.nom,
+      ref: product.ref,
       imageUrl: image,
       prixUnitaire: unitPrice,
       quantite: qty,
@@ -267,7 +267,7 @@ function ProductDetailPage() {
       encadrement: frame,
     })
     toast.success('Ajouté au panier', {
-      description: `${product.nom} · ${size}`,
+      description: `${product.ref} · ${size}`,
     })
   }
 
@@ -340,13 +340,13 @@ function ProductDetailPage() {
             </>
           )}
           <span className="mx-2">/</span>
-          <span className="font-medium text-foreground" aria-current="page">{product.nom}</span>
+          <span className="font-medium text-foreground" aria-current="page">{product.ref}</span>
         </nav>
 
         <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,420px)] lg:gap-12">
           <ProductImageGallery
             images={galleryImages}
-            alt={product.nom}
+            alt={product.ref}
             liked={liked}
             onLike={handleLike}
             simulationImageUrl={simulationImage}
@@ -370,13 +370,8 @@ function ProductDetailPage() {
             </p>
 
             <h1 className="mt-5 font-display text-2xl font-bold leading-snug text-foreground md:text-3xl">
-              {product.nom}
+              {product.ref}
             </h1>
-            {product.ref && (
-              <p className="mt-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Réf. {product.ref}
-              </p>
-            )}
 
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
               {categoryName && (

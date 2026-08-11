@@ -21,11 +21,8 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String nom;
-
-    /** Référence produit (identifiant catalogue) */
-    @Column(length = 100, unique = true)
+    /** Référence produit (identifiant catalogue affiché) */
+    @Column(nullable = false, length = 100, unique = true)
     private String ref;
 
     @Column(length = 2000)

@@ -66,7 +66,7 @@ export default function StockAlertsBanner() {
                 className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-ink-950/40 px-3 py-2"
               >
                 <div>
-                  <p className="text-sm text-white">{a.nom}</p>
+                  <p className="text-sm text-white">{a.ref}</p>
                   <p className="text-xs text-zinc-500">
                     Stock : {a.stock} · {a.statut}
                   </p>
@@ -95,7 +95,7 @@ export default function StockAlertsBanner() {
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <h3 className="font-semibold text-white">Réapprovisionner</h3>
-                <p className="text-sm text-zinc-500">{restocking.nom}</p>
+                <p className="text-sm text-zinc-500">{restocking.ref}</p>
               </div>
               <button
                 type="button"

@@ -185,8 +185,7 @@ export interface WhatsAppOrderCreate {
 
 export interface Product {
   id: number
-  ref?: string
-  nom: string
+  ref: string
   description: string
   prix: number
   stock: number
@@ -277,14 +276,14 @@ export interface ProductLike {
 
 export interface ProductBestSeller {
   productId: number
-  nom: string
+  ref: string
   quantiteVendue: number
   chiffreAffaires: number
 }
 
 export interface ProductAnalytics {
   productId: number
-  nom: string
+  ref: string
   nombreJaimes: number
   nombreCommentaires: number
   nombreAvis: number
@@ -403,7 +402,7 @@ export interface ClientCrm {
 
 export interface StockAlert {
   productId: number
-  nom: string
+  ref: string
   stock: number
   statut: string
   imageUrl?: string

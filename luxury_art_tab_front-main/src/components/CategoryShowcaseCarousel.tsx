@@ -125,7 +125,7 @@ export function CategoryShowcaseCarousel() {
                       <div className="relative z-[1] flex aspect-[3/4] items-center justify-center overflow-hidden rounded-xl border border-border bg-sand p-2.5 shadow-[0_22px_44px_-24px_rgba(74,93,79,0.6)] transition duration-500 group-hover:-translate-y-1">
                         <img
                           src={image}
-                          alt={slide.product.nom}
+                          alt={slide.product.ref}
                           onError={handleImageError(fallbackFor(i))}
                           className="h-full w-full rounded-lg object-cover transition duration-500 group-hover:scale-[1.04]"
                         />

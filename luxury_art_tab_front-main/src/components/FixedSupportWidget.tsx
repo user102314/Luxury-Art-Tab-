@@ -41,7 +41,7 @@ function BotMessageContent({ msg }: { msg: ChatMessage }) {
                 params={{ id: String(p.id) }}
                 className="block rounded-lg border border-gold/25 bg-gold/10 px-2.5 py-2 text-xs transition hover:bg-gold/20"
               >
-                <span className="font-semibold text-foreground">{p.nom}</span>
+                <span className="font-semibold text-foreground">{p.ref}</span>
                 <span className="mt-0.5 block text-muted-foreground">{formatProductLine(p)}</span>
               </Link>
             </li>

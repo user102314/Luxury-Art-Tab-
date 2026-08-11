@@ -52,7 +52,6 @@ const STATUTS: ProductStatut[] = ['DISPONIBLE', 'RUPTURE_STOCK', 'ARCHIVE']
 
 const emptyForm = {
   ref: '',
-  nom: '',
   description: '',
   prix: '',
   stock: '',
@@ -61,7 +60,7 @@ const emptyForm = {
 }
 
 type Tab = 'catalogue' | 'stats' | 'detail'
-type ProductSortKey = 'nom' | 'prix' | 'stock' | 'category'
+type ProductSortKey = 'ref' | 'prix' | 'stock' | 'category'
 
 import { resolveImageSrc as resolveMediaUrl } from '@/lib/images'
 
@@ -80,10 +79,10 @@ function parseStock(raw: string): number | null {
   return n
 }
 
-function emptyAnalytics(productId: number, nom = ''): ProductAnalytics {
+function emptyAnalytics(productId: number, ref = ''): ProductAnalytics {
   return {
     productId,
-    nom,
+    ref,
     nombreJaimes: 0,
     nombreCommentaires: 0,
     nombreAvis: 0,
@@ -136,7 +135,7 @@ export default function ProductsPage() {
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('ALL')
   const [statutFilter, setStatutFilter] = useState('ALL')
-  const [sort, setSort] = useState<ProductSortKey>('nom')
+  const [sort, setSort] = useState<ProductSortKey>('ref')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
 
   const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.nom]))
@@ -145,7 +144,7 @@ export default function ProductsPage() {
     let list = products.filter((p) => {
       if (categoryFilter !== 'ALL' && String(p.categoryId) !== categoryFilter) return false
       if (statutFilter !== 'ALL' && p.statut !== statutFilter) return false
-      if (!matchesSearch(search, [p.ref, p.nom, p.description, categoryMap[p.categoryId]])) return false
+      if (!matchesSearch(search, [p.ref, p.description, categoryMap[p.categoryId]])) return false
       return true
     })
     list = [...list].sort((a, b) => {
@@ -160,9 +159,9 @@ export default function ProductsPage() {
             categoryMap[b.categoryId] ?? '',
             sortDir,
           )
-        case 'nom':
+        case 'ref':
         default:
-          return compareStrings(a.nom, b.nom, sortDir)
+          return compareStrings(a.ref, b.ref, sortDir)
       }
     })
     return list
@@ -206,7 +205,6 @@ export default function ProductsPage() {
     setCategoryError('')
     setForm({
       ref: p.ref ?? '',
-      nom: p.nom,
       description: p.description ?? '',
       prix: String(p.prix),
       stock: String(p.stock),
@@ -354,7 +352,6 @@ export default function ProductsPage() {
     }
     const payload = {
       ref: form.ref.trim(),
-      nom: form.nom.trim(),
       description: form.description.trim() || undefined,
       prix: Number(form.prix),
       stock,
@@ -434,7 +431,7 @@ export default function ProductsPage() {
   const openDetail = async (id: number) => {
     const fromList = products.find((p) => p.id === id) ?? null
     setSelectedProduct(fromList)
-    setSelected(emptyAnalytics(id, fromList?.nom ?? ''))
+    setSelected(emptyAnalytics(id, fromList?.ref ?? ''))
     setTab('detail')
     setError('')
 
@@ -442,7 +439,7 @@ export default function ProductsPage() {
       const product = await api.getProduct(id)
       setSelectedProduct(product)
       setSelected((prev) =>
-        prev ? { ...prev, nom: product.nom || prev.nom, productId: product.id } : emptyAnalytics(product.id, product.nom),
+        prev ? { ...prev, ref: product.ref || prev.ref, productId: product.id } : emptyAnalytics(product.id, product.ref),
       )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Impossible de charger le produit')
@@ -460,7 +457,7 @@ export default function ProductsPage() {
   }
 
   const chartData = bestSellers.slice(0, 8).map((b) => ({
-    name: b.nom.length > 18 ? b.nom.slice(0, 18) + '…' : b.nom,
+    name: b.ref.length > 18 ? b.ref.slice(0, 18) + '…' : b.ref,
     ventes: b.quantiteVendue,
     ca: Number(b.chiffreAffaires),
   }))
@@ -526,7 +523,6 @@ export default function ProductsPage() {
             </div>
             <div className="space-y-4">
               <Field label="Réf. produit" value={form.ref} onChange={(v) => setForm({ ...form, ref: v })} required placeholder="Ex. TAB-001" />
-              <Field label="Nom" value={form.nom} onChange={(v) => setForm({ ...form, nom: v })} required />
               <Field label="Description (optionnel)" value={form.description} onChange={(v) => setForm({ ...form, description: v })} textarea />
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Prix (DH)" value={form.prix} onChange={(v) => setForm({ ...form, prix: v })} type="number" step="0.01" required />
@@ -847,7 +843,7 @@ export default function ProductsPage() {
             sort={sort}
             onSortChange={(v) => setSort(v as ProductSortKey)}
             sortOptions={[
-              { value: 'nom', label: 'Nom' },
+              { value: 'ref', label: 'Réf.' },
               { value: 'prix', label: 'Prix' },
               { value: 'stock', label: 'Stock' },
               { value: 'category', label: 'Catégorie' },
@@ -860,7 +856,7 @@ export default function ProductsPage() {
               setSearch('')
               setCategoryFilter('ALL')
               setStatutFilter('ALL')
-              setSort('nom')
+              setSort('ref')
               setSortDir('asc')
             }}
             filters={[
@@ -920,7 +916,7 @@ export default function ProductsPage() {
                       {p.imageUrl || p.images?.[0]?.url ? (
                         <img
                           src={resolveImageSrc(p.images?.[0]?.url ?? p.imageUrl)}
-                          alt={p.nom}
+                          alt={p.ref}
                           className="h-12 w-12 rounded-lg object-cover ring-1 ring-white/10"
                         />
                       ) : (
@@ -934,7 +930,7 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-6 py-4 font-mono text-xs text-gold-400">{p.ref ?? '—'}</td>
                     <td className="px-6 py-4">
-                      <p className="font-medium text-white">{p.nom}</p>
+                      <p className="font-medium text-white">{p.ref}</p>
                       <p className="max-w-xs truncate text-xs text-zinc-500">{p.description}</p>
                     </td>
                     <td className="px-6 py-4 text-zinc-300">
@@ -1004,7 +1000,7 @@ export default function ProductsPage() {
                     <td className="px-6 py-3">
                       <span className={`font-bold ${i === 0 ? 'text-gold-400' : 'text-zinc-400'}`}>#{i + 1}</span>
                     </td>
-                    <td className="px-6 py-3 font-medium text-white">{b.nom}</td>
+                    <td className="px-6 py-3 font-medium text-white">{b.ref}</td>
                     <td className="px-6 py-3">{b.quantiteVendue}</td>
                     <td className="px-6 py-3 text-gold-400">{formatCurrency(Number(b.chiffreAffaires))}</td>
                   </tr>
@@ -1049,7 +1045,7 @@ export default function ProductsPage() {
                         <img
                           key={img.id || img.url}
                           src={resolveImageSrc(img.url)}
-                          alt={selectedProduct?.nom ?? selected?.nom ?? 'Produit'}
+                          alt={selectedProduct?.ref ?? selected?.ref ?? 'Produit'}
                           className="aspect-square w-full rounded-xl object-cover ring-1 ring-white/10"
                           onError={(e) => {
                             e.currentTarget.src =
@@ -1063,7 +1059,7 @@ export default function ProductsPage() {
               </div>
               <div>
                 <h3 className="font-display text-2xl font-semibold text-white">
-                  {selectedProduct?.nom ?? selected?.nom ?? 'Produit'}
+                  {selectedProduct?.ref ?? selected?.ref ?? 'Produit'}
                 </h3>
                 <p className="mt-2 text-sm text-zinc-400 whitespace-pre-wrap">
                   {selectedProduct?.description || 'Aucune description'}

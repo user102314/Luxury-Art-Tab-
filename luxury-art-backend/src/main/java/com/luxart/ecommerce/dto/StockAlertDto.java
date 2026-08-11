@@ -9,7 +9,7 @@ import lombok.*;
 @Builder
 public class StockAlertDto {
     private Long productId;
-    private String nom;
+    private String ref;
     private Integer stock;
     private String statut;
     private String imageUrl;

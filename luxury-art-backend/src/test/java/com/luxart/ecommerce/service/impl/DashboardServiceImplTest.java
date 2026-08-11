@@ -54,9 +54,9 @@ class DashboardServiceImplTest {
 
     @Test
     void getDashboardSummary_computesKpisAndGlobalConversion() {
-        Product active = Product.builder().id(1L).nom("A").prix(BigDecimal.TEN).stock(1)
+        Product active = Product.builder().id(1L).ref("A").prix(BigDecimal.TEN).stock(1)
                 .statut(ProductStatut.DISPONIBLE).build();
-        Product archived = Product.builder().id(2L).nom("B").prix(BigDecimal.TEN).stock(1)
+        Product archived = Product.builder().id(2L).ref("B").prix(BigDecimal.TEN).stock(1)
                 .statut(ProductStatut.ARCHIVE).build();
 
         when(orderRepository.sumRevenueLivreeInPeriod(any(), any())).thenReturn(BigDecimal.valueOf(1000));

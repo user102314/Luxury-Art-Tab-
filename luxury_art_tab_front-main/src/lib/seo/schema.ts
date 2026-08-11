@@ -31,7 +31,7 @@ export function websiteSchema() {
 
 export function productSchema(input: {
   id: number
-  nom: string
+  ref: string
   description: string
   image?: string | null
   prix: number
@@ -42,10 +42,10 @@ export function productSchema(input: {
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: input.nom,
+    name: input.ref,
     description: input.description,
     image: input.image ? [absoluteImageUrl(input.image)] : undefined,
-    sku: input.sku ?? String(input.id),
+    sku: input.sku ?? input.ref ?? String(input.id),
     brand: {
       '@type': 'Brand',
       name: SITE.name,

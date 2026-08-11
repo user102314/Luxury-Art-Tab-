@@ -14,8 +14,7 @@ export interface ProductImage {
 
 export interface Product {
   id: number
-  ref?: string
-  nom: string
+  ref: string
   description?: string
   prix: number
   stock: number
@@ -108,7 +107,7 @@ export interface News {
 
 export interface CartItem {
   productId: number
-  nom: string
+  ref: string
   imageUrl: string
   prixUnitaire: number
   quantite: number

@@ -427,7 +427,7 @@ export function SiteNav() {
                       >
                         <img src={getProductImage({ imageUrl: item.imageUrl })} alt="" className="h-14 w-14 rounded-lg object-cover" loading="lazy" decoding="async" />
                         <div className="flex-1">
-                          <p className="text-sm font-semibold">{item.nom}</p>
+                          <p className="text-sm font-semibold">{item.ref}</p>
                           <p className="text-xs text-muted-foreground">{item.taille}</p>
                           <div className="mt-1 flex items-center gap-2">
                             <button
@@ -500,11 +500,11 @@ export function SiteNav() {
                     >
                       <img
                         src={getProductImage(p)}
-                        alt={p.nom}
+                        alt={p.ref}
                         className="h-14 w-14 rounded-lg object-cover"
                       />
                       <div>
-                        <p className="text-sm font-semibold">{p.nom}</p>
+                        <p className="text-sm font-semibold">{p.ref}</p>
                         <p className="text-sm text-accent-green">{formatPrice(Number(p.prix))}</p>
                       </div>
                     </Link>

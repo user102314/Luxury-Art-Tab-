@@ -13,7 +13,7 @@ import java.util.List;
 public class ProductAnalyticsDto {
 
     private Long productId;
-    private String nom;
+    private String ref;
     private long nombreJaimes;
     private long nombreCommentaires;
     private long nombreAvis;

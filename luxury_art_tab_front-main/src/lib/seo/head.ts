@@ -101,7 +101,7 @@ export const PAGE_COPY = {
 } as const
 
 export function productSeoDescription(product: {
-  nom: string
+  ref: string
   description?: string
   categoryName?: string
 }): string {
@@ -110,7 +110,7 @@ export function productSeoDescription(product: {
     return trimmed.length > 155 ? `${trimmed.slice(0, 152)}…` : trimmed
   }
   const cat = product.categoryName ? ` pour ${product.categoryName}` : ''
-  return `Achetez « ${product.nom} »${cat} chez Luxury Art_Tab. Tableau décoratif livré en Tunisie.`
+  return `Achetez « ${product.ref} »${cat} chez Luxury Art_Tab. Tableau décoratif livré en Tunisie.`
 }
 
 export function categorySeoDescription(categoryName: string, productCount: number): string {

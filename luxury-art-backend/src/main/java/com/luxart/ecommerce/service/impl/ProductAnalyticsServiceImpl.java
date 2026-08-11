@@ -48,7 +48,7 @@ public class ProductAnalyticsServiceImpl implements ProductAnalyticsService {
                     Product p = productRepository.findById(e.getKey()).orElse(null);
                     return ProductBestSellerDto.builder()
                             .productId(e.getKey())
-                            .nom(p != null ? p.getNom() : "Produit #" + e.getKey())
+                            .ref(p != null ? p.getRef() : "REF-" + e.getKey())
                             .quantiteVendue(e.getValue().quantite())
                             .chiffreAffaires(e.getValue().ca())
                             .build();
@@ -79,7 +79,7 @@ public class ProductAnalyticsServiceImpl implements ProductAnalyticsService {
 
         return ProductAnalyticsDto.builder()
                 .productId(productId)
-                .nom(product.getNom())
+                .ref(product.getRef())
                 .nombreJaimes(likes.size())
                 .nombreCommentaires(comments.size())
                 .nombreAvis(reviews.size())
@@ -157,7 +157,7 @@ public class ProductAnalyticsServiceImpl implements ProductAnalyticsService {
 
         return ProductStatsDto.builder()
                 .productId(productId)
-                .productName(product.getNom())
+                .productName(product.getRef())
                 .totalViews(views)
                 .totalClicks(clicks)
                 .totalAddToCart(addToCart)

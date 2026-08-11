@@ -60,7 +60,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
           <div className="aspect-[4/5] w-full">
             <img
               src={image}
-              alt={product.nom}
+              alt={product.ref}
               loading="lazy"
               decoding="async"
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
@@ -150,7 +150,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
                 compact ? 'truncate text-sm' : 'text-lg'
               }`}
             >
-              {product.nom}
+              {product.ref}
             </h3>
             {categoryName && (
               <p

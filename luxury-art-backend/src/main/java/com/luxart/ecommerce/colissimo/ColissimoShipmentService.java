@@ -155,7 +155,7 @@ public class ColissimoShipmentService {
         }
         return order.getItems().stream()
                 .map(item -> {
-                    String nom = item.getProduct().getNom();
+                    String nom = item.getProduct().getRef();
                     return item.getQuantite() > 1 ? nom + " x" + item.getQuantite() : nom;
                 })
                 .collect(Collectors.joining(", "));

@@ -20,9 +20,6 @@ public class ProductDto {
     private Long id;
 
     @NotBlank
-    private String nom;
-
-    @NotBlank
     private String ref;
 
     private String description;

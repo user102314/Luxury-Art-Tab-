@@ -35,8 +35,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDto create(ProductDto dto) {
         Product product = Product.builder()
-                .nom(dto.getNom())
-                .ref(dto.getRef())
+                .ref(dto.getRef().trim())
                 .description(dto.getDescription())
                 .prix(dto.getPrix())
                 .stock(dto.getStock())
@@ -49,8 +48,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDto update(Long id, ProductDto dto) {
         Product product = getEntity(id);
-        product.setNom(dto.getNom());
-        product.setRef(dto.getRef());
+        product.setRef(dto.getRef().trim());
         product.setDescription(dto.getDescription());
         product.setPrix(dto.getPrix());
         product.setStock(dto.getStock());
@@ -90,7 +88,6 @@ public class ProductServiceImpl implements ProductService {
 
         return ProductDto.builder()
                 .id(product.getId())
-                .nom(product.getNom())
                 .ref(product.getRef())
                 .description(product.getDescription())
                 .prix(product.getPrix())

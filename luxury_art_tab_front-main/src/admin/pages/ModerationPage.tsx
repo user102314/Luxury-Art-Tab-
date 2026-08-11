@@ -27,7 +27,7 @@ export default function ModerationPage() {
   const [sortDir, setSortDir] = useState<SortDir>('desc')
 
   const productMap = useMemo(
-    () => Object.fromEntries(products.map((p) => [p.id, p.nom])),
+    () => Object.fromEntries(products.map((p) => [p.id, p.ref])),
     [products],
   )
 
@@ -223,7 +223,7 @@ export default function ModerationPage() {
               onChange: setProductFilter,
               options: [
                 { value: 'ALL', label: 'Tous produits' },
-                ...products.map((p) => ({ value: String(p.id), label: p.nom })),
+                ...products.map((p) => ({ value: String(p.id), label: p.ref })),
               ],
             },
           ]}

@@ -45,7 +45,7 @@ public class AdminStockController {
     private StockAlertDto toAlert(Product p) {
         return StockAlertDto.builder()
                 .productId(p.getId())
-                .nom(p.getNom())
+                .ref(p.getRef())
                 .stock(p.getStock())
                 .statut(p.getStatut() != null ? p.getStatut().name() : null)
                 .imageUrl(p.getImageUrl())

@@ -13,7 +13,7 @@ import java.util.List;
 public class ProductBestSellerDto {
 
     private Long productId;
-    private String nom;
+    private String ref;
     private Long quantiteVendue;
     private BigDecimal chiffreAffaires;
 }

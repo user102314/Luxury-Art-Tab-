@@ -168,13 +168,13 @@ function CheckoutPage() {
                 >
                   <img
                     src={resolveImageSrc(item.imageUrl)}
-                    alt={item.nom}
+                    alt={item.ref}
                     loading="lazy"
                     decoding="async"
                     className="h-16 w-16 rounded-lg object-cover"
                   />
                   <div className="flex-1">
-                    <p className="font-semibold">{item.nom}</p>
+                    <p className="font-semibold">{item.ref}</p>
                     <p className="text-xs text-sand/70">
                       {item.taille} · {item.encadrement.slice(0, 30)}...
                     </p>

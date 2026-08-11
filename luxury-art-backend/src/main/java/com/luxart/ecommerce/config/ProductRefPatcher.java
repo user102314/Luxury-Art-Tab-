@@ -18,16 +18,38 @@ public class ProductRefPatcher implements CommandLineRunner {
     @Override
     public void run(String... args) {
         if (!columnExists("ref")) {
-            return;
+            jdbcTemplate.execute("ALTER TABLE products ADD COLUMN ref varchar(100)");
+            log.info("Colonne products.ref ajoutée");
         }
-        int updated = jdbcTemplate.update(
+
+        // Migrer l'ancien champ nom → ref si besoin
+        if (columnExists("nom")) {
+            int fromNom = jdbcTemplate.update(
+                    """
+                    UPDATE products
+                    SET ref = nom
+                    WHERE (ref IS NULL OR TRIM(ref) = '')
+                      AND nom IS NOT NULL AND TRIM(nom) <> ''
+                    """);
+            if (fromNom > 0) {
+                log.info("Références migrées depuis nom: {}", fromNom);
+            }
+        }
+
+        int generated = jdbcTemplate.update(
                 """
                 UPDATE products
                 SET ref = 'REF-' || id
                 WHERE ref IS NULL OR TRIM(ref) = ''
                 """);
-        if (updated > 0) {
-            log.info("Références produits générées: {}", updated);
+        if (generated > 0) {
+            log.info("Références produits générées: {}", generated);
+        }
+
+        try {
+            jdbcTemplate.execute("ALTER TABLE products ALTER COLUMN ref SET NOT NULL");
+        } catch (Exception e) {
+            log.debug("Contrainte NOT NULL sur products.ref: {}", e.getMessage());
         }
     }
 
