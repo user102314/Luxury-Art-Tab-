@@ -51,7 +51,7 @@ class ProductAnalyticsServiceImplTest {
     void setUp() {
         product = Product.builder()
                 .id(1L)
-                .nom("Tableau Or")
+                .ref("Tableau Or")
                 .prix(BigDecimal.valueOf(100))
                 .stock(5)
                 .statut(ProductStatut.DISPONIBLE)
