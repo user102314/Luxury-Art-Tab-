@@ -51,6 +51,15 @@ public class ProductRefPatcher implements CommandLineRunner {
         } catch (Exception e) {
             log.debug("Contrainte NOT NULL sur products.ref: {}", e.getMessage());
         }
+
+        if (columnExists("nom")) {
+            try {
+                jdbcTemplate.execute("ALTER TABLE products DROP COLUMN nom");
+                log.info("Colonne products.nom supprimée (remplacée par ref)");
+            } catch (Exception e) {
+                log.warn("Impossible de supprimer products.nom: {}", e.getMessage());
+            }
+        }
     }
 
     private boolean columnExists(String column) {
