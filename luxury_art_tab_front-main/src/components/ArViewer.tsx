@@ -138,10 +138,10 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
         </div>
       </div>
 
-      {/* Draggable Image */}
+      {/* Produit seul (image 2 sans fond) — pas de cadre */}
       {!error && (
         <div
-          className="absolute z-20 cursor-move shadow-2xl touch-none"
+          className="absolute z-20 cursor-move touch-none"
           style={{
             transform: `translate3d(${position.x}px, ${position.y}px, 0) scale(${scale})`,
             transition: isDragging ? "none" : "transform 0.1s ease-out",
@@ -154,14 +154,12 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
           onTouchMove={(e) => handleMove(e.touches[0].clientX, e.touches[0].clientY)}
           onTouchEnd={handleEnd}
         >
-          {/* Border simulating a frame */}
-          <div className="border-8 border-gray-900 bg-sand p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-            <img
-              src={imageSrc}
-              alt="AR Preview"
-              className="max-h-[50vh] max-w-[80vw] object-contain shadow-inner pointer-events-none"
-            />
-          </div>
+          <img
+            src={imageSrc}
+            alt="Simulation mur"
+            className="max-h-[50vh] max-w-[80vw] object-contain pointer-events-none drop-shadow-lg"
+            draggable={false}
+          />
         </div>
       )}
     </div>
