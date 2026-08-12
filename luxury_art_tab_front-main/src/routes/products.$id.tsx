@@ -319,11 +319,11 @@ function ProductDetailPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-beige/25 font-[Inter,sans-serif]">
+    <main className="flex min-h-screen min-w-0 flex-col overflow-x-hidden bg-beige/25 font-[Inter,sans-serif]">
       <SiteNav />
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:px-10 md:py-10">
-        <nav className="mb-6 flex flex-wrap items-center text-sm text-muted-foreground" aria-label="Fil d'Ariane">
+      <div className="mx-auto w-full min-w-0 max-w-7xl px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-10">
+        <nav className="mb-5 flex min-w-0 flex-wrap items-center gap-y-1 text-sm text-muted-foreground" aria-label="Fil d'Ariane">
           <Link to="/" className="hover:text-brand-red">
             Accueil
           </Link>
@@ -340,10 +340,10 @@ function ProductDetailPage() {
             </>
           )}
           <span className="mx-2">/</span>
-          <span className="font-medium text-foreground" aria-current="page">{product.ref}</span>
+          <span className="min-w-0 truncate font-medium text-foreground" aria-current="page">{product.ref}</span>
         </nav>
 
-        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,420px)] lg:gap-12">
+        <div className="grid min-w-0 items-start gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,420px)] lg:gap-12">
           <ProductImageGallery
             images={galleryImages}
             alt={product.ref}
@@ -353,7 +353,7 @@ function ProductDetailPage() {
             onAr={setArImage}
           />
 
-          <aside className="lg:sticky lg:top-24">
+          <aside className="min-w-0 w-full lg:sticky lg:top-24">
             {(likeCount > 0 || comments.length > 0) && (
               <p className="text-sm font-medium text-brand-red">
                 {likeCount > 0
@@ -362,20 +362,20 @@ function ProductDetailPage() {
               </p>
             )}
 
-            <p className="mt-3 font-display text-4xl font-bold tracking-tight text-foreground md:text-[2.75rem]">
+            <p className="mt-3 break-words font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-[2.75rem]">
               {formatPrice(unitPrice)}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
               Prix selon la taille sélectionnée · TVA incluse si applicable
             </p>
 
-            <h1 className="mt-5 font-display text-2xl font-bold leading-snug text-foreground md:text-3xl">
+            <h1 className="mt-5 break-words font-display text-xl font-bold leading-snug text-foreground sm:text-2xl md:text-3xl">
               {product.ref}
             </h1>
 
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+            <div className="mt-3 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 text-sm">
               {categoryName && (
-                <span className="rounded-full bg-accent-green/15 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-accent-green">
+                <span className="max-w-full break-words rounded-full bg-accent-green/15 px-2.5 py-0.5 text-[11px] font-bold uppercase leading-snug tracking-wider text-accent-green sm:text-xs">
                   {categoryName}
                 </span>
               )}
@@ -391,11 +391,11 @@ function ProductDetailPage() {
               </span>
             </div>
 
-            <div className="mt-5 flex items-start gap-2 rounded-xl border border-accent-blue/20 bg-accent-blue/5 px-3 py-3 text-sm text-foreground">
+            <div className="mt-5 flex min-w-0 items-start gap-2 rounded-xl border border-accent-blue/20 bg-accent-blue/5 px-3 py-3 text-sm text-foreground">
               <Truck className="mt-0.5 h-4 w-4 shrink-0 text-accent-green" />
-              <div>
+              <div className="min-w-0">
                 <p className="font-semibold">Livraison estimée</p>
-                <p className="text-muted-foreground">
+                <p className="break-words text-muted-foreground">
                   Commandez aujourd&apos;hui — réception entre le {deliveryHint}
                 </p>
               </div>
@@ -410,7 +410,7 @@ function ProductDetailPage() {
                   id="size-select"
                   value={size}
                   onChange={(e) => setSize(e.target.value as typeof dimensionOptions[number]['value'])}
-                  className="w-full rounded-xl border border-border bg-sand px-4 py-3 text-sm font-medium outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/20"
+                  className="w-full min-w-0 max-w-full rounded-xl border border-border bg-sand px-3 py-3 text-sm font-medium outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 sm:px-4"
                 >
                   {dimensionOptions.map((dim) => (
                     <option key={dim.value} value={dim.value}>
@@ -428,7 +428,7 @@ function ProductDetailPage() {
                   id="frame-select"
                   value={frame}
                   onChange={(e) => setFrame(e.target.value as typeof frame)}
-                  className="w-full rounded-xl border border-border bg-sand px-4 py-3 text-sm font-medium outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/20"
+                  className="w-full min-w-0 max-w-full rounded-xl border border-border bg-sand px-3 py-3 text-sm font-medium outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 sm:px-4"
                 >
                   {frameOptions.map((f) => (
                     <option key={f} value={f}>
@@ -470,9 +470,9 @@ function ProductDetailPage() {
               {inStock ? 'Ajouter au panier' : 'Indisponible'}
             </button>
 
-            <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-              <CheckCircle2 className="h-3.5 w-3.5 text-accent-green" />
-              Impression soignée · Formats personnalisés · Retours sous conditions
+            <div className="mt-3 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
+              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-green" />
+              <span>Impression soignée · Formats personnalisés · Retours sous conditions</span>
             </div>
 
             <div className="mt-8 border-t border-border/70">
@@ -507,9 +507,9 @@ function ProductDetailPage() {
         {/* Bloc unique « satisfaction » : synthèse à gauche, contributions à droite */}
         <section
           id="avis"
-          className="mt-16 overflow-hidden rounded-3xl border border-border/60 bg-sand shadow-[0_26px_55px_-42px_rgba(74,93,79,0.9)]"
+          className="mt-12 overflow-hidden rounded-2xl border border-border/60 bg-sand shadow-[0_26px_55px_-42px_rgba(74,93,79,0.9)] sm:mt-16 sm:rounded-3xl"
         >
-          <div className="grid lg:grid-cols-[300px_1fr]">
+          <div className="grid min-w-0 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
             <div className="border-b border-border/60 bg-beige/45 p-6 lg:border-b-0 lg:border-r">
               <p className="font-display text-xs uppercase tracking-[0.22em] text-gold">
                 Satisfaction client
@@ -562,12 +562,12 @@ function ProductDetailPage() {
               </div>
             </div>
 
-            <div className="p-6 md:p-8">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <h2 className="font-display text-2xl font-bold text-foreground">
+            <div className="min-w-0 p-4 sm:p-6 md:p-8">
+              <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                <h2 className="font-display text-xl font-bold text-foreground sm:text-2xl">
                   Ce qu&apos;en disent nos clients
                 </h2>
-                <div className="inline-flex rounded-full border border-border bg-beige/40 p-1">
+                <div className="inline-flex max-w-full flex-wrap rounded-full border border-border bg-beige/40 p-1">
                   {(
                     [
                       { key: 'avis', label: `Avis (${reviews.length})`, icon: Star },
@@ -582,7 +582,7 @@ function ProductDetailPage() {
                       key={key}
                       type="button"
                       onClick={() => setFeedbackTab(key)}
-                      className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition sm:px-4 sm:text-sm ${
                         feedbackTab === key
                           ? 'bg-foliage text-sand shadow-sm'
                           : 'text-muted-foreground hover:text-foreground'
@@ -682,9 +682,9 @@ function ProductDetailPage() {
                 </>
               ) : (
                 <>
-                  <div className="mt-6 flex gap-3 rounded-2xl border border-border bg-beige/30 p-4">
+                  <div className="mt-6 flex min-w-0 gap-3 rounded-2xl border border-border bg-beige/30 p-3 sm:p-4">
                     <FeedbackAvatar label={visitor?.nom ?? 'Vous'} />
-                    <div className="flex-1">
+                    <div className="min-w-0 flex-1">
                       <textarea
                         value={commentText}
                         onChange={(e) => setCommentText(e.target.value)}
@@ -776,7 +776,7 @@ function ProductDetailPage() {
               )}
             </div>
 
-            <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-3 snap-x snap-mandatory">
+            <div className="-mx-1 flex max-w-full gap-4 overflow-x-auto px-1 pb-3 snap-x snap-mandatory">
               {similarProducts.map((p, i) => (
                 <div
                   key={p.id}

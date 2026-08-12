@@ -228,18 +228,18 @@ function ProductsPage() {
   )
 
   return (
-    <main className="flex min-h-screen flex-col bg-beige/25 font-[Inter,sans-serif]">
+    <main className="flex min-h-screen min-w-0 flex-col overflow-x-hidden bg-beige/25 font-[Inter,sans-serif]">
       <SiteNav />
 
-      <div className="border-b border-border/40 bg-gradient-to-r from-foliage via-foliage to-taupe px-6 py-14 text-sand md:px-10">
+      <div className="border-b border-border/40 bg-gradient-to-r from-foliage via-foliage to-taupe px-4 py-10 text-sand sm:px-6 sm:py-14 md:px-10">
         <div className="mx-auto max-w-[1600px]">
-          <p className="font-display text-sm uppercase tracking-[0.25em] text-accent">
+          <p className="font-display text-xs uppercase tracking-[0.25em] text-accent sm:text-sm">
             Catalogue complet
           </p>
-          <h1 className="mt-3 font-display text-4xl font-bold md:text-5xl">
+          <h1 className="mt-3 break-words font-display text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">
             Nos tableaux et <em className="text-gold">décorations murales</em>
           </h1>
-          <p className="mt-4 max-w-2xl text-sand/80">
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-sand/80 sm:text-base">
             Explorez notre collection en Tunisie — filtrez par catégorie et prix pour trouver la pièce parfaite.
           </p>
         </div>
@@ -286,7 +286,7 @@ function ProductsPage() {
           </p>
 
           <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
-            <SelectTrigger className="w-[150px] shrink-0 rounded-xl bg-sand sm:w-[180px]">
+            <SelectTrigger className="w-[120px] shrink-0 rounded-xl bg-sand sm:w-[180px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

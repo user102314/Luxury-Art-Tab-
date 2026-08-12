@@ -200,11 +200,20 @@
 
   html {
     font-size: 87.5%; /* scale globale ~ -12.5% */
+    overflow-x: hidden;
   }
 
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  img,
+  video,
+  svg {
+    max-width: 100%;
   }
 }
 
