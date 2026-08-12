@@ -69,11 +69,48 @@ public class LocalFileStorageService {
         }
     }
 
+    public boolean exists(String storagePath) {
+        return Files.exists(resolveSafe(storagePath));
+    }
+
+    public byte[] read(String storagePath) {
+        try {
+            return Files.readAllBytes(resolveSafe(storagePath));
+        } catch (IOException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Fichier introuvable: " + storagePath);
+        }
+    }
+
+    public String toWebpStoragePath(String storagePath) {
+        if (storagePath == null || storagePath.isBlank()) {
+            return "image.webp";
+        }
+        String normalized = storagePath.replace("\\", "/");
+        if (normalized.toLowerCase().endsWith(".webp")) {
+            return normalized;
+        }
+        int dot = normalized.lastIndexOf('.');
+        if (dot > normalized.lastIndexOf('/')) {
+            return normalized.substring(0, dot) + ".webp";
+        }
+        return normalized + ".webp";
+    }
+
     public String buildStoragePath(Long productId, String originalFilename) {
-        String safeName = originalFilename != null
-                ? originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_")
-                : "image.jpg";
-        return "products/" + productId + "/" + UUID.randomUUID() + "-" + safeName;
+        String baseName = stripExtension(originalFilename);
+        return "products/" + productId + "/" + UUID.randomUUID() + "-" + baseName + ".webp";
+    }
+
+    private String stripExtension(String filename) {
+        String safeName = filename != null && !filename.isBlank()
+                ? filename.replaceAll("[^a-zA-Z0-9._-]", "_")
+                : "image";
+        int dot = safeName.lastIndexOf('.');
+        if (dot > 0) {
+            safeName = safeName.substring(0, dot);
+        }
+        return safeName.isBlank() ? "image" : safeName;
     }
 
     public String buildNewsStoragePath(Long newsId, String originalFilename) {

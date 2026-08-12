@@ -6,6 +6,7 @@ import com.luxart.ecommerce.model.entity.Product;
 import com.luxart.ecommerce.model.entity.ProductImage;
 import com.luxart.ecommerce.repository.ProductImageRepository;
 import com.luxart.ecommerce.repository.ProductRepository;
+import com.luxart.ecommerce.service.ImageConversionService;
 import com.luxart.ecommerce.service.LocalFileStorageService;
 import com.luxart.ecommerce.service.ProductImageService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class ProductImageServiceImpl implements ProductImageService {
     private final ProductRepository productRepository;
     private final ProductImageRepository productImageRepository;
     private final LocalFileStorageService localFileStorageService;
+    private final ImageConversionService imageConversionService;
 
     @Override
     public List<ProductImageDto> findByProductId(Long productId) {
@@ -56,8 +58,12 @@ public class ProductImageServiceImpl implements ProductImageService {
             }
 
             try {
+                ImageConversionService.ConvertedImage converted =
+                        imageConversionService.convertToWebp(file.getBytes(), contentType);
+
                 String storagePath = localFileStorageService.buildStoragePath(productId, file.getOriginalFilename());
-                String publicUrl = localFileStorageService.upload(storagePath, file.getBytes(), contentType);
+                String publicUrl = localFileStorageService.upload(
+                        storagePath, converted.data(), converted.contentType());
 
                 ProductImage image = ProductImage.builder()
                         .product(product)
