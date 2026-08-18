@@ -30,6 +30,10 @@ public class CadreCouleur {
     @Column(length = 16)
     private String hex;
 
+    /** Photo d’échantillon du cadre dans cette couleur */
+    @Column(length = 500)
+    private String imageUrl;
+
     @Column(nullable = false)
     @Builder.Default
     private Integer ordre = 0;

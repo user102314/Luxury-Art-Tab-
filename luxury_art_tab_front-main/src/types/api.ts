@@ -25,6 +25,7 @@ export interface CadreCouleur {
   cadreId: number
   nom: string
   hex?: string
+  imageUrl?: string
   ordre?: number
 }
 

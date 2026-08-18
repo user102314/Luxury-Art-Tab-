@@ -120,6 +120,13 @@ public class LocalFileStorageService {
         return "news/" + newsId + "/" + UUID.randomUUID() + "-" + safeName;
     }
 
+    public String buildCadreCouleurStoragePath(Long couleurId, String originalFilename) {
+        String safeName = originalFilename != null
+                ? originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_")
+                : "image.jpg";
+        return "cadres/" + couleurId + "/" + UUID.randomUUID() + "-" + safeName;
+    }
+
     public String buildTestimonialStoragePath(Long testimonialId, String originalFilename) {
         String safeName = originalFilename != null
                 ? originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_")

@@ -14,5 +14,6 @@ public class CadreCouleurDto {
     @NotBlank
     private String nom;
     private String hex;
+    private String imageUrl;
     private Integer ordre;
 }

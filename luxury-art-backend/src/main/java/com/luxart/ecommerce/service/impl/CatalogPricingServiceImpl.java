@@ -17,10 +17,12 @@ import com.luxart.ecommerce.repository.DimensionCadrePrixRepository;
 import com.luxart.ecommerce.repository.ProductRepository;
 import com.luxart.ecommerce.repository.TableauDimensionRepository;
 import com.luxart.ecommerce.service.CatalogPricingService;
+import com.luxart.ecommerce.service.LocalFileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -32,16 +34,21 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class CatalogPricingServiceImpl implements CatalogPricingService {
+
+    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
+            "image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif");
 
     private final TableauDimensionRepository dimensionRepository;
     private final CadreRepository cadreRepository;
     private final CadreCouleurRepository couleurRepository;
     private final DimensionCadrePrixRepository tarifRepository;
     private final ProductRepository productRepository;
+    private final LocalFileStorageService localFileStorageService;
 
     @Override
     @Transactional(readOnly = true)
@@ -156,6 +163,9 @@ public class CatalogPricingServiceImpl implements CatalogPricingService {
     public void deleteCadre(Long id) {
         Cadre cadre = getCadre(id);
         tarifRepository.deleteByCadreId(id);
+        for (CadreCouleur couleur : couleurRepository.findByCadreIdOrderByOrdreAscIdAsc(id)) {
+            deleteStoredImage(couleur.getImageUrl());
+        }
         cadreRepository.delete(cadre);
     }
 
@@ -179,8 +189,7 @@ public class CatalogPricingServiceImpl implements CatalogPricingService {
     @Override
     @Transactional
     public CadreCouleurDto updateCouleur(Long couleurId, CadreCouleurDto dto) {
-        CadreCouleur couleur = couleurRepository.findById(couleurId)
-                .orElseThrow(() -> new ResourceNotFoundException("Couleur introuvable: " + couleurId));
+        CadreCouleur couleur = getCouleur(couleurId);
         couleur.setNom(dto.getNom().trim());
         couleur.setHex(blankToNull(dto.getHex()));
         if (dto.getOrdre() != null) {
@@ -191,9 +200,32 @@ public class CatalogPricingServiceImpl implements CatalogPricingService {
 
     @Override
     @Transactional
+    public CadreCouleurDto uploadCouleurImage(Long couleurId, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Fichier image requis");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Format image non supporté");
+        }
+        CadreCouleur couleur = getCouleur(couleurId);
+        deleteStoredImage(couleur.getImageUrl());
+        try {
+            String path = localFileStorageService.buildCadreCouleurStoragePath(
+                    couleurId, file.getOriginalFilename());
+            String url = localFileStorageService.upload(path, file.getBytes(), contentType);
+            couleur.setImageUrl(url);
+            return toCouleurDto(couleurRepository.save(couleur));
+        } catch (java.io.IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erreur upload image");
+        }
+    }
+
+    @Override
+    @Transactional
     public void deleteCouleur(Long couleurId) {
-        CadreCouleur couleur = couleurRepository.findById(couleurId)
-                .orElseThrow(() -> new ResourceNotFoundException("Couleur introuvable: " + couleurId));
+        CadreCouleur couleur = getCouleur(couleurId);
+        deleteStoredImage(couleur.getImageUrl());
         couleurRepository.delete(couleur);
     }
 
@@ -284,6 +316,18 @@ public class CatalogPricingServiceImpl implements CatalogPricingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cadre introuvable: " + id));
     }
 
+    private CadreCouleur getCouleur(Long id) {
+        return couleurRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Couleur introuvable: " + id));
+    }
+
+    private void deleteStoredImage(String imageUrl) {
+        if (imageUrl == null || !imageUrl.startsWith("/uploads/")) {
+            return;
+        }
+        localFileStorageService.delete(imageUrl.substring("/uploads/".length()));
+    }
+
     private int nextDimensionOrdre() {
         return dimensionRepository.findAll().stream()
                 .map(TableauDimension::getOrdre)
@@ -331,6 +375,7 @@ public class CatalogPricingServiceImpl implements CatalogPricingService {
                 .cadreId(couleur.getCadre().getId())
                 .nom(couleur.getNom())
                 .hex(couleur.getHex())
+                .imageUrl(couleur.getImageUrl())
                 .ordre(couleur.getOrdre())
                 .build();
     }

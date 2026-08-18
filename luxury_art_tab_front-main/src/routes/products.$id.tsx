@@ -20,7 +20,7 @@ import { queryKeys } from '@/lib/queryKeys'
 import { REFETCH_INTERVAL } from '@/lib/queryClient'
 import { useProduct, useProducts } from '@/hooks/useStorefrontQueries'
 import { useProductTracking } from '@/hooks/useProductTracking'
-import { getProductImage, getProductImages, getSimulationImage } from '@/lib/images'
+import { getProductImage, getProductImages, getSimulationImage, resolveImageSrc } from '@/lib/images'
 import {
   displayDimension,
   formatPrice,
@@ -171,10 +171,18 @@ function ProductDetailPage() {
     refetchInterval: REFETCH_INTERVAL,
   })
 
-  const galleryImages = useMemo(
-    () => (product ? getProductImages(product) : []),
-    [product],
-  )
+  const selectedCouleurImage = useMemo(() => {
+    if (!catalog || !cadreId || !couleurId) return null
+    const cadre = catalog.cadres?.find((c) => c.id === cadreId)
+    const color = cadre?.couleurs?.find((c) => c.id === couleurId)
+    return color?.imageUrl ? resolveImageSrc(color.imageUrl) : null
+  }, [catalog, cadreId, couleurId])
+
+  const galleryImages = useMemo(() => {
+    const productImgs = product ? getProductImages(product) : []
+    if (!selectedCouleurImage) return productImgs
+    return [selectedCouleurImage, ...productImgs.filter((src) => src !== selectedCouleurImage)]
+  }, [product, selectedCouleurImage])
 
   const simulationImage = useMemo(
     () => (product ? getSimulationImage(product) : null),
@@ -496,27 +504,52 @@ function ProductDetailPage() {
 
               {couleurs.length > 0 && (
                 <div>
-                  <p className="mb-1.5 text-sm font-semibold">Couleur du cadre</p>
-                  <div className="flex flex-wrap gap-2">
-                    {couleurs.map((color) => (
-                      <button
-                        key={color.id}
-                        type="button"
-                        onClick={() => setCouleurId(color.id)}
-                        className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${
-                          selectedCouleur?.id === color.id
-                            ? 'border-brand-red bg-brand-red/10 font-semibold'
-                            : 'border-border bg-sand'
-                        }`}
-                      >
-                        <span
-                          className="h-4 w-4 rounded-full border border-black/10"
-                          style={{ background: color.hex || '#888' }}
-                        />
-                        {color.nom}
-                      </button>
-                    ))}
+                  <p className="mb-2 text-sm font-semibold">Couleurs du cadre</p>
+                  <div className="flex gap-3 overflow-x-auto pb-1">
+                    {couleurs.map((color) => {
+                      const src = color.imageUrl ? resolveImageSrc(color.imageUrl) : null
+                      const selected = selectedCouleur?.id === color.id
+                      return (
+                        <button
+                          key={color.id}
+                          type="button"
+                          onClick={() => setCouleurId(color.id)}
+                          className={`group w-[72px] shrink-0 text-left ${selected ? '' : 'opacity-80 hover:opacity-100'}`}
+                        >
+                          <span
+                            className={`block overflow-hidden rounded-lg border-2 bg-muted shadow-sm ${
+                              selected
+                                ? 'border-foliage ring-1 ring-foliage/30'
+                                : 'border-transparent'
+                            }`}
+                          >
+                            {src ? (
+                              <img
+                                src={src}
+                                alt={color.nom}
+                                className="aspect-[3/4] w-full object-cover"
+                              />
+                            ) : (
+                              <span
+                                className="block aspect-[3/4] w-full"
+                                style={{ background: color.hex || '#888' }}
+                              />
+                            )}
+                          </span>
+                          <span
+                            className={`mt-1.5 block text-center text-xs ${
+                              selected ? 'font-semibold text-foreground' : 'text-muted-foreground'
+                            }`}
+                          >
+                            {color.nom}
+                          </span>
+                        </button>
+                      )
+                    })}
                   </div>
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    Cliquez une couleur pour voir l’échantillon du cadre
+                  </p>
                 </div>
               )}
 

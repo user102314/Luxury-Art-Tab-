@@ -9,8 +9,10 @@ import com.luxart.ecommerce.service.CatalogPricingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -82,6 +84,13 @@ public class CatalogPricingController {
             @PathVariable Long id,
             @Valid @RequestBody CadreCouleurDto dto) {
         return ResponseEntity.ok(catalogPricingService.updateCouleur(id, dto));
+    }
+
+    @PostMapping(value = "/couleurs/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CadreCouleurDto> uploadCouleurImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(catalogPricingService.uploadCouleurImage(id, file));
     }
 
     @DeleteMapping("/couleurs/{id}")

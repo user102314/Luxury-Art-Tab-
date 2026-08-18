@@ -21,6 +21,25 @@ public class ProductPricingSchemaPatcher implements CommandLineRunner {
         // Le nouveau modèle n'écrit plus dedans ; le prix vient de dimension_cadre_prix.
         ensureNullableColumn("prix", "numeric(10,2)");
         ensureNullableColumn("stock", "integer");
+        ensureCadreCouleurImageColumn();
+    }
+
+    private void ensureCadreCouleurImageColumn() {
+        Integer count = jdbcTemplate.queryForObject(
+                """
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'cadre_couleurs' AND column_name = 'image_url'
+                """,
+                Integer.class);
+        if (count != null && count > 0) {
+            return;
+        }
+        try {
+            jdbcTemplate.execute("ALTER TABLE cadre_couleurs ADD COLUMN image_url varchar(500)");
+            log.info("Colonne cadre_couleurs.image_url ajoutée");
+        } catch (Exception e) {
+            log.debug("cadre_couleurs.image_url: {}", e.getMessage());
+        }
     }
 
     private void ensureNullableColumn(String column, String sqlType) {

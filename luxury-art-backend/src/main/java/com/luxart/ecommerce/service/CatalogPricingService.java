@@ -6,6 +6,7 @@ import com.luxart.ecommerce.dto.CatalogPricingDto;
 import com.luxart.ecommerce.dto.DimensionCadrePrixDto;
 import com.luxart.ecommerce.dto.TableauDimensionDto;
 import com.luxart.ecommerce.model.entity.Product;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -27,6 +28,7 @@ public interface CatalogPricingService {
 
     CadreCouleurDto createCouleur(Long cadreId, CadreCouleurDto dto);
     CadreCouleurDto updateCouleur(Long couleurId, CadreCouleurDto dto);
+    CadreCouleurDto uploadCouleurImage(Long couleurId, MultipartFile file);
     void deleteCouleur(Long couleurId);
 
     DimensionCadrePrixDto upsertTarif(DimensionCadrePrixDto dto);

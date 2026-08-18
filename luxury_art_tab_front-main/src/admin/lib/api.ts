@@ -169,6 +169,19 @@ export const api = {
     }),
   deleteCadreCouleur: (id: number) =>
     request<void>(`/catalog/couleurs/${id}`, { method: 'DELETE' }),
+  uploadCadreCouleurImage: async (couleurId: number, file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch(`${getApiBase()}/catalog/couleurs/${couleurId}/image`, {
+      method: 'POST',
+      body: formData,
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: 'Erreur upload' }))
+      throw new Error(err.message ?? `Erreur ${res.status}`)
+    }
+    return res.json() as Promise<CadreCouleur>
+  },
   upsertTarif: (data: Partial<DimensionCadrePrix>) =>
     request<DimensionCadrePrix>('/catalog/tarifs', {
       method: 'PUT',
