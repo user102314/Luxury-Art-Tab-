@@ -36,10 +36,8 @@ export function invoiceFileName(order: Order): string {
   return `facture-commande-${order.id}.pdf`
 }
 
-const BASE = getApiBase()
-
 async function downloadColissimoInvoice(orderId: number, fileName: string): Promise<boolean> {
-  const res = await fetch(`${BASE}/colissimo/orders/${orderId}/invoice`)
+  const res = await fetch(`${getApiBase()}/colissimo/orders/${orderId}/invoice`)
   if (!res.ok) {
     return false
   }

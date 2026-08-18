@@ -12,6 +12,7 @@ import com.luxart.ecommerce.repository.ClientProfileRepository;
 import com.luxart.ecommerce.repository.OrderItemRepository;
 import com.luxart.ecommerce.repository.OrderRepository;
 import com.luxart.ecommerce.repository.UserRepository;
+import com.luxart.ecommerce.service.CatalogPricingService;
 import com.luxart.ecommerce.service.LoyaltyService;
 import com.luxart.ecommerce.service.OrderService;
 import com.luxart.ecommerce.service.StockService;
@@ -38,6 +39,7 @@ public class OrderServiceImpl implements OrderService {
     private final ClientProfileRepository clientProfileRepository;
     private final LoyaltyService loyaltyService;
     private final StockService stockService;
+    private final CatalogPricingService catalogPricingService;
     private final ApplicationEventPublisher eventPublisher;
     private final ColissimoShipmentService colissimoShipmentService;
 
@@ -87,7 +89,7 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal total = BigDecimal.ZERO;
         for (FacebookOrderCreateDto.LineItem line : dto.getItems()) {
             Product product = stockService.getProductOrThrow(line.getProductId());
-            BigDecimal unit = line.getPrixUnitaire() != null ? line.getPrixUnitaire() : product.getPrix();
+            BigDecimal unit = resolveLinePrice(product, line.getPrixUnitaire());
             total = total.add(unit.multiply(BigDecimal.valueOf(line.getQuantite())));
         }
 
@@ -106,7 +108,7 @@ public class OrderServiceImpl implements OrderService {
 
         for (FacebookOrderCreateDto.LineItem line : dto.getItems()) {
             Product product = stockService.getProductOrThrow(line.getProductId());
-            BigDecimal unit = line.getPrixUnitaire() != null ? line.getPrixUnitaire() : product.getPrix();
+            BigDecimal unit = resolveLinePrice(product, line.getPrixUnitaire());
 
             stockService.decreaseStock(line.getProductId(), line.getQuantite());
 
@@ -141,7 +143,7 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal total = BigDecimal.ZERO;
         for (InstagramOrderCreateDto.LineItem line : dto.getItems()) {
             Product product = stockService.getProductOrThrow(line.getProductId());
-            BigDecimal unit = line.getPrixUnitaire() != null ? line.getPrixUnitaire() : product.getPrix();
+            BigDecimal unit = resolveLinePrice(product, line.getPrixUnitaire());
             total = total.add(unit.multiply(BigDecimal.valueOf(line.getQuantite())));
         }
 
@@ -160,7 +162,7 @@ public class OrderServiceImpl implements OrderService {
 
         for (InstagramOrderCreateDto.LineItem line : dto.getItems()) {
             Product product = stockService.getProductOrThrow(line.getProductId());
-            BigDecimal unit = line.getPrixUnitaire() != null ? line.getPrixUnitaire() : product.getPrix();
+            BigDecimal unit = resolveLinePrice(product, line.getPrixUnitaire());
 
             stockService.decreaseStock(line.getProductId(), line.getQuantite());
 
@@ -195,7 +197,7 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal total = BigDecimal.ZERO;
         for (WhatsAppOrderCreateDto.LineItem line : dto.getItems()) {
             Product product = stockService.getProductOrThrow(line.getProductId());
-            BigDecimal unit = line.getPrixUnitaire() != null ? line.getPrixUnitaire() : product.getPrix();
+            BigDecimal unit = resolveLinePrice(product, line.getPrixUnitaire());
             total = total.add(unit.multiply(BigDecimal.valueOf(line.getQuantite())));
         }
 
@@ -214,7 +216,7 @@ public class OrderServiceImpl implements OrderService {
 
         for (WhatsAppOrderCreateDto.LineItem line : dto.getItems()) {
             Product product = stockService.getProductOrThrow(line.getProductId());
-            BigDecimal unit = line.getPrixUnitaire() != null ? line.getPrixUnitaire() : product.getPrix();
+            BigDecimal unit = resolveLinePrice(product, line.getPrixUnitaire());
 
             stockService.decreaseStock(line.getProductId(), line.getQuantite());
 
@@ -556,6 +558,14 @@ public class OrderServiceImpl implements OrderService {
                         .prixUnitaire(item.getPrixUnitaire())
                         .build()).toList())
                 .build();
+    }
+
+    private BigDecimal resolveLinePrice(Product product, BigDecimal explicit) {
+        if (explicit != null) {
+            return explicit;
+        }
+        BigDecimal fromCatalog = catalogPricingService.startingPrice(product);
+        return fromCatalog != null ? fromCatalog : BigDecimal.ZERO;
     }
 
     /** Récupère un n° collé dans l'adresse (anciennes commandes site : "Tél: 06…"). */

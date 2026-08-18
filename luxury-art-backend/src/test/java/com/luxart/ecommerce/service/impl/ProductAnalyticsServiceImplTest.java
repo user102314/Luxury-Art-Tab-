@@ -52,8 +52,6 @@ class ProductAnalyticsServiceImplTest {
         product = Product.builder()
                 .id(1L)
                 .ref("Tableau Or")
-                .prix(BigDecimal.valueOf(100))
-                .stock(5)
                 .statut(ProductStatut.DISPONIBLE)
                 .build();
         period = AnalyticsPeriod.of(LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 31));

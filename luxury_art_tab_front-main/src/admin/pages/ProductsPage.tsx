@@ -40,6 +40,7 @@ import {
 } from '../../components/ui/alert-dialog'
 import {
   useBestSellers,
+  useCatalogPricing,
   useCategories,
   useInvalidateAdmin,
   useProducts,
@@ -53,10 +54,9 @@ const STATUTS: ProductStatut[] = ['DISPONIBLE', 'RUPTURE_STOCK', 'ARCHIVE']
 const emptyForm = {
   ref: 'B',
   description: '',
-  prix: '100',
-  stock: '10',
   categoryId: '',
   statut: 'DISPONIBLE' as ProductStatut,
+  dimensionIds: [] as number[],
 }
 
 function defaultTraditionCategoryId(categories: Category[]): string {
@@ -67,7 +67,7 @@ function defaultTraditionCategoryId(categories: Category[]): string {
 }
 
 type Tab = 'catalogue' | 'stats' | 'detail'
-type ProductSortKey = 'ref' | 'prix' | 'stock' | 'category'
+type ProductSortKey = 'ref' | 'prix' | 'category'
 
 import { resolveImageSrc as resolveMediaUrl } from '@/lib/images'
 
@@ -76,14 +76,6 @@ function resolveImageSrc(url?: string) {
   if (url.startsWith('blob:') || url.startsWith('data:')) return url
   const resolved = resolveMediaUrl(url)
   return resolved === '/placeholder-art.svg' && !url ? undefined : resolved
-}
-
-function parseStock(raw: string): number | null {
-  const cleaned = String(raw ?? '').trim().replace(/\s/g, '').replace(',', '.')
-  if (!cleaned) return null
-  const n = Number.parseInt(cleaned, 10)
-  if (!Number.isFinite(n) || n < 0) return null
-  return n
 }
 
 function emptyAnalytics(productId: number, ref = ''): ProductAnalytics {
@@ -104,8 +96,9 @@ function emptyAnalytics(productId: number, ref = ''): ProductAnalytics {
 export default function ProductsPage() {
   const queryClient = useQueryClient()
   const invalidate = useInvalidateAdmin()
-  const { data: products = [], isLoading, isFetching } = useProducts()
+  const { data: products = [], isLoading, isFetching, error: productsError } = useProducts()
   const { data: categories = [] } = useCategories()
+  const { data: catalog } = useCatalogPricing()
   const { data: bestSellers = [] } = useBestSellers()
   const [tab, setTab] = useState<Tab>('catalogue')
   const [selected, setSelected] = useState<ProductAnalytics | null>(null)
@@ -158,8 +151,6 @@ export default function ProductsPage() {
       switch (sort) {
         case 'prix':
           return compareNumbers(Number(a.prix) || 0, Number(b.prix) || 0, sortDir)
-        case 'stock':
-          return compareNumbers(Number(a.stock) || 0, Number(b.stock) || 0, sortDir)
         case 'category':
           return compareStrings(
             categoryMap[a.categoryId] ?? '',
@@ -195,9 +186,14 @@ export default function ProductsPage() {
     setCategoryNom('')
     setCategoryDesc('')
     setCategoryError('')
+    const defaultDims =
+      catalog?.dimensions
+        ?.filter((d) => catalog.tarifs.some((t) => t.dimensionId === d.id && t.prix != null))
+        .map((d) => d.id) ?? []
     setForm({
       ...emptyForm,
       categoryId: defaultTraditionCategoryId(categories),
+      dimensionIds: defaultDims.length ? defaultDims : catalog?.dimensions.map((d) => d.id) ?? [],
     })
     setShowForm(true)
     setError('')
@@ -214,10 +210,9 @@ export default function ProductsPage() {
     setForm({
       ref: p.ref ?? '',
       description: p.description ?? '',
-      prix: String(p.prix),
-      stock: String(p.stock),
       categoryId: String(p.categoryId),
       statut: p.statut as ProductStatut,
+      dimensionIds: p.dimensionIds ?? p.dimensions?.map((d) => d.id) ?? [],
     })
     setShowForm(true)
     setError('')
@@ -346,33 +341,26 @@ export default function ProductsPage() {
     e.preventDefault()
     setError('')
     setUploading(true)
-    const stock = parseStock(form.stock)
-    if (stock == null) {
-      setError('Stock invalide — saisissez un entier ≥ 0')
-      setUploading(false)
-      return
-    }
     const categoryId = parseInt(form.categoryId, 10)
     if (!Number.isFinite(categoryId) || categoryId <= 0) {
       setError('Choisissez ou créez une catégorie')
       setUploading(false)
       return
     }
-    const payload = {
-      ref: form.ref.trim(),
-      description: form.description.trim() || undefined,
-      prix: Number(form.prix),
-      stock,
-      categoryId,
-      statut: form.statut,
-    }
-    if (!payload.ref) {
-      setError('La référence produit est obligatoire')
+    if (form.dimensionIds.length === 0) {
+      setError('Sélectionnez au moins une dimension pour ce tableau')
       setUploading(false)
       return
     }
-    if (!Number.isFinite(payload.prix) || payload.prix <= 0) {
-      setError('Prix invalide')
+    const payload = {
+      ref: form.ref.trim(),
+      description: form.description.trim() || undefined,
+      categoryId,
+      statut: form.statut,
+      dimensionIds: form.dimensionIds,
+    }
+    if (!payload.ref) {
+      setError('La référence produit est obligatoire')
       setUploading(false)
       return
     }
@@ -385,13 +373,6 @@ export default function ProductsPage() {
       } else {
         saved = await api.createProduct(payload)
         productId = saved.id
-      }
-
-      // Vérifie que le stock renvoyé par l'API correspond à la saisie
-      if (Number(saved.stock) !== stock) {
-        setError(
-          `Attention: stock enregistré = ${saved.stock} (saisi = ${stock}). Une commande a peut‑être décrémenté le stock.`,
-        )
       }
 
       // Fermer le formulaire dès que le produit est sauvé — l'upload peut continuer
@@ -475,6 +456,11 @@ export default function ProductsPage() {
   return (
     <div className="space-y-6">
       <QueryStatusBar fetching={isFetching} />
+      {productsError && (
+        <p className="text-sm text-red-400">
+          {productsError instanceof Error ? productsError.message : 'Impossible de charger les produits'}
+        </p>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -534,16 +520,38 @@ export default function ProductsPage() {
             <div className="space-y-4">
               <Field label="Réf. produit" value={form.ref} onChange={(v) => setForm({ ...form, ref: v })} required placeholder="Ex. TAB-001" />
               <Field label="Description (optionnel)" value={form.description} onChange={(v) => setForm({ ...form, description: v })} textarea />
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Prix (DH)" value={form.prix} onChange={(v) => setForm({ ...form, prix: v })} type="number" step="0.01" required />
-                <Field
-                  label="Stock"
-                  value={form.stock}
-                  onChange={(v) => setForm({ ...form, stock: v.replace(/[^\d]/g, '') })}
-                  type="text"
-                  inputMode="numeric"
-                  required
-                />
+              <div>
+                <label className="label">Dimensions de ce tableau</label>
+                <p className="mb-2 text-xs text-zinc-500">
+                  Le prix vient de la grille globale (page Tarifs). Cochez les formats disponibles pour cette œuvre.
+                </p>
+                <div className="grid max-h-48 grid-cols-2 gap-2 overflow-y-auto rounded-xl bg-ink-800/50 p-3">
+                  {(catalog?.dimensions ?? []).map((dim) => {
+                    const checked = form.dimensionIds.includes(dim.id)
+                    return (
+                      <label key={dim.id} className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() =>
+                            setForm((prev) => ({
+                              ...prev,
+                              dimensionIds: checked
+                                ? prev.dimensionIds.filter((id) => id !== dim.id)
+                                : [...prev.dimensionIds, dim.id],
+                            }))
+                          }
+                        />
+                        {dim.label}
+                      </label>
+                    )
+                  })}
+                  {(catalog?.dimensions ?? []).length === 0 && (
+                    <p className="col-span-2 text-xs text-zinc-500">
+                      Aucune dimension — créez-les dans Tarifs &amp; cadres.
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -854,8 +862,7 @@ export default function ProductsPage() {
             onSortChange={(v) => setSort(v as ProductSortKey)}
             sortOptions={[
               { value: 'ref', label: 'Réf.' },
-              { value: 'prix', label: 'Prix' },
-              { value: 'stock', label: 'Stock' },
+              { value: 'prix', label: 'Prix de départ' },
               { value: 'category', label: 'Catégorie' },
             ]}
             sortDir={sortDir}
@@ -913,8 +920,8 @@ export default function ProductsPage() {
                   <th className="px-6 py-4">Réf.</th>
                   <th className="px-6 py-4">Produit</th>
                   <th className="px-6 py-4">Catégorie</th>
-                  <th className="px-6 py-4">Prix</th>
-                  <th className="px-6 py-4">Stock</th>
+                  <th className="px-6 py-4">Prix de départ</th>
+                  <th className="px-6 py-4">Dimensions</th>
                   <th className="px-6 py-4">Statut</th>
                   <th className="px-6 py-4">Actions</th>
                 </tr>
@@ -946,8 +953,12 @@ export default function ProductsPage() {
                     <td className="px-6 py-4 text-zinc-300">
                       {categoryMap[p.categoryId] ?? `#${p.categoryId}`}
                     </td>
-                    <td className="px-6 py-4 text-gold-400">{formatCurrency(Number(p.prix))}</td>
-                    <td className="px-6 py-4">{p.stock}</td>
+                    <td className="px-6 py-4 text-gold-400">
+                      {p.prix != null ? `À partir de ${formatCurrency(Number(p.prix))}` : '—'}
+                    </td>
+                    <td className="px-6 py-4 text-xs text-zinc-400">
+                      {(p.dimensions ?? []).map((d) => d.label).join(', ') || '—'}
+                    </td>
                     <td className="px-6 py-4">
                       <span className="rounded-lg bg-white/5 px-2 py-1 text-xs">{p.statut}</span>
                     </td>
@@ -1076,9 +1087,13 @@ export default function ProductsPage() {
                 </p>
                 <div className="mt-4 flex flex-wrap gap-4 text-sm">
                   <span className="text-gold-400 font-semibold">
-                    {formatCurrency(Number(selectedProduct?.prix ?? 0))}
+                    {selectedProduct?.prix != null
+                      ? `À partir de ${formatCurrency(Number(selectedProduct.prix))}`
+                      : 'Prix selon format'}
                   </span>
-                  <span className="text-zinc-300">Stock : {selectedProduct?.stock ?? '—'}</span>
+                  <span className="text-zinc-300">
+                    {(selectedProduct?.dimensions ?? []).map((d) => d.label).join(' · ') || 'Aucune dimension'}
+                  </span>
                   <span className="rounded-lg bg-white/5 px-2 py-0.5 text-xs">
                     {selectedProduct?.statut ?? '—'}
                   </span>

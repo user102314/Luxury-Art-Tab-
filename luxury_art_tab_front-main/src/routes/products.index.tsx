@@ -67,13 +67,12 @@ export const Route = createFileRoute('/products/')({
   component: ProductsPage,
 })
 
-type SortOption = 'price-asc' | 'price-desc' | 'name' | 'stock'
+type SortOption = 'price-asc' | 'price-desc' | 'name'
 
 const sortLabels: Record<SortOption, string> = {
   name: 'Nom A-Z',
   'price-asc': 'Prix croissant',
   'price-desc': 'Prix décroissant',
-  stock: 'Disponibilité',
 }
 
 function ProductsPage() {
@@ -114,7 +113,7 @@ function ProductsPage() {
 
   const priceBounds = useMemo(() => {
     if (available.length === 0) return [0, 1000] as [number, number]
-    const prices = available.map((p) => Number(p.prix))
+    const prices = available.map((p) => Number(p.prix ?? 0)).filter((n) => Number.isFinite(n))
     return [Math.floor(Math.min(...prices)), Math.ceil(Math.max(...prices))] as [number, number]
   }, [available])
 
@@ -138,18 +137,16 @@ function ProductsPage() {
       if (price < priceRange[0] || price > priceRange[1]) return false
       if (categoryId !== 'all' && p.categoryId !== Number(categoryId)) return false
       if (search && !p.ref.toLowerCase().includes(search.toLowerCase())) return false
-      if (inStockOnly && (p.stock <= 0 || p.statut === 'RUPTURE_STOCK')) return false
+      if (inStockOnly && p.statut !== 'DISPONIBLE') return false
       return true
     })
 
     return list.sort((a, b) => {
       switch (sort) {
         case 'price-asc':
-          return Number(a.prix) - Number(b.prix)
+          return Number(a.prix ?? 0) - Number(b.prix ?? 0)
         case 'price-desc':
-          return Number(b.prix) - Number(a.prix)
-        case 'stock':
-          return b.stock - a.stock
+          return Number(b.prix ?? 0) - Number(a.prix ?? 0)
         default:
           return a.ref.localeCompare(b.ref, 'fr')
       }
@@ -211,7 +208,7 @@ function ProductsPage() {
             checked={inStockOnly}
             onCheckedChange={(v) => setInStockOnly(v === true)}
           />
-          En stock uniquement
+          Disponibles uniquement
         </label>
       </section>
 
@@ -316,7 +313,7 @@ function ProductsPage() {
               )}
               {search && <Chip label={`« ${search} »`} onClear={() => setSearch('')} />}
               {inStockOnly && (
-                <Chip label="En stock" onClear={() => setInStockOnly(false)} />
+                <Chip label="Disponibles" onClear={() => setInStockOnly(false)} />
               )}
               {priceTouched && (
                 <Chip

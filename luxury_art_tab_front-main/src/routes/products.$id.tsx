@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import {
   CheckCircle2,
@@ -22,10 +22,11 @@ import { useProduct, useProducts } from '@/hooks/useStorefrontQueries'
 import { useProductTracking } from '@/hooks/useProductTracking'
 import { getProductImage, getProductImages, getSimulationImage } from '@/lib/images'
 import {
-  dimensionOptions,
-  frameOptions,
+  displayDimension,
   formatPrice,
-  getPrice,
+  pricedDimensions,
+  availableCadres,
+  resolveCatalogPrice,
 } from '@/lib/pricing'
 import { useCart } from '@/context/CartContext'
 import { useFavorites } from '@/context/FavoritesContext'
@@ -95,8 +96,8 @@ export const Route = createFileRoute('/products/$id')({
           ref: product.ref,
           description,
           image,
-          prix: product.prix,
-          stock: product.stock,
+          prix: Number(product.prix ?? 0),
+          available: product.statut === 'DISPONIBLE',
         }),
         breadcrumbSchema(crumbs),
       ],
@@ -114,8 +115,9 @@ function ProductDetailPage() {
   const { isFavorite, toggleFavorite } = useFavorites()
   const { ensureVisitor, loading: visitorLoading, visitor } = useVisitor()
 
-  const [size, setSize] = useState<typeof dimensionOptions[number]['value']>(dimensionOptions[2].value)
-  const [frame, setFrame] = useState(frameOptions[0])
+  const [dimensionId, setDimensionId] = useState<number | null>(null)
+  const [cadreId, setCadreId] = useState<number | null>(null)
+  const [couleurId, setCouleurId] = useState<number | null>(null)
   const [qty, setQty] = useState(1)
   const [arImage, setArImage] = useState<string | null>(null)
   const [commentText, setCommentText] = useState('')
@@ -126,6 +128,12 @@ function ProductDetailPage() {
 
   const { data: product, isLoading } = useProduct(productId, {
     initialData: seededProduct,
+  })
+  const { data: catalog } = useQuery({
+    queryKey: queryKeys.catalogPricing,
+    queryFn: api.getCatalogPricing,
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
   })
   const { data: allProducts = [] } = useProducts()
   const { trackClick } = useProductTracking(
@@ -195,6 +203,22 @@ function ProductDetailPage() {
       .slice(0, 8)
   }, [allProducts, product])
 
+  useEffect(() => {
+    if (!product || !catalog) return
+    const nextDims = pricedDimensions(product, catalog)
+    if (!nextDims.length) return
+    const nextDimId = nextDims.some((d) => d.id === dimensionId) ? dimensionId : nextDims[0].id
+    if (nextDimId !== dimensionId) setDimensionId(nextDimId)
+    const nextCadres = availableCadres(catalog, nextDimId)
+    const nextCadreId = nextCadres.some((c) => c.id === cadreId) ? cadreId : nextCadres[0]?.id ?? null
+    if (nextCadreId !== cadreId) setCadreId(nextCadreId)
+    const nextCouleurs = nextCadres.find((c) => c.id === nextCadreId)?.couleurs ?? []
+    const nextCouleurId = nextCouleurs.some((c) => c.id === couleurId)
+      ? couleurId
+      : nextCouleurs[0]?.id ?? null
+    if (nextCouleurId !== couleurId) setCouleurId(nextCouleurId)
+  }, [product, catalog, dimensionId, cadreId, couleurId])
+
   if (isLoading && !product) {
     return (
       <main className="flex min-h-screen flex-col bg-beige/25">
@@ -236,14 +260,23 @@ function ProductDetailPage() {
     ? `/category/${preferredCategorySlug(categoryMeta)}`
     : null
   const image = getProductImage(product)
-  const unitPrice = getPrice(Number(product.prix), size)
+  const dims = pricedDimensions(product, catalog)
+  const cadres = catalog && dimensionId ? availableCadres(catalog, dimensionId) : []
+  const selectedDim = dims.find((d) => d.id === dimensionId) ?? dims[0]
+  const selectedCadre = cadres.find((c) => c.id === cadreId) ?? cadres[0]
+  const couleurs = selectedCadre?.couleurs ?? []
+  const selectedCouleur = couleurs.find((c) => c.id === couleurId) ?? couleurs[0]
+  const unitPrice =
+    catalog && selectedDim && selectedCadre
+      ? resolveCatalogPrice(catalog, selectedDim.id, selectedCadre.id)
+      : null
   const liked = isFavorite(product.id)
   const avgRating =
     reviews.length > 0
       ? (reviews.reduce((s, r) => s + r.note, 0) / reviews.length).toFixed(1)
       : null
   const likeCount = likeSummary?.count ?? 0
-  const inStock = product.stock > 0
+  const available = product.statut === 'DISPONIBLE' && unitPrice != null
 
   const deliveryHint = (() => {
     const start = new Date()
@@ -256,6 +289,10 @@ function ProductDetailPage() {
   })()
 
   const handleAddToCart = () => {
+    if (unitPrice == null || !selectedDim || !selectedCadre) {
+      toast.error('Choisissez une dimension et un cadre tarifés')
+      return
+    }
     trackClick('ADD_TO_CART')
     addItem({
       productId: product.id,
@@ -263,11 +300,12 @@ function ProductDetailPage() {
       imageUrl: image,
       prixUnitaire: unitPrice,
       quantite: qty,
-      taille: size,
-      encadrement: frame,
+      taille: selectedDim.label,
+      encadrement: selectedCadre.nom,
+      couleur: selectedCouleur?.nom,
     })
     toast.success('Ajouté au panier', {
-      description: `${product.ref} · ${size}`,
+      description: `${product.ref} · ${displayDimension(selectedDim.label)}`,
     })
   }
 
@@ -363,10 +401,10 @@ function ProductDetailPage() {
             )}
 
             <p className="mt-3 break-words font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-[2.75rem]">
-              {formatPrice(unitPrice)}
+              {unitPrice != null ? formatPrice(unitPrice) : 'Prix selon format'}
             </p>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Prix selon la taille sélectionnée · TVA incluse si applicable
+              Prix selon la dimension et le cadre · la couleur ne change pas le tarif
             </p>
 
             <h1 className="mt-5 break-words font-display text-xl font-bold leading-snug text-foreground sm:text-2xl md:text-3xl">
@@ -386,8 +424,8 @@ function ProductDetailPage() {
                   <span className="font-normal text-muted-foreground">({reviews.length} avis)</span>
                 </span>
               )}
-              <span className={`font-semibold ${inStock ? 'text-accent-green' : 'text-brand-red'}`}>
-                {inStock ? `${product.stock} en stock` : 'Rupture de stock'}
+              <span className={`font-semibold ${available ? 'text-accent-green' : 'text-brand-red'}`}>
+                {available ? 'Disponible' : product.statut === 'RUPTURE_STOCK' ? 'Rupture' : 'Format à tarifer'}
               </span>
             </div>
 
@@ -404,39 +442,83 @@ function ProductDetailPage() {
             <div className="mt-6 space-y-4">
               <div>
                 <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold" htmlFor="size-select">
-                  Taille
+                  Dimension
                 </label>
                 <select
                   id="size-select"
-                  value={size}
-                  onChange={(e) => setSize(e.target.value as typeof dimensionOptions[number]['value'])}
+                  value={selectedDim?.id ?? ''}
+                  onChange={(e) => setDimensionId(Number(e.target.value))}
                   className="w-full min-w-0 max-w-full rounded-xl border border-border bg-sand px-3 py-3 text-sm font-medium outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 sm:px-4"
                 >
-                  {dimensionOptions.map((dim) => (
-                    <option key={dim.value} value={dim.value}>
-                      {dim.label} — {formatPrice(getPrice(Number(product.prix), dim.value))}
-                    </option>
-                  ))}
+                  {dims.map((dim) => {
+                    const minPrice = catalog
+                      ? availableCadres(catalog, dim.id)
+                          .map((c) => resolveCatalogPrice(catalog, dim.id, c.id))
+                          .filter((n): n is number => n != null)
+                          .sort((a, b) => a - b)[0]
+                      : null
+                    return (
+                      <option key={dim.id} value={dim.id}>
+                        {displayDimension(dim.label)}
+                        {minPrice != null ? ` — ${formatPrice(minPrice)}` : ''}
+                      </option>
+                    )
+                  })}
                 </select>
+                {dims.length === 0 && (
+                  <p className="mt-1 text-xs text-brand-red">Aucun format tarifé pour ce tableau.</p>
+                )}
               </div>
 
               <div>
                 <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold" htmlFor="frame-select">
-                  Style / encadrement
+                  Encadrement
                 </label>
                 <select
                   id="frame-select"
-                  value={frame}
-                  onChange={(e) => setFrame(e.target.value as typeof frame)}
+                  value={selectedCadre?.id ?? ''}
+                  onChange={(e) => setCadreId(Number(e.target.value))}
                   className="w-full min-w-0 max-w-full rounded-xl border border-border bg-sand px-3 py-3 text-sm font-medium outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 sm:px-4"
                 >
-                  {frameOptions.map((f) => (
-                    <option key={f} value={f}>
-                      {f}
-                    </option>
-                  ))}
+                  {cadres.map((cadre) => {
+                    const price = catalog && selectedDim
+                      ? resolveCatalogPrice(catalog, selectedDim.id, cadre.id)
+                      : null
+                    return (
+                      <option key={cadre.id} value={cadre.id}>
+                        {cadre.nom}
+                        {price != null ? ` — ${formatPrice(price)}` : ''}
+                      </option>
+                    )
+                  })}
                 </select>
               </div>
+
+              {couleurs.length > 0 && (
+                <div>
+                  <p className="mb-1.5 text-sm font-semibold">Couleur du cadre</p>
+                  <div className="flex flex-wrap gap-2">
+                    {couleurs.map((color) => (
+                      <button
+                        key={color.id}
+                        type="button"
+                        onClick={() => setCouleurId(color.id)}
+                        className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${
+                          selectedCouleur?.id === color.id
+                            ? 'border-brand-red bg-brand-red/10 font-semibold'
+                            : 'border-border bg-sand'
+                        }`}
+                      >
+                        <span
+                          className="h-4 w-4 rounded-full border border-black/10"
+                          style={{ background: color.hex || '#888' }}
+                        />
+                        {color.nom}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="mb-1.5 block text-sm font-semibold">Quantité</label>
@@ -451,9 +533,9 @@ function ProductDetailPage() {
                   <span className="w-10 text-center font-semibold">{qty}</span>
                   <button
                     type="button"
-                    onClick={() => setQty((q) => Math.min(Math.max(product.stock, 1), q + 1))}
+                    onClick={() => setQty((q) => q + 1)}
                     className="h-11 w-10 text-lg hover:bg-muted"
-                    disabled={!inStock}
+                    disabled={!available}
                   >
                     +
                   </button>
@@ -464,10 +546,10 @@ function ProductDetailPage() {
             <button
               type="button"
               onClick={handleAddToCart}
-              disabled={!inStock}
+              disabled={!available}
               className="mt-6 w-full rounded-full bg-foliage px-8 py-3.5 text-base font-bold text-sand transition hover:bg-foliage disabled:opacity-50"
             >
-              {inStock ? 'Ajouter au panier' : 'Indisponible'}
+              {available ? 'Ajouter au panier' : 'Indisponible'}
             </button>
 
             <div className="mt-3 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
@@ -494,9 +576,9 @@ function ProductDetailPage() {
                   <ul className="list-inside list-disc space-y-1">
                     {product.ref && <li>Référence : {product.ref}</li>}
                     <li>Catégorie : {categoryName ?? '—'}</li>
-                    <li>Taille sélectionnée : {size}</li>
-                    <li>Encadrement : {frame}</li>
-                    <li>Stock disponible : {product.stock}</li>
+                    <li>Dimension : {selectedDim ? displayDimension(selectedDim.label) : '—'}</li>
+                    <li>Encadrement : {selectedCadre?.nom ?? '—'}</li>
+                    {selectedCouleur && <li>Couleur : {selectedCouleur.nom}</li>}
                   </ul>
                 </div>
               )}

@@ -27,6 +27,11 @@ import type {
   ClientCrm,
   StockAlert,
   SiteSettings,
+  CatalogPricing,
+  Cadre,
+  CadreCouleur,
+  TableauDimension,
+  DimensionCadrePrix,
   ColissimoSyncResult,
   ColissimoSyncStatus,
   ColissimoTracking,
@@ -52,16 +57,27 @@ export function orderAmount(order: Order) {
   return Number(order.total) || 0
 }
 
-const BASE = getApiBase()
+async function parseError(res: Response): Promise<string> {
+  const text = await res.text()
+  try {
+    const err = JSON.parse(text) as { message?: string }
+    if (err.message) return err.message
+  } catch {
+    /* HTML 404 (SPA) ou proxy cassé */
+  }
+  if (res.status === 404) {
+    return 'API introuvable — vérifiez que le backend local tourne sur le port 8081'
+  }
+  return `Erreur ${res.status}`
+}
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${getApiBase()}${path}`, {
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     ...options,
   })
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: 'Erreur réseau' }))
-    throw new Error(err.message ?? `Erreur ${res.status}`)
+    throw new Error(await parseError(res))
   }
   if (res.status === 204) return undefined as T
   return res.json()
@@ -97,7 +113,7 @@ export const api = {
       `/colissimo/orders/${orderId}/push`,
       { method: 'POST' },
     ),
-  getColissimoInvoiceUrl: (orderId: number) => `${BASE}/colissimo/orders/${orderId}/invoice`,
+  getColissimoInvoiceUrl: (orderId: number) => `${getApiBase()}/colissimo/orders/${orderId}/invoice`,
 
   getColissimoTrackingList: () =>
     request<ColissimoTrackingSummary[]>('/colissimo/tracking'),
@@ -123,10 +139,46 @@ export const api = {
   deleteProduct: (id: number) =>
     request<void>(`/products/${id}`, { method: 'DELETE' }),
 
+  getCatalogPricing: () => request<CatalogPricing>('/catalog/pricing'),
+  createDimension: (data: Partial<TableauDimension>) =>
+    request<TableauDimension>('/catalog/dimensions', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateDimension: (id: number, data: Partial<TableauDimension>) =>
+    request<TableauDimension>(`/catalog/dimensions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  deleteDimension: (id: number) =>
+    request<void>(`/catalog/dimensions/${id}`, { method: 'DELETE' }),
+  createCadre: (data: Partial<Cadre>) =>
+    request<Cadre>('/catalog/cadres', { method: 'POST', body: JSON.stringify(data) }),
+  updateCadre: (id: number, data: Partial<Cadre>) =>
+    request<Cadre>(`/catalog/cadres/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteCadre: (id: number) => request<void>(`/catalog/cadres/${id}`, { method: 'DELETE' }),
+  createCadreCouleur: (cadreId: number, data: Partial<CadreCouleur>) =>
+    request<CadreCouleur>(`/catalog/cadres/${cadreId}/couleurs`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateCadreCouleur: (id: number, data: Partial<CadreCouleur>) =>
+    request<CadreCouleur>(`/catalog/couleurs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  deleteCadreCouleur: (id: number) =>
+    request<void>(`/catalog/couleurs/${id}`, { method: 'DELETE' }),
+  upsertTarif: (data: Partial<DimensionCadrePrix>) =>
+    request<DimensionCadrePrix>('/catalog/tarifs', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
   uploadProductImages: async (productId: number, files: File[]) => {
     const formData = new FormData()
     files.forEach((f) => formData.append('files', f))
-    const res = await fetch(`${BASE}/products/${productId}/images`, {
+    const res = await fetch(`${getApiBase()}/products/${productId}/images`, {
       method: 'POST',
       body: formData,
     })
@@ -167,7 +219,7 @@ export const api = {
   uploadNewsImage: async (newsId: number, file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    const res = await fetch(`${BASE}/news/${newsId}/image`, { method: 'POST', body: formData })
+    const res = await fetch(`${getApiBase()}/news/${newsId}/image`, { method: 'POST', body: formData })
     if (!res.ok) {
       const err = await res.json().catch(() => ({ message: 'Erreur upload' }))
       throw new Error(err.message ?? `Erreur ${res.status}`)
@@ -191,7 +243,7 @@ export const api = {
   uploadTestimonialImage: async (id: number, file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    const res = await fetch(`${BASE}/testimonials/${id}/image`, { method: 'POST', body: formData })
+    const res = await fetch(`${getApiBase()}/testimonials/${id}/image`, { method: 'POST', body: formData })
     if (!res.ok) {
       const err = await res.json().catch(() => ({ message: 'Erreur upload' }))
       throw new Error(err.message ?? `Erreur ${res.status}`)
@@ -208,7 +260,13 @@ export const api = {
   getClients: () => request<ClientCrm[]>('/admin/clients'),
   getClient: (userId: number) => request<ClientCrm>(`/admin/clients/${userId}`),
 
-  getStockAlerts: () => request<StockAlert[]>('/admin/stock/alerts'),
+  getStockAlerts: async () => {
+    try {
+      return await request<StockAlert[]>('/admin/stock/alerts')
+    } catch {
+      return []
+    }
+  },
   restockProduct: (productId: number, quantite: number) =>
     request<Product>(`/admin/stock/${productId}/restock`, {
       method: 'POST',

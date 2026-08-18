@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import type { Product } from '@/types/api'
 import { getProductImage, getSimulationImage, hasSimulationImage } from '@/lib/images'
-import { formatPrice } from '@/lib/pricing'
+import { formatStartingPrice } from '@/lib/pricing'
 import { useFavorites } from '@/context/FavoritesContext'
 import { api, getTrackingSessionId } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
@@ -22,7 +22,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
   const image = getProductImage(product)
   const simulationImage = getSimulationImage(product)
   const canSimulate = hasSimulationImage(product)
-  const outOfStock = product.statut === 'RUPTURE_STOCK' || product.stock <= 0
+  const outOfStock = product.statut === 'RUPTURE_STOCK'
 
   const handleProductClick = () => {
     void api
@@ -74,15 +74,6 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
               }`}
             >
               Rupture
-            </span>
-          )}
-          {!outOfStock && product.stock <= 5 && (
-            <span
-              className={`absolute rounded-full bg-accent-green font-bold uppercase tracking-wider text-sand ${
-                compact ? 'left-3 top-3 px-2 py-0.5 text-[10px]' : 'left-4 top-4 px-3 py-1 text-xs'
-              }`}
-            >
-              Plus que {product.stock}
             </span>
           )}
 
@@ -172,7 +163,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
               compact ? 'text-sm' : 'text-lg'
             }`}
           >
-            {formatPrice(Number(product.prix))}
+            {formatStartingPrice(product.prix)}
           </p>
         </div>
       </Link>

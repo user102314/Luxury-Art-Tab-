@@ -2,6 +2,7 @@ export const queryKeys = {
   orders: ['orders'] as const,
   orderChannelStats: ['orderChannelStats'] as const,
   products: ['products'] as const,
+  catalogPricing: ['catalog', 'pricing'] as const,
   categories: ['categories'] as const,
   bestSellers: ['bestSellers'] as const,
   dashboardStats: ['dashboardStats'] as const,

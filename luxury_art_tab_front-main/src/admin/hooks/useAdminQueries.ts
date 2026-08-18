@@ -45,6 +45,15 @@ export function useCategories() {
   })
 }
 
+export function useCatalogPricing() {
+  return useQuery({
+    queryKey: queryKeys.catalogPricing,
+    queryFn: api.getCatalogPricing,
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
+  })
+}
+
 export function useClients() {
   return useQuery({
     queryKey: queryKeys.clients,
@@ -58,7 +67,7 @@ export function useStockAlerts() {
   return useQuery({
     queryKey: queryKeys.stockAlerts,
     queryFn: api.getStockAlerts,
-    refetchInterval: REFETCH_INTERVAL,
+    retry: false,
     placeholderData: keepPreviousData,
   })
 }
@@ -202,6 +211,7 @@ export function useInvalidateAdmin() {
     orders: () => qc.invalidateQueries({ queryKey: queryKeys.orders }),
     orderChannelStats: () => qc.invalidateQueries({ queryKey: queryKeys.orderChannelStats }),
     products: () => qc.invalidateQueries({ queryKey: queryKeys.products }),
+    catalogPricing: () => qc.invalidateQueries({ queryKey: queryKeys.catalogPricing }),
     categories: () => qc.invalidateQueries({ queryKey: queryKeys.categories }),
     clients: () => qc.invalidateQueries({ queryKey: queryKeys.clients }),
     stockAlerts: () => qc.invalidateQueries({ queryKey: queryKeys.stockAlerts }),
@@ -255,6 +265,10 @@ export function prefetchRoute(qc: QueryClient, path: string) {
       qc.prefetchQuery({ queryKey: queryKeys.products, queryFn: api.getProducts, ...opts })
       qc.prefetchQuery({ queryKey: queryKeys.categories, queryFn: api.getCategories, ...opts })
       qc.prefetchQuery({ queryKey: queryKeys.bestSellers, queryFn: api.getBestSellers, ...opts })
+      qc.prefetchQuery({ queryKey: queryKeys.catalogPricing, queryFn: api.getCatalogPricing, ...opts })
+      break
+    case '/admin/pricing':
+      qc.prefetchQuery({ queryKey: queryKeys.catalogPricing, queryFn: api.getCatalogPricing, ...opts })
       break
     case '/admin/moderation':
       qc.prefetchQuery({ queryKey: queryKeys.reviews, queryFn: api.getReviews, ...opts })

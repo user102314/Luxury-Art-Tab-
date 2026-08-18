@@ -11,7 +11,7 @@ import {
 } from '@/hooks/useStorefrontQueries'
 import { useAuth } from '@/context/AuthContext'
 import { getProductImage } from '@/lib/images'
-import { formatPrice } from '@/lib/pricing'
+import { formatPrice, formatStartingPrice } from '@/lib/pricing'
 import { BrandLogo } from '@/components/BrandLogo'
 
 const navLinkClass =
@@ -422,18 +422,22 @@ export function SiteNav() {
                   <ul className="space-y-4">
                     {items.map((item) => (
                       <li
-                        key={`${item.productId}-${item.taille}`}
+                        key={`${item.productId}-${item.taille}-${item.encadrement}-${item.couleur ?? ''}`}
                         className="flex gap-3 border-b border-border/40 pb-4"
                       >
                         <img src={getProductImage({ imageUrl: item.imageUrl })} alt="" className="h-14 w-14 rounded-lg object-cover" loading="lazy" decoding="async" />
                         <div className="flex-1">
                           <p className="text-sm font-semibold">{item.ref}</p>
-                          <p className="text-xs text-muted-foreground">{item.taille}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.taille}
+                            {item.encadrement ? ` · ${item.encadrement}` : ''}
+                            {item.couleur ? ` · ${item.couleur}` : ''}
+                          </p>
                           <div className="mt-1 flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() =>
-                                updateQuantity(item.productId, item.taille, item.quantite - 1)
+                                updateQuantity(item, item.quantite - 1)
                               }
                               className="h-6 w-6 rounded border text-xs"
                             >
@@ -443,7 +447,7 @@ export function SiteNav() {
                             <button
                               type="button"
                               onClick={() =>
-                                updateQuantity(item.productId, item.taille, item.quantite + 1)
+                                updateQuantity(item, item.quantite + 1)
                               }
                               className="h-6 w-6 rounded border text-xs"
                             >
@@ -457,7 +461,7 @@ export function SiteNav() {
                           </p>
                           <button
                             type="button"
-                            onClick={() => removeItem(item.productId, item.taille)}
+                            onClick={() => removeItem(item)}
                             className="mt-1 text-xs text-muted-foreground hover:text-brand-red"
                           >
                             Retirer
@@ -505,7 +509,7 @@ export function SiteNav() {
                       />
                       <div>
                         <p className="text-sm font-semibold">{p.ref}</p>
-                        <p className="text-sm text-accent-green">{formatPrice(Number(p.prix))}</p>
+                        <p className="text-sm text-accent-green">{formatStartingPrice(p.prix)}</p>
                       </div>
                     </Link>
                   </li>

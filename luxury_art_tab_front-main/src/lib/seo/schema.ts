@@ -35,7 +35,7 @@ export function productSchema(input: {
   description: string
   image?: string | null
   prix: number
-  stock: number
+  available?: boolean
   sku?: string
 }) {
   const url = absoluteUrl(`/products/${input.id}`)
@@ -56,7 +56,9 @@ export function productSchema(input: {
       priceCurrency: SITE.currency,
       price: Number(input.prix),
       availability:
-        input.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        input.available === false
+          ? 'https://schema.org/OutOfStock'
+          : 'https://schema.org/InStock',
     },
   }
 }

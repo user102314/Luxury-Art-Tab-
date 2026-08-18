@@ -33,6 +33,15 @@ export function useCategories(options?: { initialData?: Category[] }) {
   })
 }
 
+export function useCatalogPricing() {
+  return useQuery({
+    queryKey: queryKeys.catalogPricing,
+    queryFn: api.getCatalogPricing,
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
+  })
+}
+
 export function useCategoryShowcase() {
   return useQuery({
     queryKey: queryKeys.categoryShowcase,

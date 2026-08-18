@@ -4,7 +4,6 @@ import com.luxart.ecommerce.model.enums.ProductStatut;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,13 +27,16 @@ public class Product {
     @Column(length = 2000)
     private String description;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal prix;
-
-    @Column(nullable = false)
-    private Integer stock;
-
     private String imageUrl;
+
+    @ManyToMany
+    @JoinTable(
+            name = "product_dimensions",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "dimension_id")
+    )
+    @Builder.Default
+    private List<TableauDimension> dimensions = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")

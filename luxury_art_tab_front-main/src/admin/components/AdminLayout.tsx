@@ -18,6 +18,7 @@ import {
   Bell,
   HeartHandshake,
   Truck,
+  Ruler,
 } from 'lucide-react'
 import { useAdminAuth } from '../context/AdminAuthContext'
 import { prefetchEssentials, prefetchRoute } from '../hooks/useAdminQueries'
@@ -36,6 +37,7 @@ const nav = [
   { to: '/admin/whatsapp-orders', icon: MessageCircle, label: 'WhatsApp' },
   { to: '/admin/clients', icon: Users, label: 'Clients' },
   { to: '/admin/products', icon: Package, label: 'Produits' },
+  { to: '/admin/pricing', icon: Ruler, label: 'Tarifs & cadres' },
   { to: '/admin/moderation', icon: MessageSquare, label: 'Avis & Commentaires' },
   { to: '/admin/loyalty', icon: Gift, label: 'Fidélité' },
   { to: '/admin/news', icon: Newspaper, label: 'Actualités' },

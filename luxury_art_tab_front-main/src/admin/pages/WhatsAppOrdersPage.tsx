@@ -91,9 +91,8 @@ export default function WhatsAppOrdersPage() {
       return
     }
     for (const line of validLines) {
-      const p = productMap[line.productId]
-      if (p && p.stock < line.quantite) {
-        setError(`Stock insuffisant pour « ${p.ref} » (reste: ${p.stock})`)
+      if (!line.productId) {
+        setError('Ajoutez au moins un produit')
         return
       }
     }
@@ -152,7 +151,7 @@ export default function WhatsAppOrdersPage() {
             Commandes WhatsApp
           </h2>
           <p className="text-sm text-zinc-500">
-            Saisie manuelle des ventes WhatsApp — stock et revenus mis à jour automatiquement
+            Saisie manuelle des ventes WhatsApp — le prix de départ du catalogue est proposé, ajustable par ligne
           </p>
         </div>
         <button
@@ -294,7 +293,7 @@ export default function WhatsAppOrdersPage() {
                       .filter((p) => p.statut !== 'ARCHIVE')
                       .map((p) => (
                         <option key={p.id} value={p.id}>
-                          {p.ref} — stock: {p.stock} — {p.prix} TND
+                          {p.ref} — à partir de {p.prix ?? '—'} TND
                         </option>
                       ))}
                   </select>
@@ -323,14 +322,7 @@ export default function WhatsAppOrdersPage() {
                 </div>
                 {product && (
                   <p className="pb-2 text-xs text-zinc-500">
-                    Reste après cmd:{' '}
-                    <strong
-                      className={
-                        product.stock - line.quantite < 0 ? 'text-red-400' : 'text-emerald-400'
-                      }
-                    >
-                      {product.stock - line.quantite}
-                    </strong>
+                    Prix de départ : {product.prix ?? '—'} TND
                   </p>
                 )}
                 <button

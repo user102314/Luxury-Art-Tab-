@@ -31,6 +31,7 @@ import { Route as AdminAppTestimonialsRouteImport } from './routes/admin/_app/te
 import { Route as AdminAppSettingsRouteImport } from './routes/admin/_app/settings'
 import { Route as AdminAppRevenueRouteImport } from './routes/admin/_app/revenue'
 import { Route as AdminAppProductsRouteImport } from './routes/admin/_app/products'
+import { Route as AdminAppPricingRouteImport } from './routes/admin/_app/pricing'
 import { Route as AdminAppOrdersRouteImport } from './routes/admin/_app/orders'
 import { Route as AdminAppNotificationsRouteImport } from './routes/admin/_app/notifications'
 import { Route as AdminAppNewsRouteImport } from './routes/admin/_app/news'
@@ -150,6 +151,11 @@ const AdminAppProductsRoute = AdminAppProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => AdminAppRouteRoute,
 } as any)
+const AdminAppPricingRoute = AdminAppPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
 const AdminAppOrdersRoute = AdminAppOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
@@ -221,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/admin/news': typeof AdminAppNewsRoute
   '/admin/notifications': typeof AdminAppNotificationsRoute
   '/admin/orders': typeof AdminAppOrdersRoute
+  '/admin/pricing': typeof AdminAppPricingRoute
   '/admin/products': typeof AdminAppProductsRoute
   '/admin/revenue': typeof AdminAppRevenueRoute
   '/admin/settings': typeof AdminAppSettingsRoute
@@ -252,6 +259,7 @@ export interface FileRoutesByTo {
   '/admin/news': typeof AdminAppNewsRoute
   '/admin/notifications': typeof AdminAppNotificationsRoute
   '/admin/orders': typeof AdminAppOrdersRoute
+  '/admin/pricing': typeof AdminAppPricingRoute
   '/admin/products': typeof AdminAppProductsRoute
   '/admin/revenue': typeof AdminAppRevenueRoute
   '/admin/settings': typeof AdminAppSettingsRoute
@@ -286,6 +294,7 @@ export interface FileRoutesById {
   '/admin/_app/news': typeof AdminAppNewsRoute
   '/admin/_app/notifications': typeof AdminAppNotificationsRoute
   '/admin/_app/orders': typeof AdminAppOrdersRoute
+  '/admin/_app/pricing': typeof AdminAppPricingRoute
   '/admin/_app/products': typeof AdminAppProductsRoute
   '/admin/_app/revenue': typeof AdminAppRevenueRoute
   '/admin/_app/settings': typeof AdminAppSettingsRoute
@@ -320,6 +329,7 @@ export interface FileRouteTypes {
     | '/admin/news'
     | '/admin/notifications'
     | '/admin/orders'
+    | '/admin/pricing'
     | '/admin/products'
     | '/admin/revenue'
     | '/admin/settings'
@@ -351,6 +361,7 @@ export interface FileRouteTypes {
     | '/admin/news'
     | '/admin/notifications'
     | '/admin/orders'
+    | '/admin/pricing'
     | '/admin/products'
     | '/admin/revenue'
     | '/admin/settings'
@@ -384,6 +395,7 @@ export interface FileRouteTypes {
     | '/admin/_app/news'
     | '/admin/_app/notifications'
     | '/admin/_app/orders'
+    | '/admin/_app/pricing'
     | '/admin/_app/products'
     | '/admin/_app/revenue'
     | '/admin/_app/settings'
@@ -564,6 +576,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppProductsRouteImport
       parentRoute: typeof AdminAppRouteRoute
     }
+    '/admin/_app/pricing': {
+      id: '/admin/_app/pricing'
+      path: '/pricing'
+      fullPath: '/admin/pricing'
+      preLoaderRoute: typeof AdminAppPricingRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
     '/admin/_app/orders': {
       id: '/admin/_app/orders'
       path: '/orders'
@@ -640,6 +659,7 @@ interface AdminAppRouteRouteChildren {
   AdminAppNewsRoute: typeof AdminAppNewsRoute
   AdminAppNotificationsRoute: typeof AdminAppNotificationsRoute
   AdminAppOrdersRoute: typeof AdminAppOrdersRoute
+  AdminAppPricingRoute: typeof AdminAppPricingRoute
   AdminAppProductsRoute: typeof AdminAppProductsRoute
   AdminAppRevenueRoute: typeof AdminAppRevenueRoute
   AdminAppSettingsRoute: typeof AdminAppSettingsRoute
@@ -658,6 +678,7 @@ const AdminAppRouteRouteChildren: AdminAppRouteRouteChildren = {
   AdminAppNewsRoute: AdminAppNewsRoute,
   AdminAppNotificationsRoute: AdminAppNotificationsRoute,
   AdminAppOrdersRoute: AdminAppOrdersRoute,
+  AdminAppPricingRoute: AdminAppPricingRoute,
   AdminAppProductsRoute: AdminAppProductsRoute,
   AdminAppRevenueRoute: AdminAppRevenueRoute,
   AdminAppSettingsRoute: AdminAppSettingsRoute,

@@ -6,7 +6,7 @@ export type ChatProductCard = {
   id: number
   ref: string
   prix: number
-  stock: number
+  available: boolean
   categoryName?: string
   statut: string
 }
@@ -28,7 +28,7 @@ const SITE_GUIDE: { keywords: string[]; reply: BotReply }[] = [
   {
     keywords: ['galerie', 'catalogue', 'tous les produits', 'acheter', 'boutique'],
     reply: {
-      text: 'La galerie liste tous nos tableaux avec filtres par catégorie, prix et stock en temps réel.',
+      text: 'La galerie liste tous nos tableaux avec filtres par catégorie et prix. Le tarif dépend de la dimension et du cadre.',
       links: [{ label: 'Voir la galerie', to: '/products' }],
     },
   },
@@ -80,11 +80,10 @@ function formatDh(n: number) {
   return `${new Intl.NumberFormat('fr-TN', { maximumFractionDigits: 0 }).format(n)} TND`
 }
 
-function stockLabel(stock: number, statut: string) {
+function availabilityLabel(statut: string) {
   if (statut === 'ARCHIVE') return 'archivé'
-  if (stock <= 0 || statut === 'RUPTURE_STOCK') return 'rupture de stock'
-  if (stock <= 3) return `stock faible (${stock})`
-  return `en stock (${stock})`
+  if (statut === 'RUPTURE_STOCK') return 'indisponible'
+  return 'disponible'
 }
 
 function availableProducts(products: Product[]) {
@@ -95,8 +94,8 @@ function toCard(p: Product, categoryMap: Record<number, string>): ChatProductCar
   return {
     id: p.id,
     ref: p.ref,
-    prix: Number(p.prix),
-    stock: p.stock,
+    prix: Number(p.prix ?? 0),
+    available: p.statut === 'DISPONIBLE',
     categoryName: categoryMap[p.categoryId],
     statut: p.statut,
   }
@@ -126,7 +125,7 @@ function matchProducts(query: string, products: Product[], categoryMap: Record<n
 
 export function buildWelcomeReply(): BotReply {
   return {
-    text: "Bonjour, je suis l'assistant Luxury Art. Je connais le catalogue, les stocks et les prix en direct, et je peux vous guider sur le site.",
+    text: "Bonjour, je suis l'assistant Luxury Art. Je connais le catalogue et les prix selon dimension et cadre, et je peux vous guider sur le site.",
     links: [
       { label: 'Voir la galerie', to: '/products' },
       { label: 'Programme fidélité', to: '/signup' },
@@ -172,8 +171,8 @@ export function processChatMessage(
     }
     const lines = categories.map((c) => {
       const count = list.filter((p) => p.categoryId === c.id).length
-      const inStock = list.filter((p) => p.categoryId === c.id && p.stock > 0).length
-      return `• ${c.nom} — ${count} produit(s), ${inStock} en stock`
+      const inStock = list.filter((p) => p.categoryId === c.id && p.statut === 'DISPONIBLE').length
+      return `• ${c.nom} — ${count} produit(s), ${inStock} disponible(s)`
     })
     return {
       text: `Nos catégories :\n${lines.join('\n')}\n\nFiltrez par catégorie dans la galerie.`,
@@ -187,7 +186,7 @@ export function processChatMessage(
     !lower.match(/\d/) &&
     (lower.includes('quoi') || lower.includes('quel') || lower.includes('liste') || lower.includes('dispo') || lower.includes('en stock'))
   ) {
-    const inStock = list.filter((p) => p.stock > 0 && p.statut === 'DISPONIBLE')
+    const inStock = list.filter((p) => p.statut === 'DISPONIBLE')
     if (inStock.length === 0) {
       return { text: 'Aucun produit en stock actuellement. Revenez bientôt ou contactez-nous sur WhatsApp.' }
     }
@@ -208,21 +207,21 @@ export function processChatMessage(
     lower.includes('cout') ||
     lower.includes('combien')
   ) {
-    const sorted = [...list].filter((p) => p.stock > 0).sort((a, b) => Number(a.prix) - Number(b.prix))
+    const sorted = [...list].filter((p) => p.statut === 'DISPONIBLE').sort((a, b) => Number(a.prix ?? 0) - Number(b.prix ?? 0))
     if (sorted.length === 0) {
       return { text: 'Catalogue momentanément indisponible.', links: [{ label: 'Contact', to: '/contact' }] }
     }
     if (lower.includes('pas cher') || lower.includes('bon marche') || lower.includes('moins cher')) {
       const cheap = sorted.slice(0, 5)
       return {
-        text: 'Voici nos tableaux les plus accessibles (prix de base) :',
+        text: 'Voici nos tableaux les plus accessibles (prix de départ selon format) :',
         products: cheap.map((p) => toCard(p, categoryMap)),
         links: [{ label: 'Comparer dans la galerie', to: '/products' }],
       }
     }
     const avg = sorted.reduce((s, p) => s + Number(p.prix), 0) / sorted.length
     return {
-      text: `Nos prix de base vont de ${formatDh(Number(sorted[0].prix))} à ${formatDh(Number(sorted[sorted.length - 1].prix))} (moyenne ~${formatDh(avg)}). Le prix final dépend de la taille et du cadre sur la fiche produit.`,
+      text: `Nos prix de départ vont de ${formatDh(Number(sorted[0].prix))} à ${formatDh(Number(sorted[sorted.length - 1].prix))} (moyenne ~${formatDh(avg)}). Le prix final dépend de la dimension et du cadre sur la fiche produit.`,
       links: [{ label: 'Voir les produits', to: '/products' }],
     }
   }
@@ -316,5 +315,5 @@ export function processChatMessage(
 }
 
 export function formatProductLine(card: ChatProductCard): string {
-  return `${card.ref} — ${formatDh(card.prix)} — ${stockLabel(card.stock, card.statut)}${card.categoryName ? ` (${card.categoryName})` : ''}`
+  return `${card.ref} — ${formatDh(card.prix)} — ${availabilityLabel(card.statut)}${card.categoryName ? ` (${card.categoryName})` : ''}`
 }

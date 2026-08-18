@@ -1,13 +1,17 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { CartItem } from '@/types/api'
+import { cartLineKey } from '@/lib/pricing'
 
-const STORAGE_KEY = 'luxart_cart'
+const STORAGE_KEY = 'luxart_cart_v2'
 
 interface CartContextType {
   items: CartItem[]
   addItem: (item: CartItem) => void
-  removeItem: (productId: number, taille: string) => void
-  updateQuantity: (productId: number, taille: string, quantite: number) => void
+  removeItem: (item: Pick<CartItem, 'productId' | 'taille' | 'encadrement' | 'couleur'>) => void
+  updateQuantity: (
+    item: Pick<CartItem, 'productId' | 'taille' | 'encadrement' | 'couleur'>,
+    quantite: number,
+  ) => void
   clearCart: () => void
   total: number
   count: number
@@ -35,9 +39,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = (item: CartItem) => {
     setItems((prev) => {
-      const idx = prev.findIndex(
-        (i) => i.productId === item.productId && i.taille === item.taille,
-      )
+      const key = cartLineKey(item)
+      const idx = prev.findIndex((i) => cartLineKey(i) === key)
       if (idx >= 0) {
         const next = [...prev]
         next[idx] = { ...next[idx], quantite: next[idx].quantite + item.quantite }
@@ -47,21 +50,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  const removeItem = (productId: number, taille: string) => {
-    setItems((prev) =>
-      prev.filter((i) => !(i.productId === productId && i.taille === taille)),
-    )
+  const removeItem = (item: Pick<CartItem, 'productId' | 'taille' | 'encadrement' | 'couleur'>) => {
+    const key = cartLineKey(item)
+    setItems((prev) => prev.filter((i) => cartLineKey(i) !== key))
   }
 
-  const updateQuantity = (productId: number, taille: string, quantite: number) => {
+  const updateQuantity = (
+    item: Pick<CartItem, 'productId' | 'taille' | 'encadrement' | 'couleur'>,
+    quantite: number,
+  ) => {
     if (quantite < 1) {
-      removeItem(productId, taille)
+      removeItem(item)
       return
     }
+    const key = cartLineKey(item)
     setItems((prev) =>
-      prev.map((i) =>
-        i.productId === productId && i.taille === taille ? { ...i, quantite } : i,
-      ),
+      prev.map((i) => (cartLineKey(i) === key ? { ...i, quantite } : i)),
     )
   }
 

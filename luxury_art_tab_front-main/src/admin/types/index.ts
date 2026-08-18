@@ -187,12 +187,53 @@ export interface Product {
   id: number
   ref: string
   description: string
-  prix: number
-  stock: number
+  prix?: number | null
+  dimensionIds?: number[]
+  dimensions?: TableauDimension[]
   imageUrl?: string
   images?: ProductImage[]
   categoryId: number
   statut: string
+}
+
+export interface TableauDimension {
+  id: number
+  label: string
+  largeur?: number
+  hauteur?: number
+  ordre?: number
+}
+
+export interface CadreCouleur {
+  id: number
+  cadreId: number
+  nom: string
+  hex?: string
+  ordre?: number
+}
+
+export interface Cadre {
+  id: number
+  nom: string
+  code: string
+  ordre?: number
+  couleurs?: CadreCouleur[]
+}
+
+export interface DimensionCadrePrix {
+  id?: number
+  dimensionId: number
+  dimensionLabel?: string
+  cadreId: number
+  cadreNom?: string
+  cadreCode?: string
+  prix?: number | null
+}
+
+export interface CatalogPricing {
+  dimensions: TableauDimension[]
+  cadres: Cadre[]
+  tarifs: DimensionCadrePrix[]
 }
 
 export interface ProductImage {

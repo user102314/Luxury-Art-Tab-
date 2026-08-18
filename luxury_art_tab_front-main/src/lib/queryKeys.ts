@@ -11,4 +11,5 @@ export const queryKeys = {
   productReviews: (id: number) => ['products', id, 'reviews'] as const,
   productLikes: (id: number, visitorId: string | null) =>
     ['products', id, 'likes', visitorId] as const,
+  catalogPricing: ['catalog', 'pricing'] as const,
 }

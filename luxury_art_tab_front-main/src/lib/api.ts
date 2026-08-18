@@ -1,5 +1,6 @@
 import type {
   CartItem,
+  CatalogPricing,
   Category,
   CategoryShowcase,
   ContactMessage,
@@ -14,8 +15,6 @@ import type {
 } from '@/types/api'
 
 import { getApiBase } from '@/lib/apiBase'
-
-const BASE = getApiBase()
 
 export function getVisitorKey(): string {
   const KEY = 'luxart_visitor_key'
@@ -40,7 +39,7 @@ export function getTrackingSessionId(): string {
 
 async function trackBeacon(path: string, body: unknown): Promise<void> {
   try {
-    const res = await fetch(`${BASE}${path}`, {
+    const res = await fetch(`${getApiBase()}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -55,7 +54,7 @@ async function trackBeacon(path: string, body: unknown): Promise<void> {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${getApiBase()}${path}`, {
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     ...options,
   })
@@ -99,6 +98,7 @@ export const api = {
   getProduct: (id: number) => request<Product>(`/products/${id}`),
   getCategories: () => request<Category[]>('/categories'),
   getCategoryShowcase: () => request<CategoryShowcase[]>('/categories/showcase'),
+  getCatalogPricing: () => request<CatalogPricing>('/catalog/pricing'),
 
   getProductComments: (productId: number) =>
     request<ProductComment[]>(`/products/${productId}/comments`),
@@ -234,7 +234,7 @@ export const api = {
     }),
 
   getActiveLoyaltyProgram: async () => {
-    const res = await fetch(`${BASE}/loyalty/program/active`)
+    const res = await fetch(`${getApiBase()}/loyalty/program/active`)
     if (res.status === 204 || !res.ok) return null
     return res.json() as Promise<import('@/types/api').LoyaltyProgramPublic>
   },

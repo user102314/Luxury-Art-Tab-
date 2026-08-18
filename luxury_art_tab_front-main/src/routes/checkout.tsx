@@ -163,7 +163,7 @@ function CheckoutPage() {
             <ul className="mt-6 space-y-4">
               {items.map((item) => (
                 <li
-                  key={`${item.productId}-${item.taille}`}
+                  key={`${item.productId}-${item.taille}-${item.encadrement}-${item.couleur ?? ''}`}
                   className="flex gap-4 border-b border-sand/10 pb-4"
                 >
                   <img
@@ -176,7 +176,8 @@ function CheckoutPage() {
                   <div className="flex-1">
                     <p className="font-semibold">{item.ref}</p>
                     <p className="text-xs text-sand/70">
-                      {item.taille} · {item.encadrement.slice(0, 30)}...
+                      {item.taille} · {item.encadrement}
+                      {item.couleur ? ` · ${item.couleur}` : ''}
                     </p>
                     <p className="text-sm">
                       {item.quantite} × {formatPrice(item.prixUnitaire)}
