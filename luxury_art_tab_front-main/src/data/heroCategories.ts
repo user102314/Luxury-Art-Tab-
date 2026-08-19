@@ -1,6 +1,6 @@
 // Shared hero categories for the home slider and category pages.
 
-const cuisineModules = import.meta.glob("../assets/Cuisine/*.jpeg", {
+const cuisineModules = import.meta.glob("../assets/Cuisine/*.{webp,jpeg,jpg}", {
   eager: true,
   import: "default",
 }) as Record<string, string>;

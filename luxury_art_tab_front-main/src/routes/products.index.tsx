@@ -234,10 +234,10 @@ function ProductsPage() {
             Catalogue complet
           </p>
           <h1 className="mt-3 break-words font-display text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">
-            Nos tableaux et <em className="text-gold">décorations murales</em>
+            {PAGE_COPY.products.h1}
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-sand/80 sm:text-base">
-            Explorez notre collection en Tunisie — filtrez par catégorie et prix pour trouver la pièce parfaite.
+            {PAGE_COPY.products.intro}
           </p>
         </div>
       </div>

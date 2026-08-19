@@ -3,12 +3,12 @@ import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
 import { ProductCard } from '@/components/ProductCard'
 import { api } from '@/lib/api'
-import { getProductImage } from '@/lib/images'
+import { getProductImages } from '@/lib/images'
 import type { Category, Product } from '@/types/api'
 import { heroCategories } from '@/data/heroCategories'
 import {
   buildSeoHead,
-  categorySeoDescription,
+  categorySeoCopy,
   resolveCategoryBySlug,
   preferredCategorySlug,
   breadcrumbSchema,
@@ -46,11 +46,12 @@ export const Route = createFileRoute('/category/$slug')({
     const hero = loaderData?.hero
     const label = category?.nom ?? hero?.word ?? slug
     const indexable = !!category && products.length > 0
-    const image = products[0] ? getProductImage(products[0]) : hero?.images[0]
+    const seo = categorySeoCopy(slug, label)
+    const image = products[0] ? getProductImages(products[0])[0] : hero?.images[0]
 
     return buildSeoHead({
-      title: `Tableaux ${label} | Luxury Art_Tab`,
-      description: categorySeoDescription(label, products.length),
+      title: seo.title,
+      description: seo.description(products.length),
       path: `/category/${slug}`,
       image,
       robots: indexable ? 'index, follow' : 'noindex, follow',
@@ -72,6 +73,7 @@ function CategoryPage() {
   const data = Route.useLoaderData() as CategoryLoaderData
   const { slug, category, products, hero } = data
   const label = category?.nom ?? hero?.word ?? slug
+  const seo = categorySeoCopy(slug, label)
   const indexable = !!category && products.length > 0
 
   if (!category && !hero) {
@@ -112,14 +114,14 @@ function CategoryPage() {
         </nav>
 
         <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-          Tableaux pour <span className={hero?.color ?? 'text-brand-red'}>{label}</span>
+          {seo.h1}
         </h1>
 
         <p className="mt-3 max-w-2xl text-muted-foreground">
           {category?.description?.trim() ||
             (indexable
-              ? `Sélection de tableaux ${label.toLowerCase()} disponibles chez Luxury Art_Tab, livrés en Tunisie.`
-              : `Cette collection sera bientôt enrichie. Découvrez en attendant tout le catalogue.`)}
+              ? seo.intro
+              : `Cette collection de tableaux décoratifs sera bientôt enrichie. Parcourez le catalogue en attendant, livraison en Tunisie.`)}
         </p>
 
         {indexable ? (

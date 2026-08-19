@@ -81,11 +81,10 @@ function ContactPage() {
             {/* 1 — coordonnées */}
             <Reveal className="flex flex-col justify-center">
               <h1 className="font-display text-3xl font-bold tracking-tight text-foreground lg:text-5xl">
-                <span className="text-brand-red">Contactez</span>-nous
+                {PAGE_COPY.contact.h1}
               </h1>
               <p className="mt-5 leading-relaxed text-muted-foreground">
-                Projet sur mesure, question sur une œuvre ou commande spéciale — notre équipe vous
-                répond sous 24h.
+                {PAGE_COPY.contact.intro}
               </p>
               <div className="mt-8 space-y-5">
                 <div className="rounded-2xl border border-accent-green/30 bg-accent-green/5 p-5">

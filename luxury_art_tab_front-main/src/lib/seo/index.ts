@@ -1,8 +1,14 @@
 export { SITE, absoluteUrl, absoluteImageUrl, SEO_PATHS, NOINDEX_PATH_PREFIXES } from './site'
 export {
+  PAGE_COPY,
+  categorySeoCopy,
+  productSeoTitle,
+  productVisibleTitle,
+  STORE_FAQS,
+} from './copy'
+export {
   buildSeoHead,
   noIndexHead,
-  PAGE_COPY,
   productSeoDescription,
   categorySeoDescription,
 } from './head'
@@ -11,6 +17,7 @@ export {
   websiteSchema,
   productSchema,
   breadcrumbSchema,
+  faqPageSchema,
 } from './schema'
 export {
   slugify,

@@ -22,6 +22,7 @@ export function websiteSchema() {
     name: SITE.name,
     url: SITE.url,
     inLanguage: 'fr-TN',
+    description: SITE.defaultDescription,
     publisher: {
       '@type': 'Organization',
       name: SITE.fullName,
@@ -37,12 +38,13 @@ export function productSchema(input: {
   prix: number
   available?: boolean
   sku?: string
+  name?: string
 }) {
   const url = absoluteUrl(`/products/${input.id}`)
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: input.ref,
+    name: input.name ?? input.ref,
     description: input.description,
     image: input.image ? [absoluteImageUrl(input.image)] : undefined,
     sku: input.sku ?? input.ref ?? String(input.id),
@@ -74,6 +76,21 @@ export function breadcrumbSchema(
       position: index + 1,
       name: item.name,
       item: absoluteUrl(item.path),
+    })),
+  }
+}
+
+export function faqPageSchema(faqs: { question: string; answer: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
     })),
   }
 }

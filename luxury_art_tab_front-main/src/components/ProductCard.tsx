@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import type { Product } from '@/types/api'
-import { getProductImage, getSimulationImage, hasSimulationImage } from '@/lib/images'
+import { getProductImage, getSimulationImage, hasSimulationImage, IMAGE_WIDTH } from '@/lib/images'
+import { productVisibleTitle } from '@/lib/seo'
 import { formatStartingPrice } from '@/lib/pricing'
 import { useFavorites } from '@/context/FavoritesContext'
 import { api, getTrackingSessionId } from '@/lib/api'
@@ -19,7 +20,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
   const { isFavorite, toggleFavorite } = useFavorites()
   const { client } = useAuth()
   const liked = isFavorite(product.id)
-  const image = getProductImage(product)
+  const image = getProductImage(product, compact ? IMAGE_WIDTH.hero : IMAGE_WIDTH.card)
   const simulationImage = getSimulationImage(product)
   const canSimulate = hasSimulationImage(product)
   const outOfStock = product.statut === 'RUPTURE_STOCK'
@@ -60,7 +61,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
           <div className="aspect-[4/5] w-full">
             <img
               src={image}
-              alt={product.ref}
+              alt={productVisibleTitle(product.ref, categoryName)}
               loading="lazy"
               decoding="async"
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"

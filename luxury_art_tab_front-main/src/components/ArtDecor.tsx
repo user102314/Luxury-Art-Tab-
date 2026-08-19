@@ -1,11 +1,11 @@
-import splashBrown from '@/assets/decor/paint-splash-brown.png'
-import splashOrange from '@/assets/decor/paint-splash-orange.png'
-import splashBrick from '@/assets/decor/paint-splash-brick.png'
-import splashBeige from '@/assets/decor/paint-splash-beige.png'
-import brushRed from '@/assets/decor/brush-stroke-red.png'
-import brushBrown from '@/assets/decor/brush-stroke-brown.png'
-import brushOrange from '@/assets/decor/brush-stroke-orange.png'
-import brushBeige from '@/assets/decor/brush-stroke-beige.png'
+import splashBrown from '@/assets/decor/paint-splash-brown.webp'
+import splashOrange from '@/assets/decor/paint-splash-orange.webp'
+import splashBrick from '@/assets/decor/paint-splash-brick.webp'
+import splashBeige from '@/assets/decor/paint-splash-beige.webp'
+import brushRed from '@/assets/decor/brush-stroke-red.webp'
+import brushBrown from '@/assets/decor/brush-stroke-brown.webp'
+import brushOrange from '@/assets/decor/brush-stroke-orange.webp'
+import brushBeige from '@/assets/decor/brush-stroke-beige.webp'
 import { cn } from '@/lib/utils'
 
 const SPLASH = {
@@ -69,6 +69,8 @@ function DecorImg({
         src={src}
         alt=""
         draggable={false}
+        loading="lazy"
+        decoding="async"
         className="h-full w-full object-contain"
         style={{
           transform: `rotate(${rotate}deg)${flip ? ' scaleX(-1)' : ''}`,

@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, Brush, Sparkles } from 'lucide-react'
-import atelierProcess from '@/assets/decor/atelier-process.jpg'
+import atelierProcess from '@/assets/decor/atelier-process.webp'
 import { PaintSplash, PaintStroke } from '@/components/ArtDecor'
 
 /**
@@ -33,7 +33,7 @@ export function AboutBand() {
           <div className="relative overflow-hidden rounded-3xl border border-gold/25 bg-sand p-2 shadow-[0_28px_55px_-32px_rgba(74,93,79,0.65)]">
             <img
               src={atelierProcess}
-              alt="Application de peinture à l'atelier"
+              alt="Atelier Luxury Art_Tab : préparation d'un tableau décoratif mural en Tunisie"
               className="h-[260px] w-full rounded-2xl object-cover md:h-[340px]"
               loading="lazy"
             />
@@ -52,21 +52,21 @@ export function AboutBand() {
           </p>
 
           <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-            L&apos;artiste derrière <em className="text-gold">chaque toile</em>
+            Tableaux décoratifs faits à l&apos;atelier, <em className="text-gold">en Tunisie</em>
           </h2>
 
           <p className="mt-5 max-w-xl leading-relaxed text-muted-foreground">
-            Je crée des tableaux décoratifs inspirés du quotidien : des tons chauds, des formes
-            organiques et des détails qui donnent une vraie présence à votre salon ou votre
-            cuisine. Chaque pièce raconte une histoire simple, élégante et personnelle.
+            Luxury Art_Tab crée des tableaux décoratifs muraux pour le salon et la cuisine :
+            tons chauds, formats au choix et cadres soignés. Chaque toile est préparée pour
+            une livraison partout en Tunisie.
           </p>
 
           <ul className="mt-6 grid gap-3 sm:grid-cols-2">
             {[
-              'Impression premium et finitions soignées',
-              'Formats personnalisés sur demande',
-              'Conseils déco avant achat',
-              'Livraison rapide partout en Tunisie',
+              'Tableau décoratif : formats du 30×40 au grand format',
+              'Cadre américain ou cadre large, couleurs au choix',
+              'Conseils déco avant d’acheter en ligne',
+              'Livraison de tableaux partout en Tunisie',
             ].map((item) => (
               <li key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
                 <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-sage" />

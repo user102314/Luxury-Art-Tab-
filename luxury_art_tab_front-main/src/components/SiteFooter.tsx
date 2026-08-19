@@ -24,7 +24,7 @@ export function SiteFooter() {
             <BrandLogo size="md" onDark showByline />
           </Link>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-beige">
-            Tableaux décoratifs pour salon et cuisine, imprimés avec soin. Livraison en Tunisie.
+            Tableaux décoratifs muraux en Tunisie : formats, cadres et livraison soignée.
           </p>
         </div>
 
@@ -78,7 +78,7 @@ export function SiteFooter() {
 
       <div className="relative z-[1] mx-auto mt-10 flex max-w-7xl flex-col items-start justify-between gap-3 border-t border-sand/15 pt-6 text-xs text-beige md:flex-row md:items-center">
         <p>© 2026 Luxury Art_Tab By Insaf. Tous droits réservés.</p>
-        <p>Fait avec passion pour votre décoration murale.</p>
+        <p>Tableaux décoratifs et décoration murale, livrés en Tunisie.</p>
       </div>
     </footer>
   )

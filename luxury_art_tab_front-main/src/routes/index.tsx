@@ -9,6 +9,8 @@ import {
   buildSeoHead,
   organizationSchema,
   websiteSchema,
+  faqPageSchema,
+  STORE_FAQS,
 } from "@/lib/seo";
 
 const ProductShowcase = lazy(() =>
@@ -22,6 +24,9 @@ const NewsSection = lazy(() =>
 );
 const LatestDecor = lazy(() =>
   import("@/components/LatestDecor").then((m) => ({ default: m.LatestDecor }))
+);
+const SeoFaq = lazy(() =>
+  import("@/components/SeoFaq").then((m) => ({ default: m.SeoFaq }))
 );
 const SiteFooter = lazy(() =>
   import("@/components/SiteFooter").then((m) => ({ default: m.SiteFooter }))
@@ -42,7 +47,7 @@ export const Route = createFileRoute("/")({
       title: PAGE_COPY.home.title,
       description: PAGE_COPY.home.description,
       path: "/",
-      jsonLd: [organizationSchema(), websiteSchema()],
+      jsonLd: [organizationSchema(), websiteSchema(), faqPageSchema(STORE_FAQS)],
     }),
   component: Index,
 });
@@ -76,6 +81,11 @@ function Index() {
       <Suspense fallback={<SectionSkeleton />}>
         <Reveal>
           <LatestDecor />
+        </Reveal>
+      </Suspense>
+      <Suspense fallback={<SectionSkeleton />}>
+        <Reveal>
+          <SeoFaq />
         </Reveal>
       </Suspense>
       <Suspense fallback={null}>

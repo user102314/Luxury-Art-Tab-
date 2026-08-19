@@ -1,4 +1,5 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } from "@tanstack/react-router";
+import { Analytics } from "@vercel/analytics/react";
 import { AppProviders } from "@/context/AppProviders";
 import { MaintenancePage } from "@/components/MaintenancePage";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -67,11 +68,12 @@ export const Route = createRootRoute({
     links: [
       { rel: "icon", type: "image/png", href: "/favicon.png" },
       { rel: "stylesheet", href: appCss },
+      { rel: "preconnect", href: "https://api.luxury-art.tn" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Great+Vibes&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Great+Vibes&family=Fraunces:opsz,wght@9..144,700&family=Inter:wght@400;600&display=swap",
       },
       ...(rootHead.links ?? []),
     ],
@@ -102,12 +104,18 @@ function RootComponent() {
 
   // Mode maintenance : boutique hors ligne, dashboard admin toujours accessible.
   if (maintenanceEnabled && !isAdmin) {
-    return <MaintenancePage />;
+    return (
+      <>
+        <Analytics />
+        <MaintenancePage />
+      </>
+    );
   }
 
   if (isAdmin) {
     return (
       <QueryClientProvider client={queryClient}>
+        <Analytics />
         <Outlet />
       </QueryClientProvider>
     );
@@ -115,6 +123,7 @@ function RootComponent() {
 
   return (
     <AppProviders>
+      <Analytics />
       <Outlet />
     </AppProviders>
   );

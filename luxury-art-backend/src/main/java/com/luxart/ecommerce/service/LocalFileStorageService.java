@@ -142,6 +142,10 @@ public class LocalFileStorageService {
         return localRoot;
     }
 
+    public Path resolveStoragePath(String storagePath) {
+        return resolveSafe(storagePath);
+    }
+
     private Path resolveSafe(String storagePath) {
         Path target = localRoot.resolve(storagePath).normalize();
         if (!target.startsWith(localRoot)) {

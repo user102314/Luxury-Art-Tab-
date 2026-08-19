@@ -11,7 +11,7 @@ import { useCart } from '@/context/CartContext'
 import { useAuth } from '@/context/AuthContext'
 import { useVisitor } from '@/context/VisitorContext'
 import { api, getVisitorKey } from '@/lib/api'
-import { resolveImageSrc } from '@/lib/images'
+import { resolveImageSrc, IMAGE_WIDTH } from '@/lib/images'
 import { formatPrice } from '@/lib/pricing'
 import { buildSeoHead, SITE } from '@/lib/seo'
 
@@ -167,7 +167,7 @@ function CheckoutPage() {
                   className="flex gap-4 border-b border-sand/10 pb-4"
                 >
                   <img
-                    src={resolveImageSrc(item.imageUrl)}
+                    src={resolveImageSrc(item.imageUrl, IMAGE_WIDTH.thumb)}
                     alt={item.ref}
                     loading="lazy"
                     decoding="async"

@@ -40,6 +40,10 @@ public class ImageConversionService {
     public record ConvertedImage(byte[] data, String contentType, String extension) {}
 
     public ConvertedImage convertToWebp(byte[] input, String contentType) {
+        return convertToWebp(input, contentType, 0);
+    }
+
+    public ConvertedImage convertToWebp(byte[] input, String contentType, int maxWidth) {
         if (input == null || input.length == 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Fichier image vide");
         }
@@ -56,7 +60,8 @@ public class ImageConversionService {
                         "Format d'image non reconnu ou fichier corrompu");
             }
 
-            BufferedImage rgbImage = toCompatibleImage(source);
+            BufferedImage scaled = scaleDown(source, maxWidth);
+            BufferedImage rgbImage = toCompatibleImage(scaled);
             byte[] webpBytes = writeWebp(rgbImage);
 
             log.debug("Image convertie en WebP : {} octets -> {} octets", input.length, webpBytes.length);
@@ -67,6 +72,27 @@ public class ImageConversionService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Impossible de lire l'image : " + ex.getMessage());
         }
+    }
+
+    public BufferedImage scaleDown(BufferedImage source, int maxWidth) {
+        if (source == null || maxWidth <= 0 || source.getWidth() <= maxWidth) {
+            return source;
+        }
+        int width = maxWidth;
+        int height = Math.max(1, (int) Math.round(source.getHeight() * (width / (double) source.getWidth())));
+        BufferedImage scaled = new BufferedImage(
+                width,
+                height,
+                source.getColorModel().hasAlpha() ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = scaled.createGraphics();
+        try {
+            graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            graphics.drawImage(source, 0, 0, width, height, null);
+        } finally {
+            graphics.dispose();
+        }
+        return scaled;
     }
 
     private BufferedImage toCompatibleImage(BufferedImage source) {

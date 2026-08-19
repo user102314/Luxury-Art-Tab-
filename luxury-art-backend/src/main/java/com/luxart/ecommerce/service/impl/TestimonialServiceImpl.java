@@ -5,6 +5,7 @@ import com.luxart.ecommerce.exception.ResourceNotFoundException;
 import com.luxart.ecommerce.model.entity.Testimonial;
 import com.luxart.ecommerce.model.enums.TestimonialPlateforme;
 import com.luxart.ecommerce.repository.TestimonialRepository;
+import com.luxart.ecommerce.service.ImageConversionService;
 import com.luxart.ecommerce.service.LocalFileStorageService;
 import com.luxart.ecommerce.service.TestimonialService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class TestimonialServiceImpl implements TestimonialService {
 
     private final TestimonialRepository testimonialRepository;
     private final LocalFileStorageService localFileStorageService;
+    private final ImageConversionService imageConversionService;
 
     @Override
     public List<TestimonialDto> findAll() {
@@ -88,8 +90,14 @@ public class TestimonialServiceImpl implements TestimonialService {
         }
         Testimonial t = getEntity(id);
         try {
+            ImageConversionService.ConvertedImage converted =
+                    imageConversionService.convertToWebp(file.getBytes(), contentType, 900);
             String path = localFileStorageService.buildTestimonialStoragePath(id, file.getOriginalFilename());
-            String url = localFileStorageService.upload(path, file.getBytes(), contentType);
+            if (!path.toLowerCase().endsWith(".webp")) {
+                int dot = path.lastIndexOf('.');
+                path = (dot > path.lastIndexOf('/') ? path.substring(0, dot) : path) + ".webp";
+            }
+            String url = localFileStorageService.upload(path, converted.data(), converted.contentType());
             t.setImageUrl(url);
             return toDto(testimonialRepository.save(t));
         } catch (java.io.IOException e) {

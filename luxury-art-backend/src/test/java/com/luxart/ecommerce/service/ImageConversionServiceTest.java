@@ -41,6 +41,22 @@ class ImageConversionServiceTest {
         assertThrows(Exception.class, () -> service.convertToWebp(new byte[]{1, 2, 3}, "image/png"));
     }
 
+    @Test
+    void convertToWebpRespectsMaxWidth() throws Exception {
+        byte[] png = createPng(400, 200, Color.GREEN);
+        ImageConversionService.ConvertedImage result = service.convertToWebp(png, "image/png", 100);
+        assertTrue(result.data().length > 0);
+        assertTrue(result.data().length < png.length);
+    }
+
+    @Test
+    void scaleDownKeepsAspectRatio() {
+        BufferedImage source = new BufferedImage(400, 200, BufferedImage.TYPE_INT_RGB);
+        BufferedImage scaled = service.scaleDown(source, 100);
+        assertEquals(100, scaled.getWidth());
+        assertEquals(50, scaled.getHeight());
+    }
+
     private static byte[] createPng(int width, int height, Color color) throws Exception {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = image.createGraphics();

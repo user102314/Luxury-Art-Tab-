@@ -4,6 +4,7 @@ import { usePublishedNews } from '@/hooks/useStorefrontQueries'
 import { PaintSplash, PaintStroke } from '@/components/ArtDecor'
 import { RemoteImage } from '@/components/RemoteImage'
 import type { News } from '@/types/api'
+import { IMAGE_WIDTH } from '@/lib/images'
 
 function formatDate(value?: string) {
   if (!value) return null
@@ -78,7 +79,7 @@ export function NewsSection({ initialNews }: { initialNews?: News[] } = {}) {
                   <RemoteImage
                     src={featured.imageUrl}
                     alt={featured.titre}
-                    priority
+                    widthHint={IMAGE_WIDTH.news}
                     className="absolute inset-0 h-full w-full object-cover transition duration-[900ms] group-hover:scale-105"
                   />
                   <span

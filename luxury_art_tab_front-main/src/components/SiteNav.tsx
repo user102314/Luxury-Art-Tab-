@@ -10,7 +10,7 @@ import {
   useProducts,
 } from '@/hooks/useStorefrontQueries'
 import { useAuth } from '@/context/AuthContext'
-import { getProductImage } from '@/lib/images'
+import { getProductImage, IMAGE_WIDTH } from '@/lib/images'
 import { formatPrice, formatStartingPrice } from '@/lib/pricing'
 import { BrandLogo } from '@/components/BrandLogo'
 
@@ -425,7 +425,7 @@ export function SiteNav() {
                         key={`${item.productId}-${item.taille}-${item.encadrement}-${item.couleur ?? ''}`}
                         className="flex gap-3 border-b border-border/40 pb-4"
                       >
-                        <img src={getProductImage({ imageUrl: item.imageUrl })} alt="" className="h-14 w-14 rounded-lg object-cover" loading="lazy" decoding="async" />
+                        <img src={getProductImage({ imageUrl: item.imageUrl }, IMAGE_WIDTH.thumb)} alt="" className="h-14 w-14 rounded-lg object-cover" loading="lazy" decoding="async" />
                         <div className="flex-1">
                           <p className="text-sm font-semibold">{item.ref}</p>
                           <p className="text-xs text-muted-foreground">
@@ -503,7 +503,7 @@ export function SiteNav() {
                       className="flex gap-3 rounded-xl p-2 hover:bg-secondary/50"
                     >
                       <img
-                        src={getProductImage(p)}
+                        src={getProductImage(p, IMAGE_WIDTH.thumb)}
                         alt={p.ref}
                         className="h-14 w-14 rounded-lg object-cover"
                       />

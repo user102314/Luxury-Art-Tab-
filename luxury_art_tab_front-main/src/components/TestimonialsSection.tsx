@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Heart, MessageCircle } from 'lucide-react'
 import { PaintSplash, PaintStroke } from '@/components/ArtDecor'
 import { RemoteImage } from '@/components/RemoteImage'
 import { useActiveTestimonials } from '@/hooks/useStorefrontQueries'
-import { resolveImageSrc } from '@/lib/images'
+import { resolveImageSrc, IMAGE_WIDTH } from '@/lib/images'
 import type { Testimonial, TestimonialPlateforme } from '@/types/api'
 
 /** Chaque plateforme reçoit une teinte de la charte, jamais sa couleur de marque. */
@@ -40,7 +40,7 @@ const PLATFORM_STYLE: Record<
 
 function resolveSrc(url?: string) {
   if (!url) return undefined
-  return resolveImageSrc(url)
+  return resolveImageSrc(url, IMAGE_WIDTH.testimonial)
 }
 
 function initials(name: string) {
@@ -245,7 +245,7 @@ function TestimonialCard({
       <div className="flex flex-col items-center gap-2 border-b border-sand/10 px-4 py-4 text-center">
         <div className="relative">
           {avatar ? (
-            <RemoteImage src={item.avatarUrl} alt="" className="h-12 w-12 rounded-full object-cover" />
+            <RemoteImage src={item.avatarUrl} alt="" widthHint={IMAGE_WIDTH.thumb} className="h-12 w-12 rounded-full object-cover" />
           ) : (
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gold/20 text-sm font-bold text-gold">
               {initials(item.clientNom)}
@@ -275,6 +275,7 @@ function TestimonialCard({
           <RemoteImage
             src={item.imageUrl}
             alt={`Avis de ${item.clientNom}`}
+            widthHint={IMAGE_WIDTH.testimonial}
             className="mx-auto max-h-[380px] w-auto max-w-full rounded-xl object-contain transition hover:opacity-95"
           />
         </button>

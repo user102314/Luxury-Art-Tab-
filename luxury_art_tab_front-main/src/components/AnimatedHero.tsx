@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { heroCategories } from "@/data/heroCategories";
 import { useCategoryShowcase } from "@/hooks/useStorefrontQueries";
-import { getProductImage } from "@/lib/images";
 import {
   Carousel,
   CarouselContent,
@@ -81,18 +80,17 @@ export function AnimatedHero() {
   const cards = useMemo<HeroCard[]>(() => {
     if (showcase.length > 0) {
       return showcase.map((slide, index) => {
-        const image = getProductImage(slide.product);
-        const fallback = heroCategories[index % heroCategories.length].images[0];
+        const fallback =
+          heroCategories[index % heroCategories.length]?.images[0] ?? staticCards[0]?.image ?? "/placeholder-art.svg";
         return {
           key: `cat-${slide.categoryId}`,
           label: slide.nom,
-          image: image.includes("placeholder-art") ? fallback : image,
+          image: fallback,
           fallback,
           href: `/products?category=${slide.categoryId}`,
         };
       });
     }
-    // Use static cards as fallback (already rendered on first paint)
     return staticCards;
   }, [showcase]);
 
@@ -370,14 +368,14 @@ export function AnimatedHero() {
         </span>
 
         <h1 className="mt-4 font-display text-[1.9rem] font-bold leading-[1.1] tracking-tight text-foreground md:text-[2.75rem]">
-          Tableaux et décoration murale en Tunisie
+          Tableaux décoratifs muraux en Tunisie
           <br />
-          <span className="text-muted-foreground">dix univers pour vos murs</span>
+          <span className="text-muted-foreground">salon, cuisine et calligraphie</span>
         </h1>
 
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground md:text-[0.95rem]">
-          Cuisine, florale, calligraphie, animaux… choisissez la collection qui
-          habillera votre intérieur. Livraison en Tunisie.
+          Commandez un tableau décoratif en ligne : dimension et cadre au choix,
+          livraison partout en Tunisie.
         </p>
 
         <a

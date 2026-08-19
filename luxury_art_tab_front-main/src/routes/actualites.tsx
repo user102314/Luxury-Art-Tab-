@@ -11,7 +11,7 @@ import { RemoteImage } from '@/components/RemoteImage'
 import type { News } from '@/types/api'
 import { api } from '@/lib/api'
 import { PAGE_COPY, buildSeoHead, absoluteImageUrl } from '@/lib/seo'
-import { resolveImageSrc } from '@/lib/images'
+import { resolveImageSrc, IMAGE_WIDTH } from '@/lib/images'
 
 export const Route = createFileRoute('/actualites')({
   loader: async () => {
@@ -68,11 +68,10 @@ function ActualitesPage() {
             Soldes &amp; informations
           </p>
           <h1 className="mt-3 font-display text-4xl font-bold md:text-5xl">
-            Actualités décoration et tableaux
+            {PAGE_COPY.actualites.h1}
           </h1>
           <p className="mt-4 max-w-2xl text-sand/80">
-            Promotions, nouvelles collections et annonces de la boutique — tout ce qu&apos;il ne
-            faut pas manquer en Tunisie.
+            {PAGE_COPY.actualites.intro}
           </p>
         </div>
       </div>
@@ -148,7 +147,7 @@ function FeaturedArticle({ article, isLatest }: { article: News; isLatest: boole
           <RemoteImage
             src={article.imageUrl}
             alt={article.titre}
-            priority
+            widthHint={IMAGE_WIDTH.news}
             className="h-full w-full object-cover"
           />
           <span className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full bg-gold px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-sand shadow-lg">
@@ -206,6 +205,7 @@ function SummaryCard({ article, onSelect }: { article: News; onSelect: () => voi
           src={article.imageUrl}
           alt=""
           aria-hidden
+          widthHint={IMAGE_WIDTH.thumb}
           className="h-20 w-20 shrink-0 rounded-xl object-cover"
         />
       ) : (

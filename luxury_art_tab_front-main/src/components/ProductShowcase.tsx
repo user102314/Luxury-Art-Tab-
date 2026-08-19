@@ -48,11 +48,11 @@ export function ProductShowcase({
               La Galerie
             </p>
             <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-              Tableaux <em className="text-accent-orange">muraux</em>
+              Tableaux décoratifs <em className="text-accent-orange">muraux</em>
             </h2>
             <p className="mt-3 max-w-xl text-sm text-muted-foreground md:text-base">
-              Une sélection d&apos;œuvres encadrées pour habiller vos murs — catalogue dynamique
-              connecté à notre atelier.
+              Une sélection de tableaux pour salon, cuisine ou chambre — formats et
+              cadres au choix, livrés en Tunisie.
             </p>
           </div>
 

@@ -1,4 +1,5 @@
 import { SITE, absoluteImageUrl, absoluteUrl } from './site'
+import { categorySeoCopy } from './copy'
 
 export type SeoRobots = 'index, follow' | 'noindex, nofollow' | 'noindex, follow'
 
@@ -72,33 +73,7 @@ export function noIndexHead(title: string, description?: string) {
   })
 }
 
-/** Descriptions marketing (pages statiques). */
-export const PAGE_COPY = {
-  home: {
-    title: 'Luxury Art_Tab | Tableaux et décoration murale en Tunisie',
-    description:
-      'Découvrez Luxury Art_Tab : tableaux décoratifs et art mural en Tunisie. Collections salon, cuisine et sur mesure, livraison soignée.',
-    h1: 'Tableaux et décoration murale en Tunisie',
-  },
-  products: {
-    title: 'Tableaux et décoration murale | Luxury Art_Tab',
-    description:
-      'Parcourez notre catalogue de tableaux et décorations murales. Filtrez par style, trouvez la toile idéale et commandez en Tunisie.',
-    h1: 'Nos tableaux et décorations murales',
-  },
-  actualites: {
-    title: 'Actualités décoration et tableaux | Luxury Art_Tab',
-    description:
-      'Promotions, nouvelles collections et annonces de la boutique Luxury Art_Tab. Suivez l’actualité déco en Tunisie.',
-    h1: 'Actualités décoration et tableaux',
-  },
-  contact: {
-    title: 'Contact | Luxury Art_Tab',
-    description:
-      'Contactez Luxury Art_Tab pour un projet sur mesure, une question produit ou une commande. Réponse rapide depuis la Tunisie.',
-    h1: 'Contactez-nous',
-  },
-} as const
+export { PAGE_COPY } from './copy'
 
 export function productSeoDescription(product: {
   ref: string
@@ -109,13 +84,17 @@ export function productSeoDescription(product: {
     const trimmed = product.description.trim().replace(/\s+/g, ' ')
     return trimmed.length > 155 ? `${trimmed.slice(0, 152)}…` : trimmed
   }
-  const cat = product.categoryName ? ` pour ${product.categoryName}` : ''
-  return `Achetez « ${product.ref} »${cat} chez Luxury Art_Tab. Tableau décoratif livré en Tunisie.`
+  const cat = product.categoryName?.trim()
+  if (cat) {
+    return `Tableau décoratif ${cat} ${product.ref} chez Luxury Art_Tab. Format et cadre au choix, livraison en Tunisie.`
+  }
+  return `Tableau décoratif ${product.ref} chez Luxury Art_Tab. Décoration murale, livraison en Tunisie.`
 }
 
-export function categorySeoDescription(categoryName: string, productCount: number): string {
-  if (productCount > 0) {
-    return `Découvrez nos tableaux ${categoryName.toLowerCase()} (${productCount} œuvre${productCount > 1 ? 's' : ''}). Décoration murale Luxury Art_Tab, livraison en Tunisie.`
-  }
-  return `Collection ${categoryName} — Luxury Art_Tab, tableaux et décoration murale en Tunisie.`
+export function categorySeoDescription(
+  categoryName: string,
+  productCount: number,
+  slug?: string,
+): string {
+  return categorySeoCopy(slug ?? categoryName, categoryName).description(productCount)
 }

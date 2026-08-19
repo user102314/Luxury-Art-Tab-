@@ -7,6 +7,7 @@ import com.luxart.ecommerce.model.entity.User;
 import com.luxart.ecommerce.model.enums.NewsStatut;
 import com.luxart.ecommerce.repository.NewsRepository;
 import com.luxart.ecommerce.repository.UserRepository;
+import com.luxart.ecommerce.service.ImageConversionService;
 import com.luxart.ecommerce.service.LocalFileStorageService;
 import com.luxart.ecommerce.service.NewsService;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class NewsServiceImpl implements NewsService {
 
     private final NewsRepository newsRepository;
     private final UserRepository userRepository;
+    private final ImageConversionService imageConversionService;
     private final LocalFileStorageService localFileStorageService;
 
     @Override
@@ -98,8 +100,14 @@ public class NewsServiceImpl implements NewsService {
         }
         News news = getEntity(id);
         try {
+            ImageConversionService.ConvertedImage converted =
+                    imageConversionService.convertToWebp(file.getBytes(), contentType, 1400);
             String path = localFileStorageService.buildNewsStoragePath(id, file.getOriginalFilename());
-            String url = localFileStorageService.upload(path, file.getBytes(), contentType);
+            if (!path.toLowerCase().endsWith(".webp")) {
+                int dot = path.lastIndexOf('.');
+                path = (dot > path.lastIndexOf('/') ? path.substring(0, dot) : path) + ".webp";
+            }
+            String url = localFileStorageService.upload(path, converted.data(), converted.contentType());
             news.setImageUrl(url);
             return toDto(newsRepository.save(news));
         } catch (java.io.IOException e) {

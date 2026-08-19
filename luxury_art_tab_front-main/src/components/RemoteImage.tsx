@@ -6,6 +6,8 @@ type RemoteImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'> & {
   src?: string | null
   /** Eager + high fetch priority (hero / LCP). */
   priority?: boolean
+  /** Largeur cible pour la miniature API (`/api/media/thumb`). */
+  widthHint?: number
 }
 
 /**
@@ -16,11 +18,12 @@ export function RemoteImage({
   alt = '',
   className,
   priority = false,
+  widthHint,
   loading,
   decoding,
   ...props
 }: RemoteImageProps) {
-  const resolved = resolveImageSrc(src)
+  const resolved = resolveImageSrc(src, widthHint)
   return (
     <img
       src={resolved}

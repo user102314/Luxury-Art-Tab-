@@ -20,7 +20,7 @@ import { queryKeys } from '@/lib/queryKeys'
 import { REFETCH_INTERVAL } from '@/lib/queryClient'
 import { useProduct, useProducts } from '@/hooks/useStorefrontQueries'
 import { useProductTracking } from '@/hooks/useProductTracking'
-import { getProductImage, getProductImages, getSimulationImage, resolveImageSrc } from '@/lib/images'
+import { getProductImage, getProductImages, getSimulationImage, resolveImageSrc, IMAGE_WIDTH } from '@/lib/images'
 import {
   displayDimension,
   formatPrice,
@@ -36,6 +36,8 @@ import type { Category } from '@/types/api'
 import {
   buildSeoHead,
   productSeoDescription,
+  productSeoTitle,
+  productVisibleTitle,
   productSchema,
   breadcrumbSchema,
   preferredCategorySlug,
@@ -71,7 +73,7 @@ export const Route = createFileRoute('/products/$id')({
       description: product.description,
       categoryName: category?.nom,
     })
-    const image = getProductImage(product)
+    const image = getProductImages(product)[0]
     const crumbs = [
       { name: 'Accueil', path: '/' },
       { name: 'Produits', path: '/products' },
@@ -85,7 +87,7 @@ export const Route = createFileRoute('/products/$id')({
     crumbs.push({ name: product.ref, path: `/products/${product.id}` })
 
     return buildSeoHead({
-      title: `${product.ref} | Tableau et décoration | Luxury Art_Tab`,
+      title: productSeoTitle(product.ref, category?.nom),
       description,
       path: `/products/${product.id}`,
       image,
@@ -94,6 +96,7 @@ export const Route = createFileRoute('/products/$id')({
         productSchema({
           id: product.id,
           ref: product.ref,
+          name: productVisibleTitle(product.ref, category?.nom),
           description,
           image,
           prix: Number(product.prix ?? 0),
@@ -175,11 +178,11 @@ function ProductDetailPage() {
     if (!catalog || !cadreId || !couleurId) return null
     const cadre = catalog.cadres?.find((c) => c.id === cadreId)
     const color = cadre?.couleurs?.find((c) => c.id === couleurId)
-    return color?.imageUrl ? resolveImageSrc(color.imageUrl) : null
+    return color?.imageUrl ? resolveImageSrc(color.imageUrl, IMAGE_WIDTH.color) : null
   }, [catalog, cadreId, couleurId])
 
   const galleryImages = useMemo(() => {
-    const productImgs = product ? getProductImages(product) : []
+    const productImgs = product ? getProductImages(product, IMAGE_WIDTH.gallery) : []
     if (!selectedCouleurImage) return productImgs
     return [selectedCouleurImage, ...productImgs.filter((src) => src !== selectedCouleurImage)]
   }, [product, selectedCouleurImage])
@@ -267,7 +270,7 @@ function ProductDetailPage() {
   const categoryPath = categoryMeta
     ? `/category/${preferredCategorySlug(categoryMeta)}`
     : null
-  const image = getProductImage(product)
+  const image = getProductImage(product, IMAGE_WIDTH.gallery)
   const dims = pricedDimensions(product, catalog)
   const cadres = catalog && dimensionId ? availableCadres(catalog, dimensionId) : []
   const selectedDim = dims.find((d) => d.id === dimensionId) ?? dims[0]
@@ -392,7 +395,7 @@ function ProductDetailPage() {
         <div className="grid min-w-0 items-start gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,420px)] lg:gap-12">
           <ProductImageGallery
             images={galleryImages}
-            alt={product.ref}
+            alt={productVisibleTitle(product.ref, categoryName)}
             liked={liked}
             onLike={handleLike}
             simulationImageUrl={simulationImage}
@@ -416,8 +419,12 @@ function ProductDetailPage() {
             </p>
 
             <h1 className="mt-5 break-words font-display text-xl font-bold leading-snug text-foreground sm:text-2xl md:text-3xl">
-              {product.ref}
+              {productVisibleTitle(product.ref, categoryName)}
             </h1>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              {product.description?.trim() ||
+                `Tableau décoratif mural${categoryName ? ` ${categoryName.toLowerCase()}` : ''} à commander en ligne. Choisissez la dimension et le cadre ; livraison en Tunisie.`}
+            </p>
 
             <div className="mt-3 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 text-sm">
               {categoryName && (
@@ -507,7 +514,7 @@ function ProductDetailPage() {
                   <p className="mb-2 text-sm font-semibold">Couleurs du cadre</p>
                   <div className="flex gap-3 overflow-x-auto pb-1">
                     {couleurs.map((color) => {
-                      const src = color.imageUrl ? resolveImageSrc(color.imageUrl) : null
+                      const src = color.imageUrl ? resolveImageSrc(color.imageUrl, IMAGE_WIDTH.color) : null
                       const selected = selectedCouleur?.id === color.id
                       return (
                         <button
@@ -603,9 +610,6 @@ function ProductDetailPage() {
               </button>
               {detailsOpen && (
                 <div className="space-y-3 pb-5 text-sm leading-relaxed text-muted-foreground">
-                  {product.description?.trim() && (
-                    <p className="whitespace-pre-wrap text-foreground/80">{product.description.trim()}</p>
-                  )}
                   <ul className="list-inside list-disc space-y-1">
                     {product.ref && <li>Référence : {product.ref}</li>}
                     <li>Catégorie : {categoryName ?? '—'}</li>
