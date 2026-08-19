@@ -1,5 +1,5 @@
 import type { ImgHTMLAttributes } from 'react'
-import { resolveImageSrc } from '@/lib/images'
+import { resolveImageSrc, fallbackFromBrokenImage } from '@/lib/images'
 import { cn } from '@/lib/utils'
 
 type RemoteImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'> & {
@@ -33,6 +33,10 @@ export function RemoteImage({
       decoding={decoding ?? 'async'}
       fetchPriority={priority ? 'high' : 'auto'}
       {...props}
+      onError={(event) => {
+        props.onError?.(event)
+        fallbackFromBrokenImage(event)
+      }}
     />
   )
 }

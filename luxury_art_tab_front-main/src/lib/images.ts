@@ -15,7 +15,9 @@ export const IMAGE_WIDTH = {
 /**
  * Résout une URL média backend (`/uploads/...`) vers l'origine API HTTPS.
  * Les blob:/data:/http(s): restent inchangées.
- * `width` redirige vers `/api/media/thumb` (WebP redimensionné).
+ *
+ * Les miniatures `/api/media/thumb` ne sont utilisées que si `VITE_IMAGE_THUMBS=true`
+ * (le JAR production doit exposer cet endpoint, sinon toutes les images cassent).
  */
 export function resolveImageSrc(url?: string | null, width?: number): string {
   if (!url) return '/placeholder-art.svg'
@@ -37,7 +39,29 @@ export function resolveImageSrc(url?: string | null, width?: number): string {
   }
 
   if (!width || width <= 0) return absolute
+  if (import.meta.env.VITE_IMAGE_THUMBS !== 'true') return absolute
   return withThumbWidth(absolute, width)
+}
+
+/** Si une miniature API échoue, revenir au fichier /uploads d’origine. */
+export function originalUploadSrc(url: string): string {
+  if (!url.includes('/api/media/thumb')) return url
+  try {
+    const parsed = new URL(url, 'https://luxury-art.tn')
+    const src = parsed.searchParams.get('src')
+    if (!src) return url
+    return resolveImageSrc(src)
+  } catch {
+    return url
+  }
+}
+
+export function fallbackFromBrokenImage(event: { currentTarget: HTMLImageElement }) {
+  const img = event.currentTarget
+  const original = originalUploadSrc(img.currentSrc || img.src)
+  if (!original || original === img.src) return
+  img.onerror = null
+  img.src = original
 }
 
 function withThumbWidth(url: string, width: number): string {

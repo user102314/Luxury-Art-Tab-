@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import type { Product } from '@/types/api'
-import { getProductImage, getSimulationImage, hasSimulationImage, IMAGE_WIDTH } from '@/lib/images'
+import { getProductImage, getSimulationImage, hasSimulationImage, IMAGE_WIDTH, fallbackFromBrokenImage } from '@/lib/images'
 import { productVisibleTitle } from '@/lib/seo'
 import { formatStartingPrice } from '@/lib/pricing'
 import { useFavorites } from '@/context/FavoritesContext'
@@ -64,6 +64,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
               alt={productVisibleTitle(product.ref, categoryName)}
               loading="lazy"
               decoding="async"
+              onError={fallbackFromBrokenImage}
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
             />
           </div>
