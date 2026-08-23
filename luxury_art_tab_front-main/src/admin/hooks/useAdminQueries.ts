@@ -7,7 +7,7 @@ import {
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryKeys'
 import { REFETCH_INTERVAL } from '../lib/queryClient'
-import type { TopProductCriteria } from '../types'
+import type { TopProductCriteria, AdminActionType } from '../types'
 
 export function useOrders() {
   return useQuery({
@@ -205,6 +205,29 @@ export function useAllProductStats(from: string, to: string) {
   })
 }
 
+export function useAuditLogs(
+  from: string,
+  to: string,
+  actionType?: AdminActionType,
+  search?: string,
+) {
+  return useQuery({
+    queryKey: queryKeys.auditLogs(from, to, actionType, search),
+    queryFn: () => api.getAuditLogs({ from, to, actionType, search }),
+    enabled: Boolean(from && to),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useAuditStats(from: string, to: string) {
+  return useQuery({
+    queryKey: queryKeys.auditStats(from, to),
+    queryFn: () => api.getAuditStats(from, to),
+    enabled: Boolean(from && to),
+    placeholderData: keepPreviousData,
+  })
+}
+
 export function useInvalidateAdmin() {
   const qc = useQueryClient()
   return {
@@ -300,6 +323,23 @@ export function prefetchRoute(qc: QueryClient, path: string) {
       qc.prefetchQuery({ queryKey: queryKeys.loyaltyPrograms, queryFn: api.getLoyaltyPrograms, ...opts })
       qc.prefetchQuery({ queryKey: queryKeys.loyaltyClients, queryFn: api.getLoyaltyClients, ...opts })
       break
+    case '/admin/audit-logs': {
+      const to = new Date().toISOString().slice(0, 10)
+      const fromDate = new Date()
+      fromDate.setDate(fromDate.getDate() - 6)
+      const from = fromDate.toISOString().slice(0, 10)
+      qc.prefetchQuery({
+        queryKey: queryKeys.auditLogs(from, to),
+        queryFn: () => api.getAuditLogs({ from, to }),
+        ...opts,
+      })
+      qc.prefetchQuery({
+        queryKey: queryKeys.auditStats(from, to),
+        queryFn: () => api.getAuditStats(from, to),
+        ...opts,
+      })
+      break
+    }
   }
 }
 

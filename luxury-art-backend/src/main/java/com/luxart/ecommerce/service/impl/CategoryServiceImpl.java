@@ -5,18 +5,22 @@ import com.luxart.ecommerce.dto.CategoryShowcaseDto;
 import com.luxart.ecommerce.exception.ResourceNotFoundException;
 import com.luxart.ecommerce.model.entity.Category;
 import com.luxart.ecommerce.model.entity.Product;
+import com.luxart.ecommerce.model.enums.AdminActionType;
 import com.luxart.ecommerce.model.enums.ProductStatut;
 import com.luxart.ecommerce.repository.CategoryRepository;
 import com.luxart.ecommerce.repository.ProductImageRepository;
 import com.luxart.ecommerce.repository.ProductRepository;
 import com.luxart.ecommerce.service.CategoryService;
 import com.luxart.ecommerce.service.ProductService;
+import com.luxart.ecommerce.service.AdminAuditService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +30,7 @@ public class CategoryServiceImpl implements CategoryService {
     private final ProductRepository productRepository;
     private final ProductImageRepository productImageRepository;
     private final ProductService productService;
+    private final AdminAuditService adminAuditService;
 
     @Override
     public List<CategoryDto> findAll() {
@@ -64,7 +69,21 @@ public class CategoryServiceImpl implements CategoryService {
                 .nom(dto.getNom())
                 .description(dto.getDescription())
                 .build();
-        return toDto(categoryRepository.save(category));
+        Category saved = categoryRepository.save(category);
+        CategoryDto result = toDto(saved);
+        adminAuditService.logSuccess(
+                AdminActionType.CATEGORY_CREATE,
+                "CATEGORY",
+                saved.getId(),
+                null,
+                saved.getNom(),
+                null,
+                null,
+                dto,
+                result,
+                HttpStatus.CREATED.value()
+        );
+        return result;
     }
 
     @Override
@@ -72,12 +91,40 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = getEntity(id);
         category.setNom(dto.getNom());
         category.setDescription(dto.getDescription());
-        return toDto(categoryRepository.save(category));
+        Category saved = categoryRepository.save(category);
+        CategoryDto result = toDto(saved);
+        adminAuditService.logSuccess(
+                AdminActionType.CATEGORY_UPDATE,
+                "CATEGORY",
+                saved.getId(),
+                null,
+                saved.getNom(),
+                null,
+                null,
+                dto,
+                result,
+                HttpStatus.OK.value()
+        );
+        return result;
     }
 
     @Override
     public void delete(Long id) {
-        categoryRepository.delete(getEntity(id));
+        Category category = getEntity(id);
+        String name = category.getNom();
+        categoryRepository.delete(category);
+        adminAuditService.logSuccess(
+                AdminActionType.CATEGORY_DELETE,
+                "CATEGORY",
+                id,
+                null,
+                name,
+                null,
+                null,
+                Map.of("id", id, "nom", name),
+                Map.of("deleted", true),
+                HttpStatus.NO_CONTENT.value()
+        );
     }
 
     private Category getEntity(Long id) {

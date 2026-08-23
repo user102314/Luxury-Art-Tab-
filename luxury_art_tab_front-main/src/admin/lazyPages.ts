@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 
 export const AdminAnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
+export const AdminAuditLogsPage = lazy(() => import('./pages/AuditLogsPage'))
 export const AdminCategoriesPage = lazy(() => import('./pages/CategoriesPage'))
 export const AdminClientsPage = lazy(() => import('./pages/ClientsPage'))
 export const AdminFacebookOrdersPage = lazy(() => import('./pages/FacebookOrdersPage'))

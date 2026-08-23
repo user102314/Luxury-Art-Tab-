@@ -36,8 +36,26 @@ import type {
   ColissimoSyncStatus,
   ColissimoTracking,
   ColissimoTrackingSummary,
+  AdminAuditLog,
+  AdminAuditStats,
+  AdminActionType,
 } from '../types'
 import { getApiBase } from '@/lib/apiBase'
+
+function adminActorHeaders(): Record<string, string> {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = localStorage.getItem('luxury_art_admin_user')
+    if (!raw) return {}
+    const user = JSON.parse(raw) as User
+    return {
+      'X-Admin-Email': user.email,
+      'X-Admin-Name': user.nom,
+    }
+  } catch {
+    return {}
+  }
+}
 
 /** Commandes comptabilisées dans le chiffre d'affaires (livrées uniquement) */
 export const REVENUE_ORDER_STATUSES: OrderStatut[] = ['LIVREE']
@@ -73,7 +91,11 @@ async function parseError(res: Response): Promise<string> {
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${getApiBase()}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...adminActorHeaders(),
+      ...options?.headers,
+    },
     ...options,
   })
   if (!res.ok) {
@@ -174,6 +196,7 @@ export const api = {
     formData.append('file', file)
     const res = await fetch(`${getApiBase()}/catalog/couleurs/${couleurId}/image`, {
       method: 'POST',
+      headers: adminActorHeaders(),
       body: formData,
     })
     if (!res.ok) {
@@ -193,6 +216,7 @@ export const api = {
     files.forEach((f) => formData.append('files', f))
     const res = await fetch(`${getApiBase()}/products/${productId}/images`, {
       method: 'POST',
+      headers: adminActorHeaders(),
       body: formData,
     })
     if (!res.ok) {
@@ -345,6 +369,25 @@ export const api = {
 
   getAllProductStats: (from: string, to: string) =>
     request<ProductStats[]>(`/admin/dashboard/product-stats?from=${from}&to=${to}`),
+
+  getAuditLogs: (params: {
+    from: string
+    to: string
+    actionType?: AdminActionType
+    entityType?: string
+    productRef?: string
+    search?: string
+  }) => {
+    const q = new URLSearchParams({ from: params.from, to: params.to })
+    if (params.actionType) q.set('actionType', params.actionType)
+    if (params.entityType) q.set('entityType', params.entityType)
+    if (params.productRef) q.set('productRef', params.productRef)
+    if (params.search) q.set('search', params.search)
+    return request<AdminAuditLog[]>(`/admin/audit-logs?${q.toString()}`)
+  },
+
+  getAuditStats: (from: string, to: string) =>
+    request<AdminAuditStats>(`/admin/audit-logs/stats?from=${from}&to=${to}`),
 }
 
 export function computeRevenue(orders: Order[]) {

@@ -41,6 +41,7 @@ import { Route as AdminAppInstagramOrdersRouteImport } from './routes/admin/_app
 import { Route as AdminAppFacebookOrdersRouteImport } from './routes/admin/_app/facebook-orders'
 import { Route as AdminAppClientsRouteImport } from './routes/admin/_app/clients'
 import { Route as AdminAppCategoriesRouteImport } from './routes/admin/_app/categories'
+import { Route as AdminAppAuditLogsRouteImport } from './routes/admin/_app/audit-logs'
 import { Route as AdminAppAnalyticsRouteImport } from './routes/admin/_app/analytics'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -202,6 +203,11 @@ const AdminAppCategoriesRoute = AdminAppCategoriesRouteImport.update({
   path: '/categories',
   getParentRoute: () => AdminAppRouteRoute,
 } as any)
+const AdminAppAuditLogsRoute = AdminAppAuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => AdminAppRouteRoute,
+} as any)
 const AdminAppAnalyticsRoute = AdminAppAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -225,6 +231,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/products/': typeof ProductsIndexRoute
   '/admin/analytics': typeof AdminAppAnalyticsRoute
+  '/admin/audit-logs': typeof AdminAppAuditLogsRoute
   '/admin/categories': typeof AdminAppCategoriesRoute
   '/admin/clients': typeof AdminAppClientsRoute
   '/admin/facebook-orders': typeof AdminAppFacebookOrdersRoute
@@ -258,6 +265,7 @@ export interface FileRoutesByTo {
   '/products/$id': typeof ProductsIdRoute
   '/products': typeof ProductsIndexRoute
   '/admin/analytics': typeof AdminAppAnalyticsRoute
+  '/admin/audit-logs': typeof AdminAppAuditLogsRoute
   '/admin/categories': typeof AdminAppCategoriesRoute
   '/admin/clients': typeof AdminAppClientsRoute
   '/admin/facebook-orders': typeof AdminAppFacebookOrdersRoute
@@ -294,6 +302,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/products/': typeof ProductsIndexRoute
   '/admin/_app/analytics': typeof AdminAppAnalyticsRoute
+  '/admin/_app/audit-logs': typeof AdminAppAuditLogsRoute
   '/admin/_app/categories': typeof AdminAppCategoriesRoute
   '/admin/_app/clients': typeof AdminAppClientsRoute
   '/admin/_app/facebook-orders': typeof AdminAppFacebookOrdersRoute
@@ -330,6 +339,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/products/'
     | '/admin/analytics'
+    | '/admin/audit-logs'
     | '/admin/categories'
     | '/admin/clients'
     | '/admin/facebook-orders'
@@ -363,6 +373,7 @@ export interface FileRouteTypes {
     | '/products/$id'
     | '/products'
     | '/admin/analytics'
+    | '/admin/audit-logs'
     | '/admin/categories'
     | '/admin/clients'
     | '/admin/facebook-orders'
@@ -398,6 +409,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/products/'
     | '/admin/_app/analytics'
+    | '/admin/_app/audit-logs'
     | '/admin/_app/categories'
     | '/admin/_app/clients'
     | '/admin/_app/facebook-orders'
@@ -658,6 +670,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppCategoriesRouteImport
       parentRoute: typeof AdminAppRouteRoute
     }
+    '/admin/_app/audit-logs': {
+      id: '/admin/_app/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/admin/audit-logs'
+      preLoaderRoute: typeof AdminAppAuditLogsRouteImport
+      parentRoute: typeof AdminAppRouteRoute
+    }
     '/admin/_app/analytics': {
       id: '/admin/_app/analytics'
       path: '/analytics'
@@ -670,6 +689,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminAppRouteRouteChildren {
   AdminAppAnalyticsRoute: typeof AdminAppAnalyticsRoute
+  AdminAppAuditLogsRoute: typeof AdminAppAuditLogsRoute
   AdminAppCategoriesRoute: typeof AdminAppCategoriesRoute
   AdminAppClientsRoute: typeof AdminAppClientsRoute
   AdminAppFacebookOrdersRoute: typeof AdminAppFacebookOrdersRoute
@@ -690,6 +710,7 @@ interface AdminAppRouteRouteChildren {
 
 const AdminAppRouteRouteChildren: AdminAppRouteRouteChildren = {
   AdminAppAnalyticsRoute: AdminAppAnalyticsRoute,
+  AdminAppAuditLogsRoute: AdminAppAuditLogsRoute,
   AdminAppCategoriesRoute: AdminAppCategoriesRoute,
   AdminAppClientsRoute: AdminAppClientsRoute,
   AdminAppFacebookOrdersRoute: AdminAppFacebookOrdersRoute,

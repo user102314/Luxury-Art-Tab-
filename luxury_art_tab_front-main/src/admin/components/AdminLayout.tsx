@@ -21,6 +21,7 @@ import {
   Truck,
   Ruler,
   Tags,
+  ScrollText,
 } from 'lucide-react'
 import { useAdminAuth } from '../context/AdminAuthContext'
 import { prefetchEssentials, prefetchRoute } from '../hooks/useAdminQueries'
@@ -33,6 +34,7 @@ import { PageSkeleton } from './QueryStatusBar'
 const nav = [
   { to: '/admin/revenue', icon: TrendingUp, label: 'Revenus' },
   { to: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
+  { to: '/admin/audit-logs', icon: ScrollText, label: 'Journal audit' },
   { to: '/admin/orders', icon: ShoppingBag, label: 'Commandes' },
   { to: '/admin/tracking', icon: Truck, label: 'Suivi livraisons' },
   { to: '/admin/notifications', icon: Bell, label: 'Notifications' },

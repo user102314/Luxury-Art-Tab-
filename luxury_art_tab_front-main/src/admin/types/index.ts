@@ -483,3 +483,57 @@ export interface AdminNotification {
   createdAt?: string
   read?: boolean
 }
+
+export type AdminActionType =
+  | 'PRODUCT_CREATE'
+  | 'PRODUCT_UPDATE'
+  | 'PRODUCT_DELETE'
+  | 'PRODUCT_IMAGE_UPLOAD'
+  | 'PRODUCT_IMAGE_DELETE'
+  | 'CATEGORY_CREATE'
+  | 'CATEGORY_UPDATE'
+  | 'CATEGORY_DELETE'
+
+export interface AdminAuditLog {
+  id: number
+  actionType: AdminActionType
+  entityType: string
+  entityId?: number
+  productRef?: string
+  categoryName?: string
+  imageUrl?: string
+  imageStoragePath?: string
+  requestPath?: string
+  httpMethod?: string
+  httpStatus?: number
+  success: boolean
+  requestPayload?: string
+  responsePayload?: string
+  errorMessage?: string
+  adminEmail?: string
+  adminName?: string
+  clientIp?: string
+  createdAt: string
+}
+
+export interface DuplicateRefAlert {
+  productRef: string
+  count: number
+}
+
+export interface ProductActivity {
+  productRef: string
+  productId?: number
+  uploadCount: number
+  updateCount: number
+  createCount: number
+}
+
+export interface AdminAuditStats {
+  totalLogs: number
+  failureCount: number
+  byActionType: Record<string, number>
+  duplicateCreates: DuplicateRefAlert[]
+  duplicateUploads: DuplicateRefAlert[]
+  topProductActivity: ProductActivity[]
+}

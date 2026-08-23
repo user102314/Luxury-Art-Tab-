@@ -1,0 +1,12 @@
+package com.luxart.ecommerce.model.enums;
+
+public enum AdminActionType {
+    PRODUCT_CREATE,
+    PRODUCT_UPDATE,
+    PRODUCT_DELETE,
+    PRODUCT_IMAGE_UPLOAD,
+    PRODUCT_IMAGE_DELETE,
+    CATEGORY_CREATE,
+    CATEGORY_UPDATE,
+    CATEGORY_DELETE
+}

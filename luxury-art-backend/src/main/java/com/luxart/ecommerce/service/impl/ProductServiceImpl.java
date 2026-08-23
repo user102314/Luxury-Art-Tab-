@@ -7,10 +7,12 @@ import com.luxart.ecommerce.exception.ResourceNotFoundException;
 import com.luxart.ecommerce.model.entity.Category;
 import com.luxart.ecommerce.model.entity.Product;
 import com.luxart.ecommerce.model.entity.TableauDimension;
+import com.luxart.ecommerce.model.enums.AdminActionType;
 import com.luxart.ecommerce.repository.CategoryRepository;
 import com.luxart.ecommerce.repository.ProductImageRepository;
 import com.luxart.ecommerce.repository.ProductRepository;
 import com.luxart.ecommerce.repository.TableauDimensionRepository;
+import com.luxart.ecommerce.service.AdminAuditService;
 import com.luxart.ecommerce.service.CatalogPricingService;
 import com.luxart.ecommerce.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductImageRepository productImageRepository;
     private final TableauDimensionRepository dimensionRepository;
     private final CatalogPricingService catalogPricingService;
+    private final AdminAuditService adminAuditService;
 
     @Override
     @Transactional(readOnly = true)
@@ -50,32 +53,127 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public ProductDto create(ProductDto dto) {
-        Product product = Product.builder()
-                .ref(dto.getRef().trim())
-                .description(dto.getDescription())
-                .categorie(getCategory(dto.getCategoryId()))
-                .statut(dto.getStatut())
-                .dimensions(resolveDimensions(dto.getDimensionIds()))
-                .build();
-        return toDto(productRepository.save(product), catalogPricingService.minPriceByDimension());
+        try {
+            Product product = Product.builder()
+                    .ref(dto.getRef().trim())
+                    .description(dto.getDescription())
+                    .categorie(getCategory(dto.getCategoryId()))
+                    .statut(dto.getStatut())
+                    .dimensions(resolveDimensions(dto.getDimensionIds()))
+                    .build();
+            Product saved = productRepository.save(product);
+            ProductDto result = toDto(saved, catalogPricingService.minPriceByDimension());
+            adminAuditService.logSuccess(
+                    AdminActionType.PRODUCT_CREATE,
+                    "PRODUCT",
+                    saved.getId(),
+                    saved.getRef(),
+                    saved.getCategorie().getNom(),
+                    null,
+                    null,
+                    dto,
+                    result,
+                    HttpStatus.CREATED.value()
+            );
+            return result;
+        } catch (RuntimeException ex) {
+            adminAuditService.logFailure(
+                    AdminActionType.PRODUCT_CREATE,
+                    "PRODUCT",
+                    null,
+                    dto.getRef(),
+                    null,
+                    null,
+                    null,
+                    dto,
+                    ex instanceof ResponseStatusException rse
+                            ? rse.getStatusCode().value()
+                            : HttpStatus.BAD_REQUEST.value(),
+                    ex.getMessage()
+            );
+            throw ex;
+        }
     }
 
     @Override
     @Transactional
     public ProductDto update(Long id, ProductDto dto) {
-        Product product = getEntity(id);
-        product.setRef(dto.getRef().trim());
-        product.setDescription(dto.getDescription());
-        product.setCategorie(getCategory(dto.getCategoryId()));
-        product.setStatut(dto.getStatut());
-        product.getDimensions().clear();
-        product.getDimensions().addAll(resolveDimensions(dto.getDimensionIds()));
-        return toDto(productRepository.save(product), catalogPricingService.minPriceByDimension());
+        try {
+            Product product = getEntity(id);
+            product.setRef(dto.getRef().trim());
+            product.setDescription(dto.getDescription());
+            product.setCategorie(getCategory(dto.getCategoryId()));
+            product.setStatut(dto.getStatut());
+            product.getDimensions().clear();
+            product.getDimensions().addAll(resolveDimensions(dto.getDimensionIds()));
+            Product saved = productRepository.save(product);
+            ProductDto result = toDto(saved, catalogPricingService.minPriceByDimension());
+            adminAuditService.logSuccess(
+                    AdminActionType.PRODUCT_UPDATE,
+                    "PRODUCT",
+                    saved.getId(),
+                    saved.getRef(),
+                    saved.getCategorie().getNom(),
+                    saved.getImageUrl(),
+                    null,
+                    dto,
+                    result,
+                    HttpStatus.OK.value()
+            );
+            return result;
+        } catch (RuntimeException ex) {
+            adminAuditService.logFailure(
+                    AdminActionType.PRODUCT_UPDATE,
+                    "PRODUCT",
+                    id,
+                    dto.getRef(),
+                    null,
+                    null,
+                    null,
+                    dto,
+                    ex instanceof ResponseStatusException rse
+                            ? rse.getStatusCode().value()
+                            : HttpStatus.BAD_REQUEST.value(),
+                    ex.getMessage()
+            );
+            throw ex;
+        }
     }
 
     @Override
     public void delete(Long id) {
-        productRepository.delete(getEntity(id));
+        Product product = getEntity(id);
+        String ref = product.getRef();
+        String category = product.getCategorie() != null ? product.getCategorie().getNom() : null;
+        try {
+            productRepository.delete(product);
+            adminAuditService.logSuccess(
+                    AdminActionType.PRODUCT_DELETE,
+                    "PRODUCT",
+                    id,
+                    ref,
+                    category,
+                    product.getImageUrl(),
+                    null,
+                    Map.of("id", id, "ref", ref),
+                    Map.of("deleted", true),
+                    HttpStatus.NO_CONTENT.value()
+            );
+        } catch (RuntimeException ex) {
+            adminAuditService.logFailure(
+                    AdminActionType.PRODUCT_DELETE,
+                    "PRODUCT",
+                    id,
+                    ref,
+                    category,
+                    product.getImageUrl(),
+                    null,
+                    Map.of("id", id, "ref", ref),
+                    HttpStatus.BAD_REQUEST.value(),
+                    ex.getMessage()
+            );
+            throw ex;
+        }
     }
 
     private List<TableauDimension> resolveDimensions(List<Long> ids) {

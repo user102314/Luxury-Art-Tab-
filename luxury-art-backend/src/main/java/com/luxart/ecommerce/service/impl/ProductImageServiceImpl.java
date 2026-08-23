@@ -4,8 +4,10 @@ import com.luxart.ecommerce.dto.ProductImageDto;
 import com.luxart.ecommerce.exception.ResourceNotFoundException;
 import com.luxart.ecommerce.model.entity.Product;
 import com.luxart.ecommerce.model.entity.ProductImage;
+import com.luxart.ecommerce.model.enums.AdminActionType;
 import com.luxart.ecommerce.repository.ProductImageRepository;
 import com.luxart.ecommerce.repository.ProductRepository;
+import com.luxart.ecommerce.service.AdminAuditService;
 import com.luxart.ecommerce.service.ImageConversionService;
 import com.luxart.ecommerce.service.LocalFileStorageService;
 import com.luxart.ecommerce.service.ProductImageService;
@@ -18,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +30,7 @@ public class ProductImageServiceImpl implements ProductImageService {
     private final ProductImageRepository productImageRepository;
     private final LocalFileStorageService localFileStorageService;
     private final ImageConversionService imageConversionService;
+    private final AdminAuditService adminAuditService;
 
     @Override
     public List<ProductImageDto> findByProductId(Long productId) {
@@ -41,7 +45,20 @@ public class ProductImageServiceImpl implements ProductImageService {
                 .orElseThrow(() -> new ResourceNotFoundException("Produit introuvable: " + productId));
 
         if (files == null || files.length == 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Aucun fichier fourni");
+            ResponseStatusException ex = new ResponseStatusException(HttpStatus.BAD_REQUEST, "Aucun fichier fourni");
+            adminAuditService.logFailure(
+                    AdminActionType.PRODUCT_IMAGE_UPLOAD,
+                    "PRODUCT_IMAGE",
+                    productId,
+                    product.getRef(),
+                    categoryName(product),
+                    null,
+                    null,
+                    Map.of("productId", productId, "fileCount", 0),
+                    HttpStatus.BAD_REQUEST.value(),
+                    ex.getReason()
+            );
+            throw ex;
         }
 
         int currentCount = productImageRepository.findByProductIdOrderByOrdreAsc(productId).size();
@@ -53,8 +70,10 @@ public class ProductImageServiceImpl implements ProductImageService {
 
             String contentType = file.getContentType() != null ? file.getContentType() : "image/jpeg";
             if (!contentType.startsWith("image/")) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                ResponseStatusException ex = new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "Seules les images sont acceptées: " + file.getOriginalFilename());
+                auditUploadFailure(product, file.getOriginalFilename(), ex);
+                throw ex;
             }
 
             try {
@@ -72,12 +91,33 @@ public class ProductImageServiceImpl implements ProductImageService {
                         .ordre(currentCount + i)
                         .build();
 
-                uploaded.add(toDto(productImageRepository.save(image)));
+                ProductImageDto dto = toDto(productImageRepository.save(image));
+                uploaded.add(dto);
+                adminAuditService.logSuccess(
+                        AdminActionType.PRODUCT_IMAGE_UPLOAD,
+                        "PRODUCT_IMAGE",
+                        productId,
+                        product.getRef(),
+                        categoryName(product),
+                        dto.getUrl(),
+                        dto.getStoragePath(),
+                        Map.of(
+                                "productId", productId,
+                                "originalFilename", file.getOriginalFilename(),
+                                "contentType", contentType,
+                                "sizeBytes", file.getSize()
+                        ),
+                        dto,
+                        HttpStatus.CREATED.value()
+                );
             } catch (ResponseStatusException ex) {
+                auditUploadFailure(product, file.getOriginalFilename(), ex);
                 throw ex;
             } catch (Exception ex) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                ResponseStatusException wrapped = new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                         "Erreur upload: " + ex.getMessage());
+                auditUploadFailure(product, file.getOriginalFilename(), wrapped);
+                throw wrapped;
             }
         }
 
@@ -92,13 +132,65 @@ public class ProductImageServiceImpl implements ProductImageService {
                 .orElseThrow(() -> new ResourceNotFoundException("Image introuvable: " + imageId));
 
         Product product = image.getProduct();
+        String ref = product.getRef();
+        String url = image.getUrl();
+        String storagePath = image.getStoragePath();
+        Long productId = product.getId();
+
         try {
-            localFileStorageService.delete(image.getStoragePath());
-        } catch (Exception ignored) {
-            // continue DB delete even if file delete fails
+            try {
+                localFileStorageService.delete(image.getStoragePath());
+            } catch (Exception ignored) {
+                // continue DB delete even if file delete fails
+            }
+            productImageRepository.delete(image);
+            syncPrimaryImageUrl(product);
+            adminAuditService.logSuccess(
+                    AdminActionType.PRODUCT_IMAGE_DELETE,
+                    "PRODUCT_IMAGE",
+                    productId,
+                    ref,
+                    categoryName(product),
+                    url,
+                    storagePath,
+                    Map.of("imageId", imageId, "productId", productId),
+                    Map.of("deleted", true, "imageId", imageId),
+                    HttpStatus.NO_CONTENT.value()
+            );
+        } catch (RuntimeException ex) {
+            adminAuditService.logFailure(
+                    AdminActionType.PRODUCT_IMAGE_DELETE,
+                    "PRODUCT_IMAGE",
+                    productId,
+                    ref,
+                    categoryName(product),
+                    url,
+                    storagePath,
+                    Map.of("imageId", imageId, "productId", productId),
+                    HttpStatus.BAD_REQUEST.value(),
+                    ex.getMessage()
+            );
+            throw ex;
         }
-        productImageRepository.delete(image);
-        syncPrimaryImageUrl(product);
+    }
+
+    private void auditUploadFailure(Product product, String filename, ResponseStatusException ex) {
+        adminAuditService.logFailure(
+                AdminActionType.PRODUCT_IMAGE_UPLOAD,
+                "PRODUCT_IMAGE",
+                product.getId(),
+                product.getRef(),
+                categoryName(product),
+                null,
+                null,
+                Map.of("productId", product.getId(), "originalFilename", filename),
+                ex.getStatusCode().value(),
+                ex.getReason()
+        );
+    }
+
+    private String categoryName(Product product) {
+        return product.getCategorie() != null ? product.getCategorie().getNom() : null;
     }
 
     private void syncPrimaryImageUrl(Product product) {
