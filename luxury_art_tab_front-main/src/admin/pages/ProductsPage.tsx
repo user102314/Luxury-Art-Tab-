@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   BarChart,
@@ -125,8 +126,6 @@ export default function ProductsPage() {
   })
 
   const [showCategoryForm, setShowCategoryForm] = useState(false)
-  const [showCategoryManager, setShowCategoryManager] = useState(false)
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [categoryNom, setCategoryNom] = useState('')
   const [categoryDesc, setCategoryDesc] = useState('')
   const [categoryError, setCategoryError] = useState('')
@@ -222,16 +221,7 @@ export default function ProductsPage() {
     setCategoryNom('')
     setCategoryDesc('')
     setCategoryError('')
-    setEditingCategory(null)
     setShowCategoryForm(false)
-  }
-
-  const startEditCategory = (category: Category) => {
-    setEditingCategory(category)
-    setCategoryNom(category.nom)
-    setCategoryDesc(category.description ?? '')
-    setCategoryError('')
-    setShowCategoryForm(true)
   }
 
   const handleSaveCategory = async (e?: React.FormEvent) => {
@@ -242,11 +232,7 @@ export default function ProductsPage() {
       setCategoryError('Le nom de la catégorie est obligatoire')
       return
     }
-    const duplicate = categories.some(
-      (c) =>
-        c.nom.toLowerCase() === nom.toLowerCase() &&
-        c.id !== editingCategory?.id,
-    )
+    const duplicate = categories.some((c) => c.nom.toLowerCase() === nom.toLowerCase())
     if (duplicate) {
       setCategoryError('Cette catégorie existe déjà')
       return
@@ -254,58 +240,18 @@ export default function ProductsPage() {
 
     setSavingCategory(true)
     try {
-      const payload = {
+      const created = await api.createCategory({
         nom,
         description: categoryDesc.trim() || undefined,
-      }
-      if (editingCategory) {
-        await api.updateCategory(editingCategory.id, payload)
-        await invalidate.categories()
-        resetCategoryFields()
-      } else {
-        const created = await api.createCategory(payload)
-        await invalidate.categories()
-        setForm((prev) => ({ ...prev, categoryId: String(created.id) }))
-        resetCategoryFields()
-      }
+      })
+      await invalidate.categories()
+      setForm((prev) => ({ ...prev, categoryId: String(created.id) }))
+      resetCategoryFields()
     } catch (err) {
-      setCategoryError(
-        err instanceof Error
-          ? err.message
-          : editingCategory
-            ? 'Erreur lors de la modification'
-            : 'Erreur lors de la création',
-      )
+      setCategoryError(err instanceof Error ? err.message : 'Erreur lors de la création')
     } finally {
       setSavingCategory(false)
     }
-  }
-
-  const handleDeleteCategory = (id: number) => {
-    const used = products.some((p) => p.categoryId === id)
-    if (used) {
-      alert('Impossible de supprimer : des produits utilisent cette catégorie.')
-      return
-    }
-    setConfirmDialog({
-      isOpen: true,
-      title: 'Supprimer cette catégorie ?',
-      description: 'Êtes-vous sûr de vouloir supprimer cette catégorie ?',
-      onConfirm: async () => {
-        try {
-          await api.deleteCategory(id)
-          await invalidate.categories()
-          if (form.categoryId === String(id)) {
-            setForm((prev) => ({
-              ...prev,
-              categoryId: categories.find((c) => c.id !== id)?.id?.toString() ?? '',
-            }))
-          }
-        } catch (err) {
-          alert(err instanceof Error ? err.message : 'Suppression impossible')
-        }
-      }
-    })
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -468,20 +414,10 @@ export default function ProductsPage() {
           <p className="text-sm text-zinc-500">CRUD, catégories, j'aimes, commentaires et statistiques</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setShowCategoryManager(true)
-              setShowCategoryForm(true)
-              setCategoryNom('')
-              setCategoryDesc('')
-              setCategoryError('')
-            }}
-            className="btn-ghost"
-          >
+          <Link to="/admin/categories" className="btn-ghost">
             <Tags className="h-4 w-4" />
             Catégories
-          </button>
+          </Link>
           <button type="button" onClick={openCreate} className="btn-primary">
             <Plus className="h-4 w-4" />
             Nouveau produit
@@ -731,124 +667,6 @@ export default function ProductsPage() {
               </div>
             </div>
           </form>
-        </div>
-      )}
-
-      {showCategoryManager && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="card max-h-[90vh] w-full max-w-lg overflow-y-auto p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-white">Catégories</h3>
-                <p className="text-sm text-zinc-500">Créer et gérer les catégories produits</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowCategoryManager(false)
-                  resetCategoryFields()
-                }}
-                className="text-zinc-500 hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveCategory} className="mb-6 space-y-3 rounded-xl border border-white/10 bg-ink-800/40 p-4">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-medium text-white">
-                  {editingCategory ? `Modifier « ${editingCategory.nom} »` : 'Nouvelle catégorie'}
-                </p>
-                {editingCategory && (
-                  <button
-                    type="button"
-                    onClick={resetCategoryFields}
-                    className="text-xs text-zinc-500 hover:text-white"
-                  >
-                    Annuler
-                  </button>
-                )}
-              </div>
-              <div>
-                <label className="label">Nom *</label>
-                <input
-                  className="input"
-                  value={categoryNom}
-                  onChange={(e) => setCategoryNom(e.target.value)}
-                  placeholder="Ex. Cuisine, Enfant…"
-                  required
-                />
-              </div>
-              <div>
-                <label className="label">Description</label>
-                <textarea
-                  className="input min-h-[60px]"
-                  value={categoryDesc}
-                  onChange={(e) => setCategoryDesc(e.target.value)}
-                  placeholder="Optionnel"
-                />
-              </div>
-              {categoryError && <p className="text-sm text-red-400">{categoryError}</p>}
-              <button type="submit" disabled={savingCategory} className="btn-primary w-full">
-                {editingCategory ? <Pencil className="h-4 w-4" /> : <FolderPlus className="h-4 w-4" />}
-                {savingCategory
-                  ? 'Enregistrement…'
-                  : editingCategory
-                    ? 'Enregistrer les modifications'
-                    : 'Ajouter la catégorie'}
-              </button>
-            </form>
-
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-wider text-zinc-500">
-                Liste ({categories.length})
-              </p>
-              {categories.length === 0 ? (
-                <p className="py-6 text-center text-sm text-zinc-500">Aucune catégorie pour le moment</p>
-              ) : (
-                categories.map((c) => {
-                  const count = products.filter((p) => p.categoryId === c.id).length
-                  const isEditing = editingCategory?.id === c.id
-                  return (
-                    <div
-                      key={c.id}
-                      className={`flex items-start justify-between gap-3 rounded-xl px-4 py-3 ${
-                        isEditing ? 'bg-gold-500/10 ring-1 ring-gold-500/30' : 'bg-ink-800/50'
-                      }`}
-                    >
-                      <div>
-                        <p className="font-medium text-white">{c.nom}</p>
-                        {c.description && (
-                          <p className="mt-0.5 text-xs text-zinc-500">{c.description}</p>
-                        )}
-                        <p className="mt-1 text-xs text-zinc-600">
-                          {count} produit{count !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                      <div className="flex gap-1">
-                        <button
-                          type="button"
-                          title="Modifier"
-                          onClick={() => startEditCategory(c)}
-                          className="rounded-lg p-2 text-zinc-500 hover:bg-gold-500/10 hover:text-gold-300"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          title="Supprimer"
-                          onClick={() => handleDeleteCategory(c.id)}
-                          className="rounded-lg p-2 text-zinc-500 hover:bg-red-500/10 hover:text-red-400"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })
-              )}
-            </div>
-          </div>
         </div>
       )}
 

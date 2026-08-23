@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
+import { BackButton } from '@/components/BackButton'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -80,6 +81,7 @@ function CheckoutPage() {
       <main className="flex min-h-screen flex-col bg-beige/25">
         <SiteNav />
         <div className="mx-auto max-w-lg px-6 py-32 text-center">
+          <BackButton fallbackTo="/products" fallbackSearch={{ category: undefined }} className="mb-6 mx-auto" />
           <h1 className="font-display text-3xl font-bold">Panier vide</h1>
           <p className="mt-4 text-muted-foreground">Ajoutez des tableaux depuis la galerie.</p>
           <Link
@@ -100,6 +102,7 @@ function CheckoutPage() {
       <SiteNav />
 
       <div className="mx-auto max-w-5xl px-6 py-16 md:px-10">
+        <BackButton fallbackTo="/products" fallbackSearch={{ category: undefined }} className="mb-6" />
         <h1 className="font-display text-4xl font-bold text-foreground">
           Finaliser la <span className="text-brand-red">commande</span>
         </h1>

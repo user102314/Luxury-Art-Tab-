@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import LoyaltyPage from '@/admin/pages/LoyaltyPage'
+import { AdminLoyaltyPage } from '@/admin/lazyPages'
 
 export const Route = createFileRoute('/admin/_app/loyalty')({
-  component: LoyaltyPage,
+  component: AdminLoyaltyPage,
 })

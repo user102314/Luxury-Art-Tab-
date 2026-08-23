@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ArViewer } from '@/components/ArViewer'
+import { LazyArViewer } from '@/components/LazyArViewer'
 import { CategoryShowcaseCarousel } from '@/components/CategoryShowcaseCarousel'
 import { ProductCard } from '@/components/ProductCard'
 import { useCategories, useProducts } from '@/hooks/useStorefrontQueries'
@@ -126,7 +126,7 @@ export function ProductShowcase({
         </div>
       </div>
 
-      <ArViewer isOpen={!!arImage} onClose={() => setArImage(null)} imageSrc={arImage} />
+      <LazyArViewer isOpen={!!arImage} onClose={() => setArImage(null)} imageSrc={arImage} />
     </section>
   )
 }

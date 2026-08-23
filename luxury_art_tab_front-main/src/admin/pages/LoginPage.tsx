@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useAdminAuth } from '../context/AdminAuthContext'
 import { BrandLogo } from '../components/BrandLogo'
+import { BackButton } from '@/components/BackButton'
 
 export default function LoginPage() {
   const { login, user } = useAdminAuth()
@@ -38,6 +39,7 @@ export default function LoginPage() {
       <div className="absolute -right-32 bottom-20 h-96 w-96 rounded-full bg-gold-600/10 blur-3xl" />
 
       <div className="relative w-full max-w-md px-6">
+        <BackButton variant="admin" fallbackTo="/" label="Retour à la boutique" className="mb-6" />
         <div className="mb-8 text-center">
           <BrandLogo onDark size="lg" className="mx-auto items-center" />
           <p className="mt-4 text-zinc-400">Espace administrateur</p>

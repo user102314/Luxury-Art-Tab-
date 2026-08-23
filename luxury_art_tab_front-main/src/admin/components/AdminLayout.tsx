@@ -1,4 +1,5 @@
 import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
+import { Suspense } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import {
@@ -19,12 +20,15 @@ import {
   HeartHandshake,
   Truck,
   Ruler,
+  Tags,
 } from 'lucide-react'
 import { useAdminAuth } from '../context/AdminAuthContext'
 import { prefetchEssentials, prefetchRoute } from '../hooks/useAdminQueries'
 import StockAlertsBanner from './StockAlertsBanner'
 import OrderNotificationsBell from './OrderNotificationsBell'
 import { BrandLogo } from './BrandLogo'
+import { BackButton } from '@/components/BackButton'
+import { PageSkeleton } from './QueryStatusBar'
 
 const nav = [
   { to: '/admin/revenue', icon: TrendingUp, label: 'Revenus' },
@@ -37,6 +41,7 @@ const nav = [
   { to: '/admin/whatsapp-orders', icon: MessageCircle, label: 'WhatsApp' },
   { to: '/admin/clients', icon: Users, label: 'Clients' },
   { to: '/admin/products', icon: Package, label: 'Produits' },
+  { to: '/admin/categories', icon: Tags, label: 'Catégories' },
   { to: '/admin/pricing', icon: Ruler, label: 'Tarifs & cadres' },
   { to: '/admin/moderation', icon: MessageSquare, label: 'Avis & Commentaires' },
   { to: '/admin/loyalty', icon: Gift, label: 'Fidélité' },
@@ -74,8 +79,10 @@ export default function AdminLayout() {
               <Link
                 key={to}
                 to={to}
+                preload="intent"
                 onMouseEnter={() => prefetchRoute(queryClient, to)}
                 onFocus={() => prefetchRoute(queryClient, to)}
+                onTouchStart={() => prefetchRoute(queryClient, to)}
                 className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
                   isActive
                     ? 'bg-gold-500/15 text-gold-300'
@@ -103,15 +110,20 @@ export default function AdminLayout() {
 
       <main className="ml-64 flex-1">
         <div className="relative z-40 flex items-center justify-between border-b border-white/10 bg-ink-950/80 px-8 py-5 backdrop-blur">
-          <div>
-            <h1 className="font-display text-2xl font-semibold text-white">Tableau de bord</h1>
-            <p className="text-sm text-zinc-500">Gestion de la boutique Luxury Art</p>
+          <div className="flex min-w-0 items-center gap-4">
+            <BackButton variant="admin" fallbackTo="/admin/revenue" label="Retour" />
+            <div className="min-w-0 border-l border-white/10 pl-4">
+              <h1 className="font-display text-2xl font-semibold text-white">Tableau de bord</h1>
+              <p className="text-sm text-zinc-500">Gestion de la boutique Luxury Art</p>
+            </div>
           </div>
           <OrderNotificationsBell />
         </div>
         <div className="p-8">
           <StockAlertsBanner />
-          <Outlet />
+          <Suspense fallback={<PageSkeleton rows={8} />}>
+            <Outlet />
+          </Suspense>
         </div>
       </main>
     </div>

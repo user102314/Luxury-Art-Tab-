@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
+import { BackButton } from '@/components/BackButton'
 import { ProductCard } from '@/components/ProductCard'
 import { api } from '@/lib/api'
 import { getProductImages } from '@/lib/images'
@@ -99,6 +100,7 @@ function CategoryPage() {
     <main className="flex min-h-screen flex-col bg-beige/25">
       <SiteNav />
       <div className="mx-auto w-full max-w-7xl px-6 py-12 md:py-16">
+        <BackButton fallbackTo="/products" fallbackSearch={{ category: undefined }} className="mb-4" />
         <nav className="mb-4 flex flex-wrap items-center text-sm text-muted-foreground" aria-label="Fil d'Ariane">
           <Link to="/" className="hover:text-brand-red">
             Accueil

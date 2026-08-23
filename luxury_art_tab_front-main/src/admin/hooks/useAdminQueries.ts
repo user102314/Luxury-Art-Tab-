@@ -267,6 +267,10 @@ export function prefetchRoute(qc: QueryClient, path: string) {
       qc.prefetchQuery({ queryKey: queryKeys.bestSellers, queryFn: api.getBestSellers, ...opts })
       qc.prefetchQuery({ queryKey: queryKeys.catalogPricing, queryFn: api.getCatalogPricing, ...opts })
       break
+    case '/admin/categories':
+      qc.prefetchQuery({ queryKey: queryKeys.categories, queryFn: api.getCategories, ...opts })
+      qc.prefetchQuery({ queryKey: queryKeys.products, queryFn: api.getProducts, ...opts })
+      break
     case '/admin/pricing':
       qc.prefetchQuery({ queryKey: queryKeys.catalogPricing, queryFn: api.getCatalogPricing, ...opts })
       break

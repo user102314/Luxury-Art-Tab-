@@ -66,10 +66,10 @@ function BotMessageContent({ msg }: { msg: ChatMessage }) {
 }
 
 export function FixedSupportWidget() {
-  const { data: products = [] } = useProducts()
-  const { data: categories = [] } = useCategories()
-  const { data: settings } = useSiteSettings()
   const [chatOpen, setChatOpen] = useState(false)
+  const { data: products = [] } = useProducts({ enabled: chatOpen })
+  const { data: categories = [] } = useCategories({ enabled: chatOpen })
+  const { data: settings } = useSiteSettings()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)

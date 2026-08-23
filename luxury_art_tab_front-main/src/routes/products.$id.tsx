@@ -13,7 +13,8 @@ import {
 import { toast } from 'sonner'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
-import { ArViewer } from '@/components/ArViewer'
+import { BackButton } from '@/components/BackButton'
+import { LazyArViewer } from '@/components/LazyArViewer'
 import { ProductImageGallery } from '@/components/ProductImageGallery'
 import { api } from '@/lib/api'
 import { queryKeys } from '@/lib/queryKeys'
@@ -32,7 +33,7 @@ import { useCart } from '@/context/CartContext'
 import { useFavorites } from '@/context/FavoritesContext'
 import { useVisitor } from '@/context/VisitorContext'
 import { ProductCard } from '@/components/ProductCard'
-import type { Category } from '@/types/api'
+import type { Category, Product } from '@/types/api'
 import {
   buildSeoHead,
   productSeoDescription,
@@ -138,7 +139,11 @@ function ProductDetailPage() {
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   })
-  const { data: allProducts = [] } = useProducts()
+  const cachedProducts = queryClient.getQueryData<Product[]>(queryKeys.products)
+  const { data: allProducts = cachedProducts ?? [] } = useProducts({
+    initialData: cachedProducts,
+    enabled: !!product && cachedProducts === undefined,
+  })
   const { trackClick } = useProductTracking(
     !Number.isNaN(productId) && productId > 0 ? productId : null,
   )
@@ -372,6 +377,7 @@ function ProductDetailPage() {
       <SiteNav />
 
       <div className="mx-auto w-full min-w-0 max-w-7xl px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-10">
+        <BackButton fallbackTo="/products" fallbackSearch={{ category: undefined }} className="mb-4" />
         <nav className="mb-5 flex min-w-0 flex-wrap items-center gap-y-1 text-sm text-muted-foreground" aria-label="Fil d'Ariane">
           <Link to="/" className="hover:text-brand-red">
             Accueil
@@ -915,7 +921,7 @@ function ProductDetailPage() {
       </div>
 
       <SiteFooter />
-      <ArViewer isOpen={!!arImage} onClose={() => setArImage(null)} imageSrc={arImage} />
+      <LazyArViewer isOpen={!!arImage} onClose={() => setArImage(null)} imageSrc={arImage} />
     </main>
   )
 }

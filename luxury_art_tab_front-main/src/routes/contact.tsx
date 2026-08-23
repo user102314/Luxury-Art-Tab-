@@ -4,6 +4,7 @@ import { Mail, MapPin, Phone } from 'lucide-react'
 import { toast } from 'sonner'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
+import { BackButton } from '@/components/BackButton'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -76,6 +77,7 @@ function ContactPage() {
       <SiteNav />
       <div className="flex-1 px-6 py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
+          <BackButton fallbackTo="/" className="mb-6" />
           {/* Trois colonnes de largeur égale : coordonnées · formulaire · carte */}
           <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-3 lg:gap-8">
             {/* 1 — coordonnées */}

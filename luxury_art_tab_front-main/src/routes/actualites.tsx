@@ -3,6 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { CalendarDays, Megaphone, Newspaper } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
+import { BackButton } from '@/components/BackButton'
 import { TestimonialsSection } from '@/components/TestimonialsSection'
 import { AboutBand } from '@/components/AboutBand'
 import { usePublishedNews } from '@/hooks/useStorefrontQueries'
@@ -63,6 +64,7 @@ function ActualitesPage() {
 
       <div className="border-b border-border/40 bg-gradient-to-r from-foliage via-foliage to-taupe px-6 py-16 text-sand md:px-10">
         <div className="mx-auto max-w-7xl">
+          <BackButton fallbackTo="/" className="mb-4 text-sand/80 hover:text-sand" />
           <p className="inline-flex items-center gap-2 font-display text-sm uppercase tracking-[0.25em] text-gold">
             <Megaphone className="h-4 w-4" />
             Soldes &amp; informations

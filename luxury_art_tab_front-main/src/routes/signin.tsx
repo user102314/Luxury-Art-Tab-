@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
+import { BackButton } from '@/components/BackButton'
 import { useAuth } from '@/context/AuthContext'
 import { buildSeoHead, SITE } from '@/lib/seo'
 
@@ -42,6 +43,7 @@ function SignInPage() {
     <main className="flex min-h-screen flex-col bg-beige/25">
       <SiteNav />
       <div className="mx-auto max-w-md px-6 py-16">
+        <BackButton fallbackTo="/" className="mb-6" />
         <h1 className="font-display text-3xl font-bold text-foreground">Connexion</h1>
         <p className="mt-2 text-sm text-muted-foreground">Accédez à votre profil fidélité et vos récompenses</p>
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">

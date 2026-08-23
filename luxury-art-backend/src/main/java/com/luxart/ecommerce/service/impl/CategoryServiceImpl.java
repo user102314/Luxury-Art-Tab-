@@ -7,6 +7,7 @@ import com.luxart.ecommerce.model.entity.Category;
 import com.luxart.ecommerce.model.entity.Product;
 import com.luxart.ecommerce.model.enums.ProductStatut;
 import com.luxart.ecommerce.repository.CategoryRepository;
+import com.luxart.ecommerce.repository.ProductImageRepository;
 import com.luxart.ecommerce.repository.ProductRepository;
 import com.luxart.ecommerce.service.CategoryService;
 import com.luxart.ecommerce.service.ProductService;
@@ -14,8 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +24,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
+    private final ProductImageRepository productImageRepository;
     private final ProductService productService;
 
     @Override
@@ -40,7 +42,7 @@ public class CategoryServiceImpl implements CategoryService {
             if (available.isEmpty()) {
                 continue;
             }
-            Product chosen = available.get(ThreadLocalRandom.current().nextInt(available.size()));
+            Product chosen = pickShowcaseProduct(available);
             slides.add(CategoryShowcaseDto.builder()
                     .categoryId(category.getId())
                     .nom(category.getNom())
@@ -81,6 +83,17 @@ public class CategoryServiceImpl implements CategoryService {
     private Category getEntity(Long id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Catégorie introuvable: " + id));
+    }
+
+    /** Premier produit disponible avec au moins 2 images (pour l'image hero n°2), sinon le plus ancien. */
+    private Product pickShowcaseProduct(List<Product> available) {
+        return available.stream()
+                .sorted(Comparator.comparing(Product::getId))
+                .filter(p -> productImageRepository.findByProductIdOrderByOrdreAsc(p.getId()).size() >= 2)
+                .findFirst()
+                .orElseGet(() -> available.stream()
+                        .min(Comparator.comparing(Product::getId))
+                        .orElseThrow());
     }
 
     private CategoryDto toDto(Category category) {

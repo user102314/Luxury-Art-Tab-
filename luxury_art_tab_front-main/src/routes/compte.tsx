@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { Gift, LogOut } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
+import { BackButton } from '@/components/BackButton'
 import { useAuth } from '@/context/AuthContext'
 import { formatPrice } from '@/lib/pricing'
 import { buildSeoHead, SITE } from '@/lib/seo'
@@ -35,6 +36,7 @@ function ComptePage() {
       <main className="flex min-h-screen flex-col bg-beige/25">
         <SiteNav />
         <div className="mx-auto max-w-md px-6 py-32 text-center">
+          <BackButton fallbackTo="/" className="mb-6 mx-auto" />
           <p className="text-muted-foreground">Connectez-vous pour voir votre profil fidélité</p>
           <Link to="/signin" className="mt-4 inline-block rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground">
             Se connecter
@@ -58,6 +60,7 @@ function ComptePage() {
     <main className="flex min-h-screen flex-col bg-beige/25">
       <SiteNav />
       <div className="mx-auto max-w-2xl px-6 py-16">
+        <BackButton fallbackTo="/" className="mb-6" />
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl font-bold">Mon profil</h1>

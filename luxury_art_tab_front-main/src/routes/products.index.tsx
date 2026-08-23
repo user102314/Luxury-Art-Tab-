@@ -3,8 +3,9 @@ import { useMemo, useState, useEffect } from 'react'
 import { Search, SlidersHorizontal, X } from 'lucide-react'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
+import { BackButton } from '@/components/BackButton'
 import { ProductCard } from '@/components/ProductCard'
-import { ArViewer } from '@/components/ArViewer'
+import { LazyArViewer } from '@/components/LazyArViewer'
 import { useCategories, useProducts } from '@/hooks/useStorefrontQueries'
 import { Slider } from '@/components/ui/slider'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -29,6 +30,7 @@ import {
   preferredCategorySlug,
   resolveCategoryBySlug,
 } from '@/lib/seo'
+import { spreadSimilarProducts } from '@/lib/productSort'
 
 export const Route = createFileRoute('/products/')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -141,16 +143,18 @@ function ProductsPage() {
       return true
     })
 
-    return list.sort((a, b) => {
-      switch (sort) {
-        case 'price-asc':
-          return Number(a.prix ?? 0) - Number(b.prix ?? 0)
-        case 'price-desc':
-          return Number(b.prix ?? 0) - Number(a.prix ?? 0)
-        default:
-          return a.ref.localeCompare(b.ref, 'fr')
-      }
-    })
+    return spreadSimilarProducts(
+      list.sort((a, b) => {
+        switch (sort) {
+          case 'price-asc':
+            return Number(a.prix ?? 0) - Number(b.prix ?? 0)
+          case 'price-desc':
+            return Number(b.prix ?? 0) - Number(a.prix ?? 0)
+          default:
+            return a.ref.localeCompare(b.ref, 'fr')
+        }
+      }),
+    )
   }, [available, categoryId, search, sort, priceRange, inStockOnly])
 
   const filterPanel = (
@@ -230,6 +234,7 @@ function ProductsPage() {
 
       <div className="border-b border-border/40 bg-gradient-to-r from-foliage via-foliage to-taupe px-4 py-10 text-sand sm:px-6 sm:py-14 md:px-10">
         <div className="mx-auto max-w-[1600px]">
+          <BackButton fallbackTo="/" className="mb-4 text-sand/80 hover:text-sand" />
           <p className="font-display text-xs uppercase tracking-[0.25em] text-accent sm:text-sm">
             Catalogue complet
           </p>
@@ -372,7 +377,7 @@ function ProductsPage() {
       </div>
 
       <SiteFooter />
-      <ArViewer isOpen={!!arImage} onClose={() => setArImage(null)} imageSrc={arImage} />
+      <LazyArViewer isOpen={!!arImage} onClose={() => setArImage(null)} imageSrc={arImage} />
     </main>
   )
 }

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
+import { BackButton } from '@/components/BackButton'
 import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
 import { useSiteSettings } from '@/hooks/useStorefrontQueries'
@@ -68,6 +69,7 @@ function SignUpPage() {
     <main className="flex min-h-screen flex-col bg-beige/25">
       <SiteNav />
       <div className="mx-auto max-w-lg px-6 py-16">
+        <BackButton fallbackTo="/signin" className="mb-6" />
         <h1 className="font-display text-3xl font-bold text-foreground">Créer un compte</h1>
         <p className="mt-2 text-sm text-muted-foreground">Rejoignez le programme fidélité et gagnez des cadeaux</p>
         {programHint && (

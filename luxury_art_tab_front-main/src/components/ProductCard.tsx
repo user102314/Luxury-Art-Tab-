@@ -1,6 +1,8 @@
 import { Link } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import type { Product } from '@/types/api'
 import { getProductImage, getSimulationImage, hasSimulationImage, IMAGE_WIDTH, fallbackFromBrokenImage } from '@/lib/images'
+import { prefetchProductDetail } from '@/hooks/useStorefrontQueries'
 import { productVisibleTitle } from '@/lib/seo'
 import { formatStartingPrice } from '@/lib/pricing'
 import { useFavorites } from '@/context/FavoritesContext'
@@ -17,6 +19,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, categoryName, index = 0, onAr, compact = false }: ProductCardProps) {
+  const queryClient = useQueryClient()
   const { isFavorite, toggleFavorite } = useFavorites()
   const { client } = useAuth()
   const liked = isFavorite(product.id)
@@ -51,6 +54,10 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
         to="/products/$id"
         params={{ id: String(product.id) }}
         className="block"
+        preload="intent"
+        onMouseEnter={() => prefetchProductDetail(queryClient, product.id)}
+        onFocus={() => prefetchProductDetail(queryClient, product.id)}
+        onTouchStart={() => prefetchProductDetail(queryClient, product.id)}
         onClick={handleProductClick}
       >
         <div

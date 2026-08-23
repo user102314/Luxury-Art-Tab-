@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { heroCategories } from "@/data/heroCategories";
 import { useCategoryShowcase } from "@/hooks/useStorefrontQueries";
+import { getProductImage, getShowcaseHeroImage, IMAGE_WIDTH } from "@/lib/images";
+import type { CategoryShowcase } from "@/types/api";
 import {
   Carousel,
   CarouselContent,
@@ -21,6 +23,17 @@ function handleImageError(fallback: string) {
   return (event: React.SyntheticEvent<HTMLImageElement>) => {
     const img = event.currentTarget;
     if (img.src !== fallback) img.src = fallback;
+  };
+}
+
+function heroImageForSlide(slide: CategoryShowcase, index: number) {
+  const fromProduct = getShowcaseHeroImage(slide.product, IMAGE_WIDTH.hero);
+  const staticFallback =
+    heroCategories[index % heroCategories.length]?.images[0] ?? "/placeholder-art.svg";
+  const primary = getProductImage(slide.product, IMAGE_WIDTH.hero);
+  return {
+    image: fromProduct,
+    fallback: primary !== fromProduct ? primary : staticFallback,
   };
 }
 
@@ -80,12 +93,11 @@ export function AnimatedHero() {
   const cards = useMemo<HeroCard[]>(() => {
     if (showcase.length > 0) {
       return showcase.map((slide, index) => {
-        const fallback =
-          heroCategories[index % heroCategories.length]?.images[0] ?? staticCards[0]?.image ?? "/placeholder-art.svg";
+        const { image, fallback } = heroImageForSlide(slide, index);
         return {
           key: `cat-${slide.categoryId}`,
           label: slide.nom,
-          image: fallback,
+          image,
           fallback,
           href: `/products?category=${slide.categoryId}`,
         };

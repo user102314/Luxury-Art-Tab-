@@ -126,3 +126,14 @@ export function getSimulationImage(product: {
   const images = getProductImages(product, IMAGE_WIDTH.gallery)
   return images.length > 1 ? images[1] : null
 }
+
+/** Image hero catégorie : préfère l'image n°2 (simulation AR), sinon la vignette catalogue. */
+export function getShowcaseHeroImage(
+  product: {
+    imageUrl?: string
+    images?: { url: string; ordre?: number }[]
+  },
+  width: number = IMAGE_WIDTH.hero,
+): string {
+  return getSimulationImage(product) ?? getProductImage(product, width)
+}

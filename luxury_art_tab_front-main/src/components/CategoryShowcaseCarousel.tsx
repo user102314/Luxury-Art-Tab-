@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { PaintSplash, PaintStroke } from '@/components/ArtDecor'
 import { useCategoryShowcase } from '@/hooks/useStorefrontQueries'
-import { getProductImage, IMAGE_WIDTH } from '@/lib/images'
+import { getProductImage, getShowcaseHeroImage, IMAGE_WIDTH } from '@/lib/images'
 import { heroCategories } from '@/data/heroCategories'
 
 const CYCLE_MS = 5000
@@ -98,7 +98,8 @@ export function CategoryShowcaseCarousel() {
         <div className="relative">
           <div className="relative overflow-hidden">
             {slides.map((slide, i) => {
-              const image = getProductImage(slide.product, IMAGE_WIDTH.hero)
+              const image = getShowcaseHeroImage(slide.product, IMAGE_WIDTH.hero)
+              const fallback = getProductImage(slide.product, IMAGE_WIDTH.hero)
               return (
                 <div
                   key={`${slide.categoryId}-${slide.product.id}`}
@@ -128,7 +129,7 @@ export function CategoryShowcaseCarousel() {
                           alt={slide.product.ref}
                           loading="lazy"
                           decoding="async"
-                          onError={handleImageError(fallbackFor(i))}
+                          onError={handleImageError(fallback !== image ? fallback : fallbackFor(i))}
                           className="h-full w-full rounded-lg object-cover transition duration-500 group-hover:scale-[1.04]"
                         />
                       </div>

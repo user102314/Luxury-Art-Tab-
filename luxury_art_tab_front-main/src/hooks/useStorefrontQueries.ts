@@ -90,14 +90,40 @@ export function useActiveTestimonials(options?: { initialData?: Testimonial[] })
   })
 }
 
-/** Précharge les données au survol des liens de navigation */
+/** Précharge les données au survol / intent des liens de navigation */
+export function prefetchProductDetail(qc: QueryClient, productId: number) {
+  const opts = { staleTime: 2 * 60_000 }
+  void qc.prefetchQuery({
+    queryKey: queryKeys.product(productId),
+    queryFn: () => api.getProduct(productId),
+    ...opts,
+  })
+  void qc.prefetchQuery({
+    queryKey: queryKeys.catalogPricing,
+    queryFn: api.getCatalogPricing,
+    ...opts,
+  })
+}
+
 export function prefetchStorefrontRoute(qc: QueryClient, path: string) {
   const opts = { staleTime: 2 * 60_000 }
+  const productMatch = path.match(/^\/products\/(\d+)\/?$/)
+  if (productMatch) {
+    prefetchProductDetail(qc, Number(productMatch[1]))
+    return
+  }
   if (path === '/products' || path.startsWith('/products')) {
-    qc.prefetchQuery({ queryKey: queryKeys.products, queryFn: api.getProducts, ...opts })
-    qc.prefetchQuery({ queryKey: queryKeys.categories, queryFn: api.getCategories, ...opts })
+    void qc.prefetchQuery({ queryKey: queryKeys.products, queryFn: api.getProducts, ...opts })
+    void qc.prefetchQuery({ queryKey: queryKeys.categories, queryFn: api.getCategories, ...opts })
+  }
+  if (path.startsWith('/category/')) {
+    void qc.prefetchQuery({ queryKey: queryKeys.products, queryFn: api.getProducts, ...opts })
+    void qc.prefetchQuery({ queryKey: queryKeys.categories, queryFn: api.getCategories, ...opts })
   }
   if (path === '/actualites') {
-    qc.prefetchQuery({ queryKey: queryKeys.newsPublished, queryFn: api.getPublishedNews, ...opts })
+    void qc.prefetchQuery({ queryKey: queryKeys.newsPublished, queryFn: api.getPublishedNews, ...opts })
+  }
+  if (path === '/contact') {
+    void qc.prefetchQuery({ queryKey: queryKeys.siteSettings, queryFn: api.getSiteSettings, ...opts })
   }
 }
