@@ -30,7 +30,9 @@ import {
   preferredCategorySlug,
   resolveCategoryBySlug,
 } from '@/lib/seo'
-import { spreadSimilarProducts } from '@/lib/productSort'
+import { dedupeCatalogVariants } from '@/lib/productSort'
+
+const CATALOG_BATCH = 24
 
 export const Route = createFileRoute('/products/')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -87,10 +89,14 @@ function ProductsPage() {
   const [inStockOnly, setInStockOnly] = useState(false)
   const [arImage, setArImage] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(CATALOG_BATCH)
 
-  const { data: products = [], isLoading: loadingProducts } = useProducts({
+  const { data: products = [], isLoading: loadingAll } = useProducts({
     initialData: seededProducts,
+    refetchInterval: false,
+    staleTime: 5 * 60_000,
   })
+  const loadingProducts = loadingAll && products.length === 0
   const { data: categories = [] } = useCategories({ initialData: seededCategories })
 
   useEffect(() => {
@@ -105,6 +111,11 @@ function ProductsPage() {
   const available = useMemo(
     () => products.filter((p) => p.statut !== 'ARCHIVE'),
     [products],
+  )
+
+  const globalCatalog = useMemo(
+    () => dedupeCatalogVariants([...available].sort((a, b) => a.ref.localeCompare(b.ref, 'fr'))),
+    [available],
   )
 
   const countByCategory = useMemo(() => {
@@ -143,19 +154,31 @@ function ProductsPage() {
       return true
     })
 
-    return spreadSimilarProducts(
-      list.sort((a, b) => {
-        switch (sort) {
-          case 'price-asc':
-            return Number(a.prix ?? 0) - Number(b.prix ?? 0)
-          case 'price-desc':
-            return Number(b.prix ?? 0) - Number(a.prix ?? 0)
-          default:
-            return a.ref.localeCompare(b.ref, 'fr')
-        }
-      }),
-    )
+    const sorted = list.sort((a, b) => {
+      switch (sort) {
+        case 'price-asc':
+          return Number(a.prix ?? 0) - Number(b.prix ?? 0)
+        case 'price-desc':
+          return Number(b.prix ?? 0) - Number(a.prix ?? 0)
+        default:
+          return a.ref.localeCompare(b.ref, 'fr')
+      }
+    })
+
+    return categoryId === 'all' ? dedupeCatalogVariants(sorted) : sorted
   }, [available, categoryId, search, sort, priceRange, inStockOnly])
+
+  useEffect(() => {
+    setVisibleCount(CATALOG_BATCH)
+  }, [categoryId, search, sort, priceRange[0], priceRange[1], inStockOnly])
+
+  const visibleProducts = filtered.slice(0, visibleCount)
+  const hasMore = visibleCount < filtered.length
+  const remainingCount = filtered.length - visibleCount
+
+  const loadMore = () => {
+    setVisibleCount((current) => Math.min(current + CATALOG_BATCH, filtered.length))
+  }
 
   const filterPanel = (
     <div className="space-y-8">
@@ -167,7 +190,7 @@ function ProductsPage() {
           <li>
             <FilterRow
               label="Toutes les catégories"
-              count={available.length}
+              count={globalCatalog.length}
               active={categoryId === 'all'}
               onSelect={() => setCategoryId('all')}
             />
@@ -360,18 +383,38 @@ function ProductsPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-              {filtered.map((p, i) => (
-                <ProductCard
-                  key={p.id}
-                  product={p}
-                  categoryName={categoryMap[p.categoryId]}
-                  index={i}
-                  onAr={setArImage}
-                  compact
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                {visibleProducts.map((p, i) => (
+                  <ProductCard
+                    key={p.id}
+                    product={p}
+                    categoryName={categoryMap[p.categoryId]}
+                    index={i}
+                    onAr={setArImage}
+                    compact
+                  />
+                ))}
+              </div>
+              {hasMore && (
+                <div className="mt-10 flex flex-col items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={loadMore}
+                    className="inline-flex items-center gap-2 rounded-full border-2 border-brand-red bg-brand-red px-8 py-3 text-sm font-bold text-sand shadow-lg transition hover:bg-brand-red/90 hover:shadow-xl"
+                  >
+                    Voir plus
+                    <span aria-hidden>→</span>
+                  </button>
+                  <p className="text-sm text-muted-foreground">
+                    {visibleCount} sur {filtered.length} produits
+                    {remainingCount > CATALOG_BATCH
+                      ? ` · ${CATALOG_BATCH} de plus`
+                      : ` · ${remainingCount} de plus`}
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </section>
       </div>

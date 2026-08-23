@@ -7,9 +7,39 @@ export function normalizeProductRef(ref: string): string {
     .toUpperCase()
 }
 
+/** Variante catalogue du type B 109' (apostrophe en suffixe). */
+export function isVariantRef(ref: string): boolean {
+  return /[''`]\s*$/.test(ref.trim())
+}
+
+function pickCanonicalProduct<T extends { ref: string; id: number }>(group: T[]): T {
+  return group.reduce((best, p) => {
+    if (isVariantRef(best.ref) && !isVariantRef(p.ref)) return p
+    if (!isVariantRef(best.ref) && isVariantRef(p.ref)) return best
+    return p.id < best.id ? p : best
+  })
+}
+
 /**
- * Évite d'afficher côte à côte des produits quasi-identiques
- * (même référence de base dans des catégories différentes).
+ * Sur « Toutes les catégories », ne garder qu'un produit par référence de base.
+ * Ex. B 109 (AFFRO) masque B 109' (FEMMES) sur la galerie globale.
+ */
+export function dedupeCatalogVariants<T extends { ref: string; id: number }>(sorted: T[]): T[] {
+  if (sorted.length <= 1) return sorted
+
+  const canonicalByKey = new Map<string, T>()
+  for (const p of sorted) {
+    const key = normalizeProductRef(p.ref)
+    const prev = canonicalByKey.get(key)
+    canonicalByKey.set(key, prev ? pickCanonicalProduct([prev, p]) : p)
+  }
+
+  const keepIds = new Set([...canonicalByKey.values()].map((p) => p.id))
+  return sorted.filter((p) => keepIds.has(p.id))
+}
+
+/**
+ * @deprecated Préférer dedupeCatalogVariants sur la galerie globale.
  */
 export function spreadSimilarProducts<T extends { ref: string }>(sorted: T[]): T[] {
   if (sorted.length <= 1) return sorted

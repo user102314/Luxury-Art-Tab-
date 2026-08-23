@@ -4,22 +4,24 @@ import {
   type QueryClient,
 } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import { REFETCH_INTERVAL } from '@/lib/queryClient'
+import { REFETCH_INTERVAL, STALE_TIME } from '@/lib/queryClient'
 import { queryKeys } from '@/lib/queryKeys'
 import type { Category, News, Product, Testimonial } from '@/types/api'
 
-const listOptions = {
-  refetchInterval: REFETCH_INTERVAL,
-  placeholderData: keepPreviousData,
-}
-
-export function useProducts(options?: { initialData?: Product[]; enabled?: boolean }) {
+export function useProducts(options?: {
+  initialData?: Product[]
+  enabled?: boolean
+  refetchInterval?: number | false
+  staleTime?: number
+}) {
   return useQuery({
     queryKey: queryKeys.products,
     queryFn: api.getProducts,
     enabled: options?.enabled ?? true,
     initialData: options?.initialData,
-    ...listOptions,
+    staleTime: options?.staleTime ?? STALE_TIME,
+    refetchInterval: options?.refetchInterval ?? REFETCH_INTERVAL,
+    placeholderData: keepPreviousData,
   })
 }
 

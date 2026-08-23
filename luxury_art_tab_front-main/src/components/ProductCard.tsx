@@ -23,7 +23,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
   const { isFavorite, toggleFavorite } = useFavorites()
   const { client } = useAuth()
   const liked = isFavorite(product.id)
-  const image = getProductImage(product, compact ? IMAGE_WIDTH.hero : IMAGE_WIDTH.card)
+  const image = getProductImage(product, compact ? IMAGE_WIDTH.thumb : IMAGE_WIDTH.card)
   const simulationImage = getSimulationImage(product)
   const canSimulate = hasSimulationImage(product)
   const outOfStock = product.statut === 'RUPTURE_STOCK'

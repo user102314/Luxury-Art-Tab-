@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { LazyArViewer } from '@/components/LazyArViewer'
 import { CategoryShowcaseCarousel } from '@/components/CategoryShowcaseCarousel'
 import { ProductCard } from '@/components/ProductCard'
-import { useCategories, useProducts } from '@/hooks/useStorefrontQueries'
+import { prefetchStorefrontRoute, useCategories, useProducts } from '@/hooks/useStorefrontQueries'
+import { dedupeCatalogVariants } from '@/lib/productSort'
 import type { Category, Product } from '@/types/api'
 
 type ProductShowcaseProps = {
@@ -17,6 +19,7 @@ export function ProductShowcase({
 }: ProductShowcaseProps = {}) {
   const [activeCategory, setActiveCategory] = useState<string>('all')
   const [arImage, setArImage] = useState<string | null>(null)
+  const queryClient = useQueryClient()
 
   const { data: products = [], isLoading } = useProducts({ initialData: initialProducts })
   const { data: categories = [] } = useCategories({ initialData: initialCategories })
@@ -35,6 +38,8 @@ export function ProductShowcase({
     let list = available
     if (activeCategory !== 'all') {
       list = list.filter((p) => p.categoryId === Number(activeCategory))
+    } else {
+      list = dedupeCatalogVariants([...list].sort((a, b) => a.ref.localeCompare(b.ref, 'fr')))
     }
     return list.slice(0, 8)
   }, [available, activeCategory])
@@ -114,6 +119,10 @@ export function ProductShowcase({
           <Link
             to="/products"
             search={{ category: undefined }}
+            preload="intent"
+            onMouseEnter={() => prefetchStorefrontRoute(queryClient, '/products')}
+            onFocus={() => prefetchStorefrontRoute(queryClient, '/products')}
+            onTouchStart={() => prefetchStorefrontRoute(queryClient, '/products')}
             className="group inline-flex items-center gap-2 rounded-full border-2 border-brand-red bg-brand-red px-6 py-2.5 text-sm font-bold text-sand shadow-lg transition hover:bg-brand-red/90 hover:shadow-xl"
           >
             Voir tous les produits
