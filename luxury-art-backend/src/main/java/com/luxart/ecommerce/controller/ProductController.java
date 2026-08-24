@@ -64,4 +64,12 @@ public class ProductController {
         productService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/priority")
+    public ResponseEntity<ProductDto> promote(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "false") boolean toFirst
+    ) {
+        return ResponseEntity.ok(productService.promote(id, toFirst));
+    }
 }

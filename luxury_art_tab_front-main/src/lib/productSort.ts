@@ -38,6 +38,20 @@ export function dedupeCatalogVariants<T extends { ref: string; id: number }>(sor
   return sorted.filter((p) => keepIds.has(p.id))
 }
 
+/** 1 = premier. 0 / absent = après les produits priorisés. */
+export function compareDisplayOrder<T extends { displayOrder?: number | null; id: number; ref: string }>(
+  a: T,
+  b: T,
+) {
+  const rank = (p: T) => {
+    const order = p.displayOrder ?? 0
+    return order > 0 ? order : Number.MAX_SAFE_INTEGER
+  }
+  const diff = rank(a) - rank(b)
+  if (diff !== 0) return diff
+  return a.ref.localeCompare(b.ref, 'fr') || a.id - b.id
+}
+
 /**
  * @deprecated Préférer dedupeCatalogVariants sur la galerie globale.
  */

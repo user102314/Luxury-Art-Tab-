@@ -9,5 +9,6 @@ public interface ProductService {
     ProductDto findById(Long id);
     ProductDto create(ProductDto dto);
     ProductDto update(Long id, ProductDto dto);
+    ProductDto promote(Long id, boolean toFirst);
     void delete(Long id);
 }

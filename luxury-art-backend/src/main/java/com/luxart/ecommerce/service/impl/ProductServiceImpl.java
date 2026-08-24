@@ -23,6 +23,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -60,6 +61,7 @@ public class ProductServiceImpl implements ProductService {
                     .categorie(getCategory(dto.getCategoryId()))
                     .statut(dto.getStatut())
                     .dimensions(resolveDimensions(dto.getDimensionIds()))
+                    .displayOrder(nextDisplayOrder(dto.getCategoryId()))
                     .build();
             Product saved = productRepository.save(product);
             ProductDto result = toDto(saved, catalogPricingService.minPriceByDimension());
@@ -141,6 +143,55 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
+    public ProductDto promote(Long id, boolean toFirst) {
+        Product product = getEntity(id);
+        Long categoryId = product.getCategorie() != null ? product.getCategorie().getId() : null;
+        if (categoryId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Produit sans catégorie");
+        }
+
+        List<Product> ordered = productRepository.findByCategorieId(categoryId).stream()
+                .sorted(displayComparator())
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+
+        int currentIndex = -1;
+        for (int i = 0; i < ordered.size(); i++) {
+            if (ordered.get(i).getId().equals(id)) {
+                currentIndex = i;
+                break;
+            }
+        }
+        if (currentIndex < 0) {
+            throw new ResourceNotFoundException("Produit introuvable: " + id);
+        }
+
+        ordered.remove(currentIndex);
+        int target = toFirst ? 0 : Math.max(0, currentIndex - 1);
+        ordered.add(target, product);
+
+        for (int i = 0; i < ordered.size(); i++) {
+            ordered.get(i).setDisplayOrder(i + 1);
+        }
+        productRepository.saveAll(ordered);
+
+        ProductDto result = toDto(product, catalogPricingService.minPriceByDimension());
+        adminAuditService.logSuccess(
+                AdminActionType.PRODUCT_PRIORITY,
+                "PRODUCT",
+                product.getId(),
+                product.getRef(),
+                product.getCategorie().getNom(),
+                product.getImageUrl(),
+                null,
+                Map.of("toFirst", toFirst, "displayOrder", product.getDisplayOrder()),
+                result,
+                HttpStatus.OK.value()
+        );
+        return result;
+    }
+
+    @Override
     public void delete(Long id) {
         Product product = getEntity(id);
         String ref = product.getRef();
@@ -198,6 +249,24 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Catégorie introuvable: " + id));
     }
 
+    private int nextDisplayOrder(Long categoryId) {
+        return productRepository.findByCategorieId(categoryId).stream()
+                .mapToInt(p -> p.getDisplayOrder() == null ? 0 : p.getDisplayOrder())
+                .max()
+                .orElse(0) + 1;
+    }
+
+    private static Comparator<Product> displayComparator() {
+        return Comparator
+                .comparingInt(ProductServiceImpl::rank)
+                .thenComparing(Product::getId);
+    }
+
+    private static int rank(Product product) {
+        Integer order = product.getDisplayOrder();
+        return order == null || order <= 0 ? Integer.MAX_VALUE : order;
+    }
+
     private ProductDto toDto(Product product, Map<Long, BigDecimal> minByDimension) {
         List<ProductImageDto> images = productImageRepository
                 .findByProductIdOrderByOrdreAsc(product.getId())
@@ -242,6 +311,7 @@ public class ProductServiceImpl implements ProductService {
                 .images(images)
                 .categoryId(product.getCategorie() != null ? product.getCategorie().getId() : null)
                 .statut(product.getStatut())
+                .displayOrder(product.getDisplayOrder() == null ? 0 : product.getDisplayOrder())
                 .build();
     }
 }

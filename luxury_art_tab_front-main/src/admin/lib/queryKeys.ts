@@ -26,6 +26,7 @@ export const queryKeys = {
     ['salesOverTime', from, to, granularity] as const,
   topProductsAnalytics: (criteria: string, limit: number, from: string, to: string) =>
     ['topProductsAnalytics', criteria, limit, from, to] as const,
+  allProductStats: (from: string, to: string) => ['allProductStats', from, to] as const,
   auditLogs: (from: string, to: string, actionType?: string, search?: string) =>
     ['auditLogs', from, to, actionType ?? '', search ?? ''] as const,
   auditStats: (from: string, to: string) => ['auditStats', from, to] as const,

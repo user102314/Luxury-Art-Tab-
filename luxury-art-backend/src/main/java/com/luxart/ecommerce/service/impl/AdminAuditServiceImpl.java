@@ -72,9 +72,16 @@ public class AdminAuditServiceImpl implements AdminAuditService {
             String productRef,
             String search
     ) {
-        return repository.searchLogs(from, to, actionType, blankToNull(entityType),
-                        blankToNull(productRef), blankToNull(search))
-                .stream()
+        String entity = blankToNull(entityType);
+        String ref = blankToNull(productRef);
+        String q = blankToNull(search);
+        String qLower = q == null ? null : q.toLowerCase();
+
+        return repository.findByCreatedAtBetweenOrderByCreatedAtDesc(from, to).stream()
+                .filter(log -> actionType == null || log.getActionType() == actionType)
+                .filter(log -> entity == null || entity.equalsIgnoreCase(log.getEntityType()))
+                .filter(log -> ref == null || containsIgnoreCase(log.getProductRef(), ref))
+                .filter(log -> qLower == null || matchesSearch(log, qLower))
                 .map(this::toDto)
                 .toList();
     }
@@ -224,5 +231,26 @@ public class AdminAuditServiceImpl implements AdminAuditService {
 
     private static String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private static boolean containsIgnoreCase(String value, String needle) {
+        return value != null && value.toLowerCase().contains(needle.toLowerCase());
+    }
+
+    private static boolean matchesSearch(AdminAuditLog log, String qLower) {
+        return contains(log.getProductRef(), qLower)
+                || contains(log.getCategoryName(), qLower)
+                || contains(log.getImageUrl(), qLower)
+                || contains(log.getImageStoragePath(), qLower)
+                || contains(log.getRequestPath(), qLower)
+                || contains(log.getResponsePayload(), qLower)
+                || contains(log.getRequestPayload(), qLower)
+                || contains(log.getAdminEmail(), qLower)
+                || contains(log.getAdminName(), qLower)
+                || contains(log.getErrorMessage(), qLower);
+    }
+
+    private static boolean contains(String value, String qLower) {
+        return value != null && value.toLowerCase().contains(qLower);
     }
 }

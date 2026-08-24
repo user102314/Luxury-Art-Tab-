@@ -65,6 +65,7 @@ export interface Product {
   images?: ProductImage[]
   categoryId: number
   statut: ProductStatut
+  displayOrder?: number
 }
 
 export interface Category {

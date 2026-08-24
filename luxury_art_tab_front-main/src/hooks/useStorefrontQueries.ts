@@ -25,11 +25,12 @@ export function useProducts(options?: {
   })
 }
 
-export function useCategories(options?: { initialData?: Category[] }) {
+export function useCategories(options?: { initialData?: Category[]; enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.categories,
     queryFn: api.getCategories,
     staleTime: 5 * 60_000,
+    enabled: options?.enabled ?? true,
     initialData: options?.initialData,
     placeholderData: keepPreviousData,
   })

@@ -160,6 +160,8 @@ export const api = {
     request<Product>(`/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteProduct: (id: number) =>
     request<void>(`/products/${id}`, { method: 'DELETE' }),
+  promoteProduct: (id: number, toFirst = false) =>
+    request<Product>(`/products/${id}/priority?toFirst=${toFirst}`, { method: 'POST' }),
 
   getCatalogPricing: () => request<CatalogPricing>('/catalog/pricing'),
   createDimension: (data: Partial<TableauDimension>) =>

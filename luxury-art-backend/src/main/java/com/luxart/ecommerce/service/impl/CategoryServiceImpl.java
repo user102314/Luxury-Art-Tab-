@@ -132,14 +132,20 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Catégorie introuvable: " + id));
     }
 
-    /** Premier produit disponible avec au moins 2 images (pour l'image hero n°2), sinon le plus ancien. */
+    /** Premier produit prioritaire avec au moins 2 images (hero AR), sinon le plus prioritaire. */
     private Product pickShowcaseProduct(List<Product> available) {
+        Comparator<Product> byPriority = Comparator
+                .comparingInt((Product p) -> {
+                    Integer order = p.getDisplayOrder();
+                    return order == null || order <= 0 ? Integer.MAX_VALUE : order;
+                })
+                .thenComparing(Product::getId);
         return available.stream()
-                .sorted(Comparator.comparing(Product::getId))
+                .sorted(byPriority)
                 .filter(p -> productImageRepository.findByProductIdOrderByOrdreAsc(p.getId()).size() >= 2)
                 .findFirst()
                 .orElseGet(() -> available.stream()
-                        .min(Comparator.comparing(Product::getId))
+                        .min(byPriority)
                         .orElseThrow());
     }
 

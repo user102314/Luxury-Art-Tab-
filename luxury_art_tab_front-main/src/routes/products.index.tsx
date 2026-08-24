@@ -30,7 +30,7 @@ import {
   preferredCategorySlug,
   resolveCategoryBySlug,
 } from '@/lib/seo'
-import { dedupeCatalogVariants } from '@/lib/productSort'
+import { dedupeCatalogVariants, compareDisplayOrder } from '@/lib/productSort'
 
 const CATALOG_BATCH = 24
 
@@ -114,7 +114,10 @@ function ProductsPage() {
   )
 
   const globalCatalog = useMemo(
-    () => dedupeCatalogVariants([...available].sort((a, b) => a.ref.localeCompare(b.ref, 'fr'))),
+    () =>
+      dedupeCatalogVariants(
+        [...available].sort((a, b) => compareDisplayOrder(a, b)),
+      ),
     [available],
   )
 
@@ -161,7 +164,7 @@ function ProductsPage() {
         case 'price-desc':
           return Number(b.prix ?? 0) - Number(a.prix ?? 0)
         default:
-          return a.ref.localeCompare(b.ref, 'fr')
+          return compareDisplayOrder(a, b)
       }
     })
 

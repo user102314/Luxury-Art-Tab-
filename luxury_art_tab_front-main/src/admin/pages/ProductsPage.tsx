@@ -25,7 +25,11 @@ import {
   ImageIcon,
   Tags,
   FolderPlus,
+  ArrowUp,
+  LayoutGrid,
+  List,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { api, formatCurrency, formatDate } from '../lib/api'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
 import { ListToolbar } from '../components/ListToolbar'
@@ -49,6 +53,7 @@ import {
 import { queryKeys } from '../lib/queryKeys'
 import type { Category, Product, ProductAnalytics, ProductImage, ProductStatut } from '../types'
 import { compareNumbers, compareStrings, matchesSearch, type SortDir } from '../lib/listUtils'
+import { compareDisplayOrder } from '@/lib/productSort'
 
 const STATUTS: ProductStatut[] = ['DISPONIBLE', 'RUPTURE_STOCK', 'ARCHIVE']
 
@@ -68,7 +73,8 @@ function defaultTraditionCategoryId(categories: Category[]): string {
 }
 
 type Tab = 'catalogue' | 'stats' | 'detail'
-type ProductSortKey = 'ref' | 'prix' | 'category'
+type ProductSortKey = 'ref' | 'prix' | 'category' | 'priorite'
+type CatalogView = 'list' | 'grid'
 
 import { resolveImageSrc as resolveMediaUrl } from '@/lib/images'
 
@@ -134,8 +140,10 @@ export default function ProductsPage() {
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('ALL')
   const [statutFilter, setStatutFilter] = useState('ALL')
-  const [sort, setSort] = useState<ProductSortKey>('ref')
+  const [sort, setSort] = useState<ProductSortKey>('priorite')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
+  const [viewMode, setViewMode] = useState<CatalogView>('grid')
+  const [promotingId, setPromotingId] = useState<number | null>(null)
 
   const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.nom]))
 
@@ -156,6 +164,10 @@ export default function ProductsPage() {
             categoryMap[b.categoryId] ?? '',
             sortDir,
           )
+        case 'priorite':
+          return sortDir === 'asc'
+            ? compareDisplayOrder(a, b)
+            : compareDisplayOrder(b, a)
         case 'ref':
         default:
           return compareStrings(a.ref, b.ref, sortDir)
@@ -174,6 +186,23 @@ export default function ProductsPage() {
   const refreshProducts = () => {
     void invalidate.products()
     void invalidate.bestSellers()
+  }
+
+  const promoteProduct = async (id: number, toFirst: boolean) => {
+    setPromotingId(id)
+    try {
+      const updated = await api.promoteProduct(id, toFirst)
+      toast.success(
+        toFirst
+          ? `${updated.ref} est maintenant affiché en premier`
+          : `${updated.ref} avance d’une place (ordre ${updated.displayOrder})`,
+      )
+      refreshProducts()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Impossible de changer la priorité')
+    } finally {
+      setPromotingId(null)
+    }
   }
 
   const openCreate = () => {
@@ -679,6 +708,7 @@ export default function ProductsPage() {
             sort={sort}
             onSortChange={(v) => setSort(v as ProductSortKey)}
             sortOptions={[
+              { value: 'priorite', label: 'Priorité affichage' },
               { value: 'ref', label: 'Réf.' },
               { value: 'prix', label: 'Prix de départ' },
               { value: 'category', label: 'Catégorie' },
@@ -691,7 +721,7 @@ export default function ProductsPage() {
               setSearch('')
               setCategoryFilter('ALL')
               setStatutFilter('ALL')
-              setSort('ref')
+              setSort('priorite')
               setSortDir('asc')
             }}
             filters={[
@@ -717,23 +747,97 @@ export default function ProductsPage() {
               },
             ]}
           />
-        <div className="card overflow-hidden">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-zinc-500">
+              Flèche : avance d’une place dans sa catégorie. Double-clic (flèche ou produit) : affiché en premier.
+            </p>
+            <div className="flex rounded-xl border border-white/10 p-1">
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                  viewMode === 'grid' ? 'bg-gold-500/20 text-gold-300' : 'text-zinc-500 hover:text-white'
+                }`}
+              >
+                <LayoutGrid className="mr-1 inline h-3.5 w-3.5" />
+                Grille
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                  viewMode === 'list' ? 'bg-gold-500/20 text-gold-300' : 'text-zinc-500 hover:text-white'
+                }`}
+              >
+                <List className="mr-1 inline h-3.5 w-3.5" />
+                Colonnes
+              </button>
+            </div>
+          </div>
+        <div className={viewMode === 'grid' ? '' : 'card overflow-hidden'}>
           {isLoading && products.length === 0 ? (
             <PageSkeleton rows={5} />
           ) : products.length === 0 ? (
-            <div className="p-12 text-center">
+            <div className="card p-12 text-center">
               <Package className="mx-auto mb-3 h-10 w-10 text-zinc-600" />
               <p className="text-zinc-500">Aucun produit — créez-en un</p>
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="p-12 text-center">
+            <div className="card p-12 text-center">
               <Package className="mx-auto mb-3 h-10 w-10 text-zinc-600" />
               <p className="text-zinc-500">Aucun produit ne correspond aux filtres</p>
+            </div>
+          ) : viewMode === 'grid' ? (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+              {filteredProducts.map((p) => (
+                <article
+                  key={p.id}
+                  onDoubleClick={() => promoteProduct(p.id, true)}
+                  className="card cursor-pointer overflow-hidden transition hover:ring-1 hover:ring-gold-500/40"
+                >
+                  <div className="relative aspect-[4/5] bg-ink-800">
+                    {p.imageUrl || p.images?.[0]?.url ? (
+                      <img
+                        src={resolveImageSrc(p.images?.[0]?.url ?? p.imageUrl)}
+                        alt={p.ref}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center">
+                        <ImageIcon className="h-8 w-8 text-zinc-600" />
+                      </div>
+                    )}
+                    {(p.displayOrder ?? 0) > 0 && (
+                      <span className="absolute left-2 top-2 rounded-full bg-gold-500 px-2 py-0.5 text-[11px] font-bold text-ink-950">
+                        #{p.displayOrder}
+                      </span>
+                    )}
+                    <PriorityArrow
+                      overlay
+                      disabled={promotingId === p.id}
+                      onUp={() => promoteProduct(p.id, false)}
+                      onFirst={() => promoteProduct(p.id, true)}
+                    />
+                  </div>
+                  <div className="space-y-1 p-3">
+                    <p className="font-mono text-xs text-gold-400">{p.ref}</p>
+                    <p className="truncate text-sm text-zinc-300">
+                      {categoryMap[p.categoryId] ?? `#${p.categoryId}`}
+                    </p>
+                    <div className="flex gap-1 pt-1">
+                      <ActionBtn icon={Eye} onClick={() => openDetail(p.id)} title="Voir détails" />
+                      <ActionBtn icon={Pencil} onClick={() => openEdit(p)} title="Modifier" />
+                      <ActionBtn icon={Trash2} onClick={() => handleDelete(p.id)} danger title="Supprimer" />
+                    </div>
+                  </div>
+                </article>
+              ))}
             </div>
           ) : (
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-white/10 text-xs uppercase text-zinc-500">
+                  <th className="px-6 py-4">Priorité</th>
                   <th className="px-6 py-4">Image</th>
                   <th className="px-6 py-4">Réf.</th>
                   <th className="px-6 py-4">Produit</th>
@@ -746,7 +850,23 @@ export default function ProductsPage() {
               </thead>
               <tbody>
                 {filteredProducts.map((p) => (
-                  <tr key={p.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                  <tr
+                    key={p.id}
+                    onDoubleClick={() => promoteProduct(p.id, true)}
+                    className="border-b border-white/5 hover:bg-white/[0.02]"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span className="w-8 font-mono text-xs text-gold-400">
+                          {(p.displayOrder ?? 0) > 0 ? `#${p.displayOrder}` : '—'}
+                        </span>
+                        <PriorityArrow
+                          disabled={promotingId === p.id}
+                          onUp={() => promoteProduct(p.id, false)}
+                          onFirst={() => promoteProduct(p.id, true)}
+                        />
+                      </div>
+                    </td>
                     <td className="px-6 py-4">
                       {p.imageUrl || p.images?.[0]?.url ? (
                         <img
@@ -1026,6 +1146,7 @@ function Field({
   textarea,
   step,
   inputMode,
+  placeholder,
 }: {
   label: string
   value: string
@@ -1035,12 +1156,18 @@ function Field({
   textarea?: boolean
   step?: string
   inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']
+  placeholder?: string
 }) {
   return (
     <div>
       <label className="label">{label}</label>
       {textarea ? (
-        <textarea className="input min-h-[80px] resize-y" value={value} onChange={(e) => onChange(e.target.value)} />
+        <textarea
+          className="input min-h-[80px] resize-y"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+        />
       ) : (
         <input
           className="input"
@@ -1049,12 +1176,59 @@ function Field({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           required={required}
+          placeholder={placeholder}
           step={step ?? (type === 'number' ? '0.01' : undefined)}
           min={type === 'number' ? '0' : undefined}
           onWheel={type === 'number' ? (e) => e.currentTarget.blur() : undefined}
         />
       )}
     </div>
+  )
+}
+
+function PriorityArrow({
+  onUp,
+  onFirst,
+  disabled,
+  overlay,
+}: {
+  onUp: () => void
+  onFirst: () => void
+  disabled?: boolean
+  overlay?: boolean
+}) {
+  const timer = useRef<number | null>(null)
+
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      title="Clic : avancer d’une place · Double-clic : afficher en premier"
+      onClick={(e) => {
+        e.stopPropagation()
+        if (timer.current) window.clearTimeout(timer.current)
+        timer.current = window.setTimeout(() => {
+          timer.current = null
+          onUp()
+        }, 280)
+      }}
+      onDoubleClick={(e) => {
+        e.stopPropagation()
+        e.preventDefault()
+        if (timer.current) {
+          window.clearTimeout(timer.current)
+          timer.current = null
+        }
+        onFirst()
+      }}
+      className={
+        overlay
+          ? 'absolute right-2 top-2 rounded-full bg-black/70 p-2 text-gold-300 shadow-lg transition hover:bg-gold-500 hover:text-ink-950 disabled:opacity-40'
+          : 'rounded-full bg-white/10 p-2 text-gold-300 transition hover:bg-gold-500 hover:text-ink-950 disabled:opacity-40'
+      }
+    >
+      <ArrowUp className="h-4 w-4" />
+    </button>
   )
 }
 

@@ -1,5 +1,6 @@
 package com.luxart.ecommerce.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.luxart.ecommerce.model.enums.AdminActionType;
 import lombok.Builder;
 import lombok.Data;
@@ -27,5 +28,6 @@ public class AdminAuditLogDto {
     private String adminEmail;
     private String adminName;
     private String clientIp;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Instant createdAt;
 }

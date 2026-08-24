@@ -134,7 +134,7 @@ export default function CategoriesPage() {
 
   return (
     <div>
-      <QueryStatusBar isFetching={isFetching} />
+      <QueryStatusBar fetching={isFetching} />
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>

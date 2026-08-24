@@ -39,4 +39,7 @@ public class ProductDto {
 
     @NotNull
     private ProductStatut statut;
+
+    /** 1 = premier dans sa catégorie */
+    private Integer displayOrder;
 }

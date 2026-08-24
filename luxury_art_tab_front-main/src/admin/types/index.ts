@@ -194,6 +194,7 @@ export interface Product {
   images?: ProductImage[]
   categoryId: number
   statut: string
+  displayOrder?: number
 }
 
 export interface TableauDimension {
@@ -493,6 +494,7 @@ export type AdminActionType =
   | 'CATEGORY_CREATE'
   | 'CATEGORY_UPDATE'
   | 'CATEGORY_DELETE'
+  | 'PRODUCT_PRIORITY'
 
 export interface AdminAuditLog {
   id: number

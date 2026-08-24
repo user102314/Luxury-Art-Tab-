@@ -46,6 +46,10 @@ public class Product {
     @Column(nullable = false)
     private ProductStatut statut;
 
+    /** 1 = affiché en premier dans sa catégorie. 0 / null = pas de priorité. */
+    @Builder.Default
+    private Integer displayOrder = 0;
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
@@ -65,4 +69,11 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ProductImage> images = new ArrayList<>();
+
+    @PrePersist
+    protected void onCreate() {
+        if (displayOrder == null) {
+            displayOrder = 0;
+        }
+    }
 }

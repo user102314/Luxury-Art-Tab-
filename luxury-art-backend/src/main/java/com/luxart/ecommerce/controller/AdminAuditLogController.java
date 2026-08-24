@@ -14,13 +14,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/audit-logs")
 @RequiredArgsConstructor
 public class AdminAuditLogController {
+
+    private static final ZoneId TUNIS = ZoneId.of("Africa/Tunis");
 
     private final AdminAuditService adminAuditService;
 
@@ -33,10 +35,8 @@ public class AdminAuditLogController {
             @RequestParam(required = false) String productRef,
             @RequestParam(required = false) String search
     ) {
-        Instant fromInstant = from.atStartOfDay(ZoneOffset.UTC).toInstant();
-        Instant toInstant = to.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().minusMillis(1);
         return ResponseEntity.ok(adminAuditService.search(
-                fromInstant, toInstant, actionType, entityType, productRef, search));
+                startOfDay(from), endOfDay(to), actionType, entityType, productRef, search));
     }
 
     @GetMapping("/stats")
@@ -44,8 +44,14 @@ public class AdminAuditLogController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
     ) {
-        Instant fromInstant = from.atStartOfDay(ZoneOffset.UTC).toInstant();
-        Instant toInstant = to.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().minusMillis(1);
-        return ResponseEntity.ok(adminAuditService.stats(fromInstant, toInstant));
+        return ResponseEntity.ok(adminAuditService.stats(startOfDay(from), endOfDay(to)));
+    }
+
+    private static Instant startOfDay(LocalDate date) {
+        return date.atStartOfDay(TUNIS).toInstant();
+    }
+
+    private static Instant endOfDay(LocalDate date) {
+        return date.plusDays(1).atStartOfDay(TUNIS).toInstant().minusMillis(1);
     }
 }

@@ -5,7 +5,7 @@ import { LazyArViewer } from '@/components/LazyArViewer'
 import { CategoryShowcaseCarousel } from '@/components/CategoryShowcaseCarousel'
 import { ProductCard } from '@/components/ProductCard'
 import { prefetchStorefrontRoute, useCategories, useProducts } from '@/hooks/useStorefrontQueries'
-import { dedupeCatalogVariants } from '@/lib/productSort'
+import { dedupeCatalogVariants, compareDisplayOrder } from '@/lib/productSort'
 import type { Category, Product } from '@/types/api'
 
 type ProductShowcaseProps = {
@@ -37,9 +37,11 @@ export function ProductShowcase({
   const filtered = useMemo(() => {
     let list = available
     if (activeCategory !== 'all') {
-      list = list.filter((p) => p.categoryId === Number(activeCategory))
+      list = list
+        .filter((p) => p.categoryId === Number(activeCategory))
+        .sort((a, b) => compareDisplayOrder(a, b))
     } else {
-      list = dedupeCatalogVariants([...list].sort((a, b) => a.ref.localeCompare(b.ref, 'fr')))
+      list = dedupeCatalogVariants([...list].sort((a, b) => compareDisplayOrder(a, b)))
     }
     return list.slice(0, 8)
   }, [available, activeCategory])

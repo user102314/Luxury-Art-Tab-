@@ -78,7 +78,7 @@ export default function FacebookOrdersPage() {
   const estimatedTotal = lines.reduce((sum, line) => {
     const p = productMap[line.productId]
     if (!p || !line.quantite) return sum
-    const unit = line.prixUnitaire ?? p.prix
+    const unit = Number(line.prixUnitaire ?? p.prix ?? 0)
     return sum + unit * line.quantite
   }, 0)
 
@@ -257,7 +257,7 @@ export default function FacebookOrdersPage() {
                       const p = productMap[id]
                       updateLine(index, {
                         productId: id,
-                        prixUnitaire: p ? p.prix : undefined,
+                        prixUnitaire: p?.prix ?? undefined,
                       })
                     }}
                     required
