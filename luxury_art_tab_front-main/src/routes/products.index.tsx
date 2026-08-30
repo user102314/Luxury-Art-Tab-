@@ -29,7 +29,7 @@ import {
   preferredCategorySlug,
   resolveCategoryBySlug,
 } from '@/lib/seo'
-import { dedupeCatalogVariants, compareDisplayOrder } from '@/lib/productSort'
+import { compareProductRefs, refMatchesSearch } from '@/lib/productSort'
 import { catalogPriceBounds, productPriceBounds } from '@/lib/pricing'
 import { ensureStorefrontCatalog, prefetchCatalogPricing } from '@/lib/storefrontLoader'
 
@@ -70,10 +70,10 @@ export const Route = createFileRoute('/products/')({
   component: ProductsPage,
 })
 
-type SortOption = 'price-asc' | 'price-desc' | 'name'
+type SortOption = 'ref' | 'price-asc' | 'price-desc'
 
 const sortLabels: Record<SortOption, string> = {
-  name: 'Nom A-Z',
+  ref: 'Référence',
   'price-asc': 'Prix croissant',
   'price-desc': 'Prix décroissant',
 }
@@ -95,7 +95,7 @@ function ProductsPage() {
     resolveCategoryFilter(categoryFromUrl, seededCategories),
   )
   const [search, setSearch] = useState('')
-  const [sort, setSort] = useState<SortOption>('name')
+  const [sort, setSort] = useState<SortOption>('ref')
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000])
   const [inStockOnly, setInStockOnly] = useState(false)
   const [arImage, setArImage] = useState<string | null>(null)
@@ -131,10 +131,7 @@ function ProductsPage() {
   )
 
   const globalCatalog = useMemo(
-    () =>
-      dedupeCatalogVariants(
-        [...available].sort((a, b) => compareDisplayOrder(a, b)),
-      ),
+    () => [...available].sort((a, b) => compareProductRefs(a.ref, b.ref)),
     [available],
   )
 
@@ -179,7 +176,7 @@ function ProductsPage() {
         if (price < priceRange[0] || price > priceRange[1]) return false
       }
       if (categoryId !== 'all' && p.categoryId !== Number(categoryId)) return false
-      if (search && !p.ref.toLowerCase().includes(search.toLowerCase())) return false
+      if (search && !refMatchesSearch(p.ref, search)) return false
       if (inStockOnly && p.statut !== 'DISPONIBLE') return false
       return true
     })
@@ -191,11 +188,11 @@ function ProductsPage() {
         case 'price-desc':
           return Number(b.prix ?? 0) - Number(a.prix ?? 0)
         default:
-          return compareDisplayOrder(a, b)
+          return compareProductRefs(a.ref, b.ref)
       }
     })
 
-    return categoryId === 'all' ? dedupeCatalogVariants(sorted) : sorted
+    return sorted
   }, [available, categoryId, search, sort, priceRange, inStockOnly])
 
   useEffect(() => {

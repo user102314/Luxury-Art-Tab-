@@ -7,6 +7,70 @@ export function normalizeProductRef(ref: string): string {
     .toUpperCase()
 }
 
+/**
+ * Numéro principal de la référence (ex. « B 1046 » → 1046, « B 104 » → 104).
+ */
+export function extractPrimaryRefNumber(ref: string): number | null {
+  const normalized = normalizeProductRef(ref)
+  const prefixed = normalized.match(/^[A-Z]+\s*(\d+)/)
+  if (prefixed) return Number.parseInt(prefixed[1], 10)
+  const any = normalized.match(/(\d+)/)
+  return any ? Number.parseInt(any[1], 10) : null
+}
+
+/**
+ * Filtre recherche par référence :
+ * - « 104 » → B 104 uniquement (pas B 1046)
+ * - « B 105 » → B 105 exact
+ * - texte libre → sous-chaîne classique
+ */
+export function refMatchesSearch(ref: string, search: string): boolean {
+  const term = search.trim()
+  if (!term) return true
+
+  const termLower = term.toLowerCase()
+  const refLower = ref.trim().toLowerCase()
+
+  const exactNum = term.match(/^(\d+)([''`])?$/)
+  if (exactNum) {
+    const n = extractPrimaryRefNumber(ref)
+    if (n === null || String(n) !== exactNum[1]) return false
+    const wantsVariant = Boolean(exactNum[2])
+    return wantsVariant ? isVariantRef(ref) : !isVariantRef(ref)
+  }
+
+  const letterNum = term.match(/^([a-zA-Z]+)\s*(\d+)([''`])?$/i)
+  if (letterNum) {
+    const refParts = ref.trim().match(/^([a-zA-Z]+)\s*(\d+)/i)
+    if (!refParts) return refLower.includes(termLower)
+    const prefixOk =
+      refParts[1].toLowerCase() === letterNum[1].toLowerCase() &&
+      refParts[2] === letterNum[2]
+    if (!prefixOk) return false
+    const wantsVariant = Boolean(letterNum[3])
+    return wantsVariant ? isVariantRef(ref) : !isVariantRef(ref)
+  }
+
+  return refLower.includes(termLower)
+}
+
+/** Tri par numéro principal ; à égalité B 101 avant B 101'. */
+export function compareProductRefs(a: string, b: string): number {
+  const numA = extractPrimaryRefNumber(a)
+  const numB = extractPrimaryRefNumber(b)
+  if (numA !== null && numB !== null && numA !== numB) {
+    return numA - numB
+  }
+  if (numA !== null && numB === null) return -1
+  if (numA === null && numB !== null) return 1
+
+  const varA = isVariantRef(a) ? 1 : 0
+  const varB = isVariantRef(b) ? 1 : 0
+  if (varA !== varB) return varA - varB
+
+  return a.trim().localeCompare(b.trim(), 'fr', { sensitivity: 'base', numeric: true })
+}
+
 /** Variante catalogue du type B 109' (apostrophe en suffixe). */
 export function isVariantRef(ref: string): boolean {
   return /[''`]\s*$/.test(ref.trim())
@@ -49,7 +113,7 @@ export function compareDisplayOrder<T extends { displayOrder?: number | null; id
   }
   const diff = rank(a) - rank(b)
   if (diff !== 0) return diff
-  return a.ref.localeCompare(b.ref, 'fr') || a.id - b.id
+  return compareProductRefs(a.ref, b.ref) || a.id - b.id
 }
 
 /**

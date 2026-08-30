@@ -53,7 +53,7 @@ import {
 import { queryKeys } from '../lib/queryKeys'
 import type { Category, Product, ProductAnalytics, ProductImage, ProductStatut } from '../types'
 import { compareNumbers, compareStrings, matchesSearch, type SortDir } from '../lib/listUtils'
-import { compareDisplayOrder } from '@/lib/productSort'
+import { compareDisplayOrder, compareProductRefs, refMatchesSearch } from '@/lib/productSort'
 
 const STATUTS: ProductStatut[] = ['DISPONIBLE', 'RUPTURE_STOCK', 'ARCHIVE']
 
@@ -140,7 +140,7 @@ export default function ProductsPage() {
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('ALL')
   const [statutFilter, setStatutFilter] = useState('ALL')
-  const [sort, setSort] = useState<ProductSortKey>('priorite')
+  const [sort, setSort] = useState<ProductSortKey>('ref')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [viewMode, setViewMode] = useState<CatalogView>('grid')
   const [promotingId, setPromotingId] = useState<number | null>(null)
@@ -151,7 +151,12 @@ export default function ProductsPage() {
     let list = products.filter((p) => {
       if (categoryFilter !== 'ALL' && String(p.categoryId) !== categoryFilter) return false
       if (statutFilter !== 'ALL' && p.statut !== statutFilter) return false
-      if (!matchesSearch(search, [p.ref, p.description, categoryMap[p.categoryId]])) return false
+      if (search) {
+        const term = search.trim()
+        const refHit = refMatchesSearch(p.ref, term)
+        const metaHit = matchesSearch(term, [p.description, categoryMap[p.categoryId]])
+        if (!refHit && !metaHit) return false
+      }
       return true
     })
     list = [...list].sort((a, b) => {
@@ -170,7 +175,9 @@ export default function ProductsPage() {
             : compareDisplayOrder(b, a)
         case 'ref':
         default:
-          return compareStrings(a.ref, b.ref, sortDir)
+          return sortDir === 'asc'
+            ? compareProductRefs(a.ref, b.ref)
+            : compareProductRefs(b.ref, a.ref)
       }
     })
     return list
