@@ -6,7 +6,7 @@ import { SiteFooter } from '@/components/SiteFooter'
 import { BackButton } from '@/components/BackButton'
 import { ProductCard } from '@/components/ProductCard'
 import { LazyArViewer } from '@/components/LazyArViewer'
-import { useCategories, useProducts } from '@/hooks/useStorefrontQueries'
+import { useCatalogPricing, useCategories, useProducts } from '@/hooks/useStorefrontQueries'
 import { Slider } from '@/components/ui/slider'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -23,7 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { api } from '@/lib/api'
 import {
   PAGE_COPY,
   buildSeoHead,
@@ -31,8 +30,11 @@ import {
   resolveCategoryBySlug,
 } from '@/lib/seo'
 import { dedupeCatalogVariants, compareDisplayOrder } from '@/lib/productSort'
+import { catalogPriceBounds, productPriceBounds } from '@/lib/pricing'
+import { ensureStorefrontCatalog, prefetchCatalogPricing } from '@/lib/storefrontLoader'
 
-const CATALOG_BATCH = 24
+const CATALOG_BATCH = 20
+const EAGER_IMAGES = 12
 
 export const Route = createFileRoute('/products/')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -42,11 +44,8 @@ export const Route = createFileRoute('/products/')({
         : undefined,
   }),
   loader: async () => {
-    const [products, categories] = await Promise.all([
-      api.getProducts().catch(() => []),
-      api.getCategories().catch(() => []),
-    ])
-    return { products, categories }
+    prefetchCatalogPricing()
+    return ensureStorefrontCatalog()
   },
   head: ({ loaderData, match }) => {
     const categoryParam = (match.search as { category?: string }).category
@@ -79,10 +78,22 @@ const sortLabels: Record<SortOption, string> = {
   'price-desc': 'Prix décroissant',
 }
 
+function resolveCategoryFilter(
+  param: string | undefined,
+  categories: { id: number; nom: string }[],
+): string {
+  if (!param) return 'all'
+  if (/^\d+$/.test(param)) return param
+  const match = resolveCategoryBySlug(param, categories)
+  return match ? String(match.id) : 'all'
+}
+
 function ProductsPage() {
   const { products: seededProducts, categories: seededCategories } = Route.useLoaderData()
   const { category: categoryFromUrl } = Route.useSearch()
-  const [categoryId, setCategoryId] = useState<string>(categoryFromUrl ?? 'all')
+  const [categoryId, setCategoryId] = useState<string>(() =>
+    resolveCategoryFilter(categoryFromUrl, seededCategories),
+  )
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<SortOption>('name')
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000])
@@ -98,10 +109,16 @@ function ProductsPage() {
   })
   const loadingProducts = loadingAll && products.length === 0
   const { data: categories = [] } = useCategories({ initialData: seededCategories })
+  const { data: catalogPricing } = useCatalogPricing()
+
+  const resolvedCategoryId = useMemo(
+    () => resolveCategoryFilter(categoryFromUrl, categories),
+    [categoryFromUrl, categories],
+  )
 
   useEffect(() => {
-    setCategoryId(categoryFromUrl ?? 'all')
-  }, [categoryFromUrl])
+    setCategoryId(resolvedCategoryId)
+  }, [resolvedCategoryId])
 
   const categoryMap = useMemo(
     () => Object.fromEntries(categories.map((c) => [c.id, c.nom])),
@@ -128,10 +145,18 @@ function ProductsPage() {
   }, [available])
 
   const priceBounds = useMemo(() => {
-    if (available.length === 0) return [0, 1000] as [number, number]
-    const prices = available.map((p) => Number(p.prix ?? 0)).filter((n) => Number.isFinite(n))
-    return [Math.floor(Math.min(...prices)), Math.ceil(Math.max(...prices))] as [number, number]
-  }, [available])
+    const fromCatalog = catalogPriceBounds(catalogPricing)
+    if (fromCatalog) return fromCatalog
+
+    const pool =
+      categoryId === 'all'
+        ? available
+        : available.filter((p) => p.categoryId === Number(categoryId))
+    const fromProducts = productPriceBounds(pool)
+    if (fromProducts) return fromProducts
+
+    return [0, 1000] as [number, number]
+  }, [catalogPricing, available, categoryId])
 
   useEffect(() => {
     setPriceRange(priceBounds)
@@ -150,7 +175,9 @@ function ProductsPage() {
   const filtered = useMemo(() => {
     const list = available.filter((p) => {
       const price = Number(p.prix)
-      if (price < priceRange[0] || price > priceRange[1]) return false
+      if (Number.isFinite(price) && price > 0) {
+        if (price < priceRange[0] || price > priceRange[1]) return false
+      }
       if (categoryId !== 'all' && p.categoryId !== Number(categoryId)) return false
       if (search && !p.ref.toLowerCase().includes(search.toLowerCase())) return false
       if (inStockOnly && p.statut !== 'DISPONIBLE') return false
@@ -218,7 +245,7 @@ function ProductsPage() {
         <Slider
           min={priceBounds[0]}
           max={priceBounds[1]}
-          step={10}
+          step={5}
           value={priceRange}
           onValueChange={(v) => setPriceRange(v as [number, number])}
         />
@@ -265,7 +292,9 @@ function ProductsPage() {
             Catalogue complet
           </p>
           <h1 className="mt-3 break-words font-display text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">
-            {PAGE_COPY.products.h1}
+            {categoryId !== 'all' && categoryMap[Number(categoryId)]
+              ? categoryMap[Number(categoryId)]
+              : PAGE_COPY.products.h1}
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-sand/80 sm:text-base">
             {PAGE_COPY.products.intro}
@@ -273,7 +302,6 @@ function ProductsPage() {
         </div>
       </div>
 
-      {/* Barre d'outils collante : recherche, résultats, tri */}
       <div className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-[1600px] items-center gap-3 px-4 py-3 md:px-10">
           <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
@@ -364,7 +392,7 @@ function ProductsPage() {
 
           {loadingProducts ? (
             <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-              {Array.from({ length: 10 }, (_, i) => (
+              {Array.from({ length: CATALOG_BATCH }, (_, i) => (
                 <div key={i} className="aspect-[4/5] animate-pulse rounded-2xl bg-muted" />
               ))}
             </div>
@@ -393,7 +421,8 @@ function ProductsPage() {
                     key={p.id}
                     product={p}
                     categoryName={categoryMap[p.categoryId]}
-                    index={i}
+                    index={i < EAGER_IMAGES ? i : 0}
+                    imagePriority={i < EAGER_IMAGES}
                     onAr={setArImage}
                     compact
                   />

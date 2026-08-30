@@ -118,6 +118,7 @@ export function prefetchStorefrontRoute(qc: QueryClient, path: string) {
   if (path === '/products' || path.startsWith('/products')) {
     void qc.prefetchQuery({ queryKey: queryKeys.products, queryFn: api.getProducts, ...opts })
     void qc.prefetchQuery({ queryKey: queryKeys.categories, queryFn: api.getCategories, ...opts })
+    void qc.prefetchQuery({ queryKey: queryKeys.catalogPricing, queryFn: api.getCatalogPricing, ...opts })
   }
   if (path.startsWith('/category/')) {
     void qc.prefetchQuery({ queryKey: queryKeys.products, queryFn: api.getProducts, ...opts })

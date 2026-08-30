@@ -16,9 +16,11 @@ interface ProductCardProps {
   index?: number
   onAr?: (imageUrl: string) => void
   compact?: boolean
+  /** Charge l'image immédiatement (premiers items du catalogue). */
+  imagePriority?: boolean
 }
 
-export function ProductCard({ product, categoryName, index = 0, onAr, compact = false }: ProductCardProps) {
+export function ProductCard({ product, categoryName, index = 0, onAr, compact = false, imagePriority = false }: ProductCardProps) {
   const queryClient = useQueryClient()
   const { isFavorite, toggleFavorite } = useFavorites()
   const { client } = useAuth()
@@ -69,7 +71,8 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
             <img
               src={image}
               alt={productVisibleTitle(product.ref, categoryName)}
-              loading="lazy"
+              loading={imagePriority ? 'eager' : 'lazy'}
+              fetchPriority={imagePriority ? 'high' : 'auto'}
               decoding="async"
               onError={fallbackFromBrokenImage}
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"

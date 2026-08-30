@@ -4,6 +4,7 @@ import { AnimatedHero } from "@/components/AnimatedHero";
 import { SiteNav } from "@/components/SiteNav";
 import { Reveal } from "@/components/Reveal";
 import { api } from "@/lib/api";
+import { ensureStorefrontCatalog, prefetchCatalogPricing } from "@/lib/storefrontLoader";
 import {
   PAGE_COPY,
   buildSeoHead,
@@ -34,9 +35,9 @@ const SiteFooter = lazy(() =>
 
 export const Route = createFileRoute("/")({
   loader: async () => {
-    const [products, categories, news, testimonials] = await Promise.all([
-      api.getProducts().catch(() => []),
-      api.getCategories().catch(() => []),
+    prefetchCatalogPricing();
+    const [{ products, categories }, news, testimonials] = await Promise.all([
+      ensureStorefrontCatalog(),
       api.getPublishedNews().catch(() => []),
       api.getActiveTestimonials().catch(() => []),
     ]);

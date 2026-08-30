@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { heroCategories } from "@/data/heroCategories";
 import { useCategoryShowcase } from "@/hooks/useStorefrontQueries";
@@ -16,7 +17,8 @@ type HeroCard = {
   label: string;
   image: string;
   fallback: string;
-  href: string;
+  /** ID catégorie API ou slug hero (résolu côté page produits). */
+  category: string;
 };
 
 function handleImageError(fallback: string) {
@@ -66,7 +68,7 @@ const staticCards: HeroCard[] = heroCategories.map((category) => ({
   label: category.word,
   image: category.images[0],
   fallback: category.images[0],
-  href: `/category/${category.slug}`,
+  category: category.slug,
 }));
 
 export function AnimatedHero() {
@@ -99,7 +101,7 @@ export function AnimatedHero() {
           label: slide.nom,
           image,
           fallback,
-          href: `/products?category=${slide.categoryId}`,
+          category: String(slide.categoryId),
         };
       });
     }
@@ -210,9 +212,11 @@ export function AnimatedHero() {
         {cards.map((card, index) => {
           const spot = placeCard(index, cards.length);
           return (
-            <a
+            <Link
               key={card.key}
-              href={card.href}
+              to="/products"
+              search={{ category: card.category }}
+              preload="intent"
               className="group absolute block"
               style={{
                 left: `${spot.left}%`,
@@ -277,7 +281,7 @@ export function AnimatedHero() {
                   </div>
                 </div>
               </div>
-            </a>
+            </Link>
           );
         })}
       </div>
@@ -292,7 +296,12 @@ export function AnimatedHero() {
           <CarouselContent className="-ml-3">
             {cards.map((card, index) => (
               <CarouselItem key={card.key} className="basis-[68%] pl-3 sm:basis-[58%]">
-                <a href={card.href} className="group block">
+                <Link
+                  to="/products"
+                  search={{ category: card.category }}
+                  preload="intent"
+                  className="group block"
+                >
                   <div
                     className={[
                       "overflow-hidden rounded-2xl bg-sand p-1.5 shadow-[0_18px_40px_-22px_rgba(74,93,79,0.55)] ring-1 ring-foliage/[0.06] transition duration-500",
@@ -327,7 +336,7 @@ export function AnimatedHero() {
                       </span>
                     </div>
                   </div>
-                </a>
+                </Link>
               </CarouselItem>
             ))}
           </CarouselContent>
@@ -390,13 +399,15 @@ export function AnimatedHero() {
           livraison partout en Tunisie.
         </p>
 
-        <a
-          href="/products"
+        <Link
+          to="/products"
+          search={{ category: undefined }}
+          preload="intent"
           className="mt-5 inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background shadow-[0_16px_34px_-18px_rgba(0,0,0,0.7)] transition hover:scale-[1.03]"
         >
           Voir toute la galerie
           <ArrowRight className="h-4 w-4" />
-        </a>
+        </Link>
       </div>
     </section>
   );

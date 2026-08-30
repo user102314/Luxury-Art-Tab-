@@ -6,6 +6,7 @@ import com.luxart.ecommerce.dto.TableauDimensionDto;
 import com.luxart.ecommerce.exception.ResourceNotFoundException;
 import com.luxart.ecommerce.model.entity.Category;
 import com.luxart.ecommerce.model.entity.Product;
+import com.luxart.ecommerce.model.entity.ProductImage;
 import com.luxart.ecommerce.model.entity.TableauDimension;
 import com.luxart.ecommerce.model.enums.AdminActionType;
 import com.luxart.ecommerce.repository.CategoryRepository;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,14 +43,18 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public List<ProductDto> findAll() {
+        List<Product> products = productRepository.findAll();
         Map<Long, BigDecimal> mins = catalogPricingService.minPriceByDimension();
-        return productRepository.findAll().stream().map(p -> toDto(p, mins)).toList();
+        Map<Long, List<ProductImage>> imagesByProduct = loadImagesByProduct(products);
+        return products.stream()
+                .map(p -> toDto(p, mins, imagesByProduct.getOrDefault(p.getId(), List.of())))
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public ProductDto findById(Long id) {
-        return toDto(getEntity(id), catalogPricingService.minPriceByDimension());
+        return toDto(getEntity(id), catalogPricingService.minPriceByDimension(), null);
     }
 
     @Override
@@ -267,19 +273,51 @@ public class ProductServiceImpl implements ProductService {
         return order == null || order <= 0 ? Integer.MAX_VALUE : order;
     }
 
+    private Map<Long, List<ProductImage>> loadImagesByProduct(List<Product> products) {
+        if (products.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> ids = products.stream().map(Product::getId).toList();
+        return productImageRepository.findByProductIdIn(ids).stream()
+                .collect(Collectors.groupingBy(img -> img.getProduct().getId()));
+    }
+
     private ProductDto toDto(Product product, Map<Long, BigDecimal> minByDimension) {
-        List<ProductImageDto> images = productImageRepository
-                .findByProductIdOrderByOrdreAsc(product.getId())
-                .stream()
-                .map(img -> ProductImageDto.builder()
-                        .id(img.getId())
-                        .productId(product.getId())
-                        .url(img.getUrl())
-                        .storagePath(img.getStoragePath())
-                        .ordre(img.getOrdre())
-                        .createdAt(img.getCreatedAt())
-                        .build())
-                .toList();
+        return toDto(product, minByDimension, null);
+    }
+
+    private ProductDto toDto(
+            Product product,
+            Map<Long, BigDecimal> minByDimension,
+            List<ProductImage> preloadedImages
+    ) {
+        List<ProductImageDto> images;
+        if (preloadedImages != null) {
+            images = preloadedImages.stream()
+                    .sorted(Comparator.comparingInt(img -> img.getOrdre() == null ? 0 : img.getOrdre()))
+                    .map(img -> ProductImageDto.builder()
+                            .id(img.getId())
+                            .productId(product.getId())
+                            .url(img.getUrl())
+                            .storagePath(img.getStoragePath())
+                            .ordre(img.getOrdre())
+                            .createdAt(img.getCreatedAt())
+                            .build())
+                    .toList();
+        } else {
+            images = productImageRepository
+                    .findByProductIdOrderByOrdreAsc(product.getId())
+                    .stream()
+                    .map(img -> ProductImageDto.builder()
+                            .id(img.getId())
+                            .productId(product.getId())
+                            .url(img.getUrl())
+                            .storagePath(img.getStoragePath())
+                            .ordre(img.getOrdre())
+                            .createdAt(img.getCreatedAt())
+                            .build())
+                    .toList();
+        }
 
         List<TableauDimensionDto> dimensions = product.getDimensions() == null
                 ? List.of()

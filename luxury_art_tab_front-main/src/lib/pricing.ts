@@ -74,3 +74,22 @@ export function pricedDimensions(product: Product, catalog?: CatalogPricing | nu
 export function getPrice(basePrice: number, _size?: string): number {
   return Number(basePrice) || 0
 }
+
+/** Min / max depuis la grille tarifs admin (page Tarifs). */
+export function catalogPriceBounds(catalog?: CatalogPricing | null): [number, number] | null {
+  if (!catalog?.tarifs?.length) return null
+  const prices = catalog.tarifs
+    .map((t) => Number(t.prix))
+    .filter((n) => Number.isFinite(n) && n > 0)
+  if (prices.length === 0) return null
+  return [Math.floor(Math.min(...prices)), Math.ceil(Math.max(...prices))]
+}
+
+/** Min / max depuis les prix de départ affichés sur les produits. */
+export function productPriceBounds(products: Product[]): [number, number] | null {
+  const prices = products
+    .map((p) => Number(p.prix))
+    .filter((n) => Number.isFinite(n) && n > 0)
+  if (prices.length === 0) return null
+  return [Math.floor(Math.min(...prices)), Math.ceil(Math.max(...prices))]
+}
