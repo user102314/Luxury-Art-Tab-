@@ -16,8 +16,8 @@ public class TableauDimension {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Ex. 90/60 */
-    @Column(nullable = false, unique = true, length = 30)
+    /** Ex. 90/60 — plusieurs lignes possibles si la note diffère */
+    @Column(nullable = false, length = 30)
     private String label;
 
     @Column(nullable = false)
@@ -30,7 +30,8 @@ public class TableauDimension {
     @Builder.Default
     private Integer ordre = 0;
 
-    /** Note optionnelle (ex. « 3 » = tableau 3 pièces). Affichée côté boutique : note × dimension. */
-    @Column(length = 40)
-    private String note;
+    /** Note optionnelle (ex. « 3 »). Chaîne vide = sans note. Unique avec label. */
+    @Column(nullable = false, length = 40)
+    @Builder.Default
+    private String note = "";
 }

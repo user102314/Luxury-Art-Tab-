@@ -69,8 +69,9 @@ public class CatalogPricingServiceImpl implements CatalogPricingService {
     @Transactional
     public TableauDimensionDto createDimension(TableauDimensionDto dto) {
         String label = normalizeLabel(dto.getLabel());
-        if (dimensionRepository.existsByLabelIgnoreCase(label)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dimension déjà existante: " + label);
+        String note = storeNote(dto.getNote());
+        if (dimensionRepository.existsByLabelIgnoreCaseAndNote(label, note)) {
+            throw duplicateDimensionError(label, note);
         }
         int[] wh = parseSize(label);
         TableauDimension saved = dimensionRepository.save(TableauDimension.builder()
@@ -78,7 +79,7 @@ public class CatalogPricingServiceImpl implements CatalogPricingService {
                 .largeur(dto.getLargeur() != null ? dto.getLargeur() : wh[0])
                 .hauteur(dto.getHauteur() != null ? dto.getHauteur() : wh[1])
                 .ordre(dto.getOrdre() != null ? dto.getOrdre() : nextDimensionOrdre())
-                .note(blankToNull(dto.getNote()))
+                .note(note)
                 .build());
         ensureTarifRows(saved);
         return toDimensionDto(saved);
@@ -89,10 +90,11 @@ public class CatalogPricingServiceImpl implements CatalogPricingService {
     public TableauDimensionDto updateDimension(Long id, TableauDimensionDto dto) {
         TableauDimension dim = getDimension(id);
         String label = normalizeLabel(dto.getLabel());
-        dimensionRepository.findByLabelIgnoreCase(label)
+        String note = storeNote(dto.getNote());
+        dimensionRepository.findByLabelIgnoreCaseAndNote(label, note)
                 .filter(other -> !other.getId().equals(id))
                 .ifPresent(other -> {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dimension déjà existante: " + label);
+                    throw duplicateDimensionError(label, note);
                 });
         int[] wh = parseSize(label);
         dim.setLabel(label);
@@ -101,7 +103,7 @@ public class CatalogPricingServiceImpl implements CatalogPricingService {
         if (dto.getOrdre() != null) {
             dim.setOrdre(dto.getOrdre());
         }
-        dim.setNote(blankToNull(dto.getNote()));
+        dim.setNote(note);
         return toDimensionDto(dimensionRepository.save(dim));
     }
 
@@ -353,8 +355,22 @@ public class CatalogPricingServiceImpl implements CatalogPricingService {
                 .largeur(dim.getLargeur())
                 .hauteur(dim.getHauteur())
                 .ordre(dim.getOrdre())
-                .note(dim.getNote())
+                .note(blankToNull(dim.getNote()))
                 .build();
+    }
+
+    private static String storeNote(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "";
+        }
+        return raw.trim();
+    }
+
+    private static ResponseStatusException duplicateDimensionError(String label, String note) {
+        String message = note.isBlank()
+                ? "Dimension déjà existante: " + label
+                : "Dimension déjà existante: " + label + " (note « " + note + " »)";
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
     }
 
     private CadreDto toCadreDto(Cadre cadre) {

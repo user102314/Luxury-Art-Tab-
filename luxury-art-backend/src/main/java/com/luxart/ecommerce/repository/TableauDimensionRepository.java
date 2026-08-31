@@ -9,7 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface TableauDimensionRepository extends JpaRepository<TableauDimension, Long> {
-    Optional<TableauDimension> findByLabelIgnoreCase(String label);
+    Optional<TableauDimension> findByLabelIgnoreCaseAndNote(String label, String note);
     List<TableauDimension> findAllByOrderByOrdreAscIdAsc();
-    boolean existsByLabelIgnoreCase(String label);
+    boolean existsByLabelIgnoreCaseAndNote(String label, String note);
 }

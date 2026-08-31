@@ -75,12 +75,13 @@ public class CatalogPricingSeedRunner implements CommandLineRunner {
         int ordre = 0;
         for (int[] size : SIZES) {
             String label = size[0] + "/" + size[1];
-            if (dimensionRepository.findByLabelIgnoreCase(label).isEmpty()) {
+            if (dimensionRepository.findByLabelIgnoreCaseAndNote(label, "").isEmpty()) {
                 dimensionRepository.save(TableauDimension.builder()
                         .label(label)
                         .largeur(size[0])
                         .hauteur(size[1])
                         .ordre(ordre)
+                        .note("")
                         .build());
                 log.info("Dimension catalogue créée : {}", label);
             }
