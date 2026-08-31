@@ -18,6 +18,8 @@ export interface TableauDimension {
   largeur?: number
   hauteur?: number
   ordre?: number
+  /** Ex. « 3 » pour tableau 3 pièces — optionnel */
+  note?: string | null
 }
 
 export interface CadreCouleur {

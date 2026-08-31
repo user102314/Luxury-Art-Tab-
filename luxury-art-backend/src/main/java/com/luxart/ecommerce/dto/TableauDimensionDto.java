@@ -15,4 +15,6 @@ public class TableauDimensionDto {
     private Integer largeur;
     private Integer hauteur;
     private Integer ordre;
+    /** Ex. « 3 » pour un format 3 pièces — optionnel */
+    private String note;
 }

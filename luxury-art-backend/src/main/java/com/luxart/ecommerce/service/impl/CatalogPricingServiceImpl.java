@@ -78,6 +78,7 @@ public class CatalogPricingServiceImpl implements CatalogPricingService {
                 .largeur(dto.getLargeur() != null ? dto.getLargeur() : wh[0])
                 .hauteur(dto.getHauteur() != null ? dto.getHauteur() : wh[1])
                 .ordre(dto.getOrdre() != null ? dto.getOrdre() : nextDimensionOrdre())
+                .note(blankToNull(dto.getNote()))
                 .build());
         ensureTarifRows(saved);
         return toDimensionDto(saved);
@@ -100,6 +101,7 @@ public class CatalogPricingServiceImpl implements CatalogPricingService {
         if (dto.getOrdre() != null) {
             dim.setOrdre(dto.getOrdre());
         }
+        dim.setNote(blankToNull(dto.getNote()));
         return toDimensionDto(dimensionRepository.save(dim));
     }
 
@@ -351,6 +353,7 @@ public class CatalogPricingServiceImpl implements CatalogPricingService {
                 .largeur(dim.getLargeur())
                 .hauteur(dim.getHauteur())
                 .ordre(dim.getOrdre())
+                .note(dim.getNote())
                 .build();
     }
 

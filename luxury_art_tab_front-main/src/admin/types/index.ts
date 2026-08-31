@@ -203,6 +203,7 @@ export interface TableauDimension {
   largeur?: number
   hauteur?: number
   ordre?: number
+  note?: string | null
 }
 
 export interface CadreCouleur {

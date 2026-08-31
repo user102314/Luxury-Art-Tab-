@@ -19,6 +19,14 @@ export function displayDimension(label: string): string {
   return `${label.replaceAll('/', '×')} cm`
 }
 
+/** Affichage boutique : « 3 × 60×40 cm » si note présente, sinon « 60×40 cm ». */
+export function formatDimensionLabel(dim: { label: string; note?: string | null }): string {
+  const size = dim.label.replaceAll('/', '×')
+  const note = dim.note?.trim()
+  if (note) return `${note} × ${size} cm`
+  return `${size} cm`
+}
+
 export function cartLineKey(item: {
   productId: number
   taille: string

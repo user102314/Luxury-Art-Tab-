@@ -54,6 +54,7 @@ import { queryKeys } from '../lib/queryKeys'
 import type { Category, Product, ProductAnalytics, ProductImage, ProductStatut } from '../types'
 import { compareNumbers, compareStrings, matchesSearch, type SortDir } from '../lib/listUtils'
 import { compareDisplayOrder, compareProductRefs, refMatchesSearch } from '@/lib/productSort'
+import { formatDimensionLabel } from '@/lib/pricing'
 
 const STATUTS: ProductStatut[] = ['DISPONIBLE', 'RUPTURE_STOCK', 'ARCHIVE']
 
@@ -514,7 +515,7 @@ export default function ProductsPage() {
                             }))
                           }
                         />
-                        {dim.label}
+                        {formatDimensionLabel(dim)}
                       </label>
                     )
                   })}
@@ -902,7 +903,7 @@ export default function ProductsPage() {
                       {p.prix != null ? `À partir de ${formatCurrency(Number(p.prix))}` : '—'}
                     </td>
                     <td className="px-6 py-4 text-xs text-zinc-400">
-                      {(p.dimensions ?? []).map((d) => d.label).join(', ') || '—'}
+                      {(p.dimensions ?? []).map((d) => formatDimensionLabel(d)).join(', ') || '—'}
                     </td>
                     <td className="px-6 py-4">
                       <span className="rounded-lg bg-white/5 px-2 py-1 text-xs">{p.statut}</span>
@@ -1037,7 +1038,7 @@ export default function ProductsPage() {
                       : 'Prix selon format'}
                   </span>
                   <span className="text-zinc-300">
-                    {(selectedProduct?.dimensions ?? []).map((d) => d.label).join(' · ') || 'Aucune dimension'}
+                    {(selectedProduct?.dimensions ?? []).map((d) => formatDimensionLabel(d)).join(' · ') || 'Aucune dimension'}
                   </span>
                   <span className="rounded-lg bg-white/5 px-2 py-0.5 text-xs">
                     {selectedProduct?.statut ?? '—'}

@@ -29,4 +29,8 @@ public class TableauDimension {
     @Column(nullable = false)
     @Builder.Default
     private Integer ordre = 0;
+
+    /** Note optionnelle (ex. « 3 » = tableau 3 pièces). Affichée côté boutique : note × dimension. */
+    @Column(length = 40)
+    private String note;
 }

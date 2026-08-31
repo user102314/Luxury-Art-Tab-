@@ -328,6 +328,7 @@ public class ProductServiceImpl implements ProductService {
                                 .largeur(d.getLargeur())
                                 .hauteur(d.getHauteur())
                                 .ordre(d.getOrdre())
+                                .note(d.getNote())
                                 .build())
                         .toList();
 

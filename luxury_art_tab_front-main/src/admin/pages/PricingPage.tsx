@@ -4,6 +4,7 @@ import { api } from '../lib/api'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
 import { useCatalogPricing, useInvalidateAdmin } from '../hooks/useAdminQueries'
 import { resolveImageSrc } from '@/lib/images'
+import { formatDimensionLabel } from '@/lib/pricing'
 import type { Cadre, CadreCouleur, TableauDimension } from '../types'
 
 const EMPTY_COLOR_DRAFT = { nom: '', hex: '#111111', file: null as File | null, preview: '' }
@@ -24,6 +25,7 @@ export default function PricingPage() {
   const [message, setMessage] = useState('')
   const [savingCell, setSavingCell] = useState('')
   const [newDim, setNewDim] = useState('')
+  const [newDimNote, setNewDimNote] = useState('')
   const [newCadre, setNewCadre] = useState('')
   const [colorDrafts, setColorDrafts] = useState<
     Record<number, { nom: string; hex: string; file: File | null; preview: string }>
@@ -68,10 +70,29 @@ export default function PricingPage() {
     e.preventDefault()
     if (!newDim.trim()) return
     try {
-      await api.createDimension({ label: newDim.trim() })
+      await api.createDimension({
+        label: newDim.trim(),
+        note: newDimNote.trim() || undefined,
+      })
       setNewDim('')
+      setNewDimNote('')
       await refresh()
       flash('Dimension ajoutée')
+    } catch (err) {
+      handleError(err)
+    }
+  }
+
+  const saveDimensionNote = async (dim: TableauDimension, rawNote: string) => {
+    const note = rawNote.trim()
+    if ((dim.note ?? '') === note) return
+    try {
+      await api.updateDimension(dim.id, {
+        label: dim.label,
+        note: note || undefined,
+      })
+      await refresh()
+      flash('Note de dimension enregistrée')
     } catch (err) {
       handleError(err)
     }
@@ -204,7 +225,7 @@ export default function PricingPage() {
             <tbody>
               {dimensions.map((dim) => (
                 <tr key={dim.id} className="border-b border-white/5">
-                  <td className="px-4 py-3 font-medium text-white">{dim.label}</td>
+                  <td className="px-4 py-3 font-medium text-white">{formatDimensionLabel(dim)}</td>
                   {cadres.map((cadre) => {
                     const tarif = tarifs.find(
                       (t) => t.dimensionId === dim.id && t.cadreId === cadre.id,
@@ -243,32 +264,57 @@ export default function PricingPage() {
             <Ruler className="h-4 w-4 text-gold-400" />
             <h3 className="font-semibold text-white">Dimensions</h3>
           </div>
-          <form onSubmit={addDimension} className="mb-4 flex gap-2">
-            <input
-              className="input flex-1"
-              placeholder="Ex. 90/60"
-              value={newDim}
-              onChange={(e) => setNewDim(e.target.value)}
-            />
-            <button type="submit" className="btn-primary">
-              <Plus className="h-4 w-4" />
-              Ajouter
-            </button>
+          <form onSubmit={addDimension} className="mb-4 space-y-2">
+            <div className="flex gap-2">
+              <input
+                className="input flex-1"
+                placeholder="Ex. 90/60"
+                value={newDim}
+                onChange={(e) => setNewDim(e.target.value)}
+              />
+              <input
+                className="input w-28"
+                placeholder="Note (opt.)"
+                title="Ex. 3 pour un tableau 3 pièces"
+                value={newDimNote}
+                onChange={(e) => setNewDimNote(e.target.value)}
+              />
+              <button type="submit" className="btn-primary shrink-0">
+                <Plus className="h-4 w-4" />
+                Ajouter
+              </button>
+            </div>
+            <p className="text-xs text-zinc-500">
+              La note est optionnelle. Ex. note « 3 » → affichage client : 3 × 90×60 cm
+            </p>
           </form>
           <ul className="space-y-2">
             {dimensions.map((dim) => (
               <li
                 key={dim.id}
-                className="flex items-center justify-between rounded-xl bg-ink-800/60 px-4 py-2"
+                className="flex flex-col gap-2 rounded-xl bg-ink-800/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
               >
-                <span className="text-sm text-white">{dim.label} cm</span>
-                <button
-                  type="button"
-                  onClick={() => void deleteDimension(dim)}
-                  className="rounded-lg p-2 text-zinc-500 hover:text-red-400"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-white">{formatDimensionLabel(dim)}</p>
+                  <p className="font-mono text-xs text-zinc-500">{dim.label}</p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <input
+                    className="input w-28 text-sm"
+                    placeholder="Note"
+                    defaultValue={dim.note ?? ''}
+                    key={`note-${dim.id}-${dim.note ?? ''}`}
+                    onBlur={(e) => void saveDimensionNote(dim, e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void deleteDimension(dim)}
+                    className="rounded-lg p-2 text-zinc-500 hover:text-red-400"
+                    aria-label={`Supprimer ${formatDimensionLabel(dim)}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

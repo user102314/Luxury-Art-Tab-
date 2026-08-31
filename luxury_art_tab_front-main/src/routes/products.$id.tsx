@@ -23,7 +23,7 @@ import { useProduct, useProducts } from '@/hooks/useStorefrontQueries'
 import { useProductTracking } from '@/hooks/useProductTracking'
 import { getProductImage, getProductImages, getSimulationImage, resolveImageSrc, IMAGE_WIDTH } from '@/lib/images'
 import {
-  displayDimension,
+  formatDimensionLabel,
   formatPrice,
   pricedDimensions,
   availableCadres,
@@ -316,12 +316,12 @@ function ProductDetailPage() {
       imageUrl: image,
       prixUnitaire: unitPrice,
       quantite: qty,
-      taille: selectedDim.label,
+      taille: formatDimensionLabel(selectedDim),
       encadrement: selectedCadre.nom,
       couleur: selectedCouleur?.nom,
     })
     toast.success('Ajouté au panier', {
-      description: `${product.ref} · ${displayDimension(selectedDim.label)}`,
+      description: `${product.ref} · ${formatDimensionLabel(selectedDim)}`,
     })
   }
 
@@ -480,7 +480,7 @@ function ProductDetailPage() {
                       : null
                     return (
                       <option key={dim.id} value={dim.id}>
-                        {displayDimension(dim.label)}
+                        {formatDimensionLabel(dim)}
                         {minPrice != null ? ` — ${formatPrice(minPrice)}` : ''}
                       </option>
                     )
@@ -619,7 +619,7 @@ function ProductDetailPage() {
                   <ul className="list-inside list-disc space-y-1">
                     {product.ref && <li>Référence : {product.ref}</li>}
                     <li>Catégorie : {categoryName ?? '—'}</li>
-                    <li>Dimension : {selectedDim ? displayDimension(selectedDim.label) : '—'}</li>
+                    <li>Dimension : {selectedDim ? formatDimensionLabel(selectedDim) : '—'}</li>
                     <li>Encadrement : {selectedCadre?.nom ?? '—'}</li>
                     {selectedCouleur && <li>Couleur : {selectedCouleur.nom}</li>}
                   </ul>
