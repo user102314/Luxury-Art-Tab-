@@ -25,7 +25,7 @@ import { getProductImage, getProductImages, getSimulationImage, resolveImageSrc,
 import {
   formatDimensionLabel,
   formatPrice,
-  pricedDimensions,
+  productDimensions,
   availableCadres,
   resolveCatalogPrice,
 } from '@/lib/pricing'
@@ -221,7 +221,7 @@ function ProductDetailPage() {
 
   useEffect(() => {
     if (!product || !catalog) return
-    const nextDims = pricedDimensions(product, catalog)
+    const nextDims = productDimensions(product, catalog)
     if (!nextDims.length) return
     const nextDimId = nextDims.some((d) => d.id === dimensionId) ? dimensionId : nextDims[0].id
     if (nextDimId !== dimensionId) setDimensionId(nextDimId)
@@ -276,7 +276,7 @@ function ProductDetailPage() {
     ? `/category/${preferredCategorySlug(categoryMeta)}`
     : null
   const image = getProductImage(product, IMAGE_WIDTH.gallery)
-  const dims = pricedDimensions(product, catalog)
+  const dims = productDimensions(product, catalog)
   const cadres = catalog && dimensionId ? availableCadres(catalog, dimensionId) : []
   const selectedDim = dims.find((d) => d.id === dimensionId) ?? dims[0]
   const selectedCadre = cadres.find((c) => c.id === cadreId) ?? cadres[0]
@@ -418,7 +418,7 @@ function ProductDetailPage() {
             )}
 
             <p className="mt-3 break-words font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-[2.75rem]">
-              {unitPrice != null ? formatPrice(unitPrice) : 'Prix selon format'}
+              {unitPrice != null ? formatPrice(unitPrice * qty) : 'Prix selon format'}
             </p>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
               Prix selon la dimension et le cadre · la couleur ne change pas le tarif
@@ -471,23 +471,14 @@ function ProductDetailPage() {
                   onChange={(e) => setDimensionId(Number(e.target.value))}
                   className="w-full min-w-0 max-w-full rounded-xl border border-border bg-sand px-3 py-3 text-sm font-medium outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 sm:px-4"
                 >
-                  {dims.map((dim) => {
-                    const minPrice = catalog
-                      ? availableCadres(catalog, dim.id)
-                          .map((c) => resolveCatalogPrice(catalog, dim.id, c.id))
-                          .filter((n): n is number => n != null)
-                          .sort((a, b) => a - b)[0]
-                      : null
-                    return (
-                      <option key={dim.id} value={dim.id}>
-                        {formatDimensionLabel(dim)}
-                        {minPrice != null ? ` — ${formatPrice(minPrice)}` : ''}
-                      </option>
-                    )
-                  })}
+                  {dims.map((dim) => (
+                    <option key={dim.id} value={dim.id}>
+                      {formatDimensionLabel(dim)}
+                    </option>
+                  ))}
                 </select>
                 {dims.length === 0 && (
-                  <p className="mt-1 text-xs text-brand-red">Aucun format tarifé pour ce tableau.</p>
+                  <p className="mt-1 text-xs text-brand-red">Aucun format disponible pour ce tableau.</p>
                 )}
               </div>
 
@@ -501,18 +492,17 @@ function ProductDetailPage() {
                   onChange={(e) => setCadreId(Number(e.target.value))}
                   className="w-full min-w-0 max-w-full rounded-xl border border-border bg-sand px-3 py-3 text-sm font-medium outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 sm:px-4"
                 >
-                  {cadres.map((cadre) => {
-                    const price = catalog && selectedDim
-                      ? resolveCatalogPrice(catalog, selectedDim.id, cadre.id)
-                      : null
-                    return (
-                      <option key={cadre.id} value={cadre.id}>
-                        {cadre.nom}
-                        {price != null ? ` — ${formatPrice(price)}` : ''}
-                      </option>
-                    )
-                  })}
+                  {cadres.map((cadre) => (
+                    <option key={cadre.id} value={cadre.id}>
+                      {cadre.nom}
+                    </option>
+                  ))}
                 </select>
+                {selectedDim && catalog && cadres.length === 0 && (
+                  <p className="mt-1 text-xs text-amber-700">
+                    Tarif non défini pour ce format — renseignez-le dans Tarifs &amp; cadres (admin).
+                  </p>
+                )}
               </div>
 
               {couleurs.length > 0 && (
@@ -595,7 +585,11 @@ function ProductDetailPage() {
               disabled={!available}
               className="mt-6 w-full rounded-full bg-foliage px-8 py-3.5 text-base font-bold text-sand transition hover:bg-foliage disabled:opacity-50"
             >
-              {available ? 'Ajouter au panier' : 'Indisponible'}
+              {available
+                ? `Commander — ${formatPrice(unitPrice! * qty)}`
+                : unitPrice == null && selectedDim
+                  ? 'Tarif à définir'
+                  : 'Indisponible'}
             </button>
 
             <div className="mt-3 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">

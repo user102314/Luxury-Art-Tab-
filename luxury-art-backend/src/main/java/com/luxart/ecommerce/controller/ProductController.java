@@ -72,4 +72,9 @@ public class ProductController {
     ) {
         return ResponseEntity.ok(productService.promote(id, toFirst));
     }
+
+    @PostMapping("/{id}/hero")
+    public ResponseEntity<ProductDto> setAsCategoryHero(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.setAsCategoryHero(id));
+    }
 }

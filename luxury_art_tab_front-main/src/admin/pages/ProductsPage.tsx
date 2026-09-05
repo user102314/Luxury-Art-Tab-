@@ -54,7 +54,7 @@ import { queryKeys } from '../lib/queryKeys'
 import type { Category, Product, ProductAnalytics, ProductImage, ProductStatut } from '../types'
 import { compareNumbers, compareStrings, matchesSearch, type SortDir } from '../lib/listUtils'
 import { compareDisplayOrder, compareProductRefs, refMatchesSearch } from '@/lib/productSort'
-import { formatDimensionLabel } from '@/lib/pricing'
+import { availableCadres, formatDimensionLabel } from '@/lib/pricing'
 
 const STATUTS: ProductStatut[] = ['DISPONIBLE', 'RUPTURE_STOCK', 'ARCHIVE']
 
@@ -147,6 +147,11 @@ export default function ProductsPage() {
   const [promotingId, setPromotingId] = useState<number | null>(null)
 
   const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.nom]))
+  const heroProductByCategory = Object.fromEntries(
+    categories
+      .filter((c) => c.heroProductId != null)
+      .map((c) => [c.id, c.heroProductId as number]),
+  )
 
   const filteredProducts = useMemo(() => {
     let list = products.filter((p) => {
@@ -196,18 +201,28 @@ export default function ProductsPage() {
     void invalidate.bestSellers()
   }
 
-  const promoteProduct = async (id: number, toFirst: boolean) => {
+  const promoteProduct = async (id: number) => {
     setPromotingId(id)
     try {
-      const updated = await api.promoteProduct(id, toFirst)
-      toast.success(
-        toFirst
-          ? `${updated.ref} est maintenant affiché en premier`
-          : `${updated.ref} avance d’une place (ordre ${updated.displayOrder})`,
-      )
+      const updated = await api.promoteProduct(id, true)
+      toast.success(`${updated.ref} est maintenant en 1ʳᵉ position de sa catégorie`)
       refreshProducts()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Impossible de changer la priorité')
+    } finally {
+      setPromotingId(null)
+    }
+  }
+
+  const setAsCategoryHero = async (id: number) => {
+    setPromotingId(id)
+    try {
+      const updated = await api.setProductAsCategoryHero(id)
+      toast.success(`${updated.ref} représente maintenant sa catégorie dans le hero`)
+      refreshProducts()
+      void invalidate.categories()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Impossible de définir le hero')
     } finally {
       setPromotingId(null)
     }
@@ -497,10 +512,12 @@ export default function ProductsPage() {
                 <label className="label">Dimensions de ce tableau</label>
                 <p className="mb-2 text-xs text-zinc-500">
                   Le prix vient de la grille globale (page Tarifs). Cochez les formats disponibles pour cette œuvre.
+                  Les formats sans tarif apparaissent en boutique mais ne sont pas commandables.
                 </p>
                 <div className="grid max-h-48 grid-cols-2 gap-2 overflow-y-auto rounded-xl bg-ink-800/50 p-3">
                   {(catalog?.dimensions ?? []).map((dim) => {
                     const checked = form.dimensionIds.includes(dim.id)
+                    const priced = catalog ? availableCadres(catalog, dim.id).length > 0 : true
                     return (
                       <label key={dim.id} className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
                         <input
@@ -515,7 +532,12 @@ export default function ProductsPage() {
                             }))
                           }
                         />
-                        {formatDimensionLabel(dim)}
+                        <span>
+                          {formatDimensionLabel(dim)}
+                          {checked && !priced && (
+                            <span className="ml-1 text-amber-400">(tarif manquant)</span>
+                          )}
+                        </span>
                       </label>
                     )
                   })}
@@ -797,11 +819,12 @@ export default function ProductsPage() {
             </div>
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-              {filteredProducts.map((p) => (
+              {filteredProducts.map((p) => {
+                const isHero = heroProductByCategory[p.categoryId] === p.id
+                return (
                 <article
                   key={p.id}
-                  onDoubleClick={() => promoteProduct(p.id, true)}
-                  className="card cursor-pointer overflow-hidden transition hover:ring-1 hover:ring-gold-500/40"
+                  className="card overflow-hidden transition hover:ring-1 hover:ring-gold-500/40"
                 >
                   <div className="relative aspect-[4/5] bg-ink-800">
                     {p.imageUrl || p.images?.[0]?.url ? (
@@ -815,16 +838,23 @@ export default function ProductsPage() {
                         <ImageIcon className="h-8 w-8 text-zinc-600" />
                       </div>
                     )}
-                    {(p.displayOrder ?? 0) > 0 && (
-                      <span className="absolute left-2 top-2 rounded-full bg-gold-500 px-2 py-0.5 text-[11px] font-bold text-ink-950">
-                        #{p.displayOrder}
-                      </span>
-                    )}
+                    <div className="absolute left-2 top-2 flex flex-col gap-1">
+                      {(p.displayOrder ?? 0) > 0 && (
+                        <span className="rounded-full bg-gold-500 px-2 py-0.5 text-[11px] font-bold text-ink-950">
+                          #{p.displayOrder}
+                        </span>
+                      )}
+                      {isHero && (
+                        <span className="rounded-full bg-brand-red px-2 py-0.5 text-[11px] font-bold text-white">
+                          Hero
+                        </span>
+                      )}
+                    </div>
                     <PriorityArrow
                       overlay
                       disabled={promotingId === p.id}
-                      onUp={() => promoteProduct(p.id, false)}
-                      onFirst={() => promoteProduct(p.id, true)}
+                      onFirst={() => promoteProduct(p.id)}
+                      onHero={() => setAsCategoryHero(p.id)}
                     />
                   </div>
                   <div className="space-y-1 p-3">
@@ -839,7 +869,8 @@ export default function ProductsPage() {
                     </div>
                   </div>
                 </article>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <table className="w-full text-left text-sm">
@@ -857,10 +888,11 @@ export default function ProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredProducts.map((p) => (
+                {filteredProducts.map((p) => {
+                  const isHero = heroProductByCategory[p.categoryId] === p.id
+                  return (
                   <tr
                     key={p.id}
-                    onDoubleClick={() => promoteProduct(p.id, true)}
                     className="border-b border-white/5 hover:bg-white/[0.02]"
                   >
                     <td className="px-6 py-4">
@@ -870,9 +902,14 @@ export default function ProductsPage() {
                         </span>
                         <PriorityArrow
                           disabled={promotingId === p.id}
-                          onUp={() => promoteProduct(p.id, false)}
-                          onFirst={() => promoteProduct(p.id, true)}
+                          onFirst={() => promoteProduct(p.id)}
+                          onHero={() => setAsCategoryHero(p.id)}
                         />
+                        {isHero && (
+                          <span className="rounded-full bg-brand-red px-2 py-0.5 text-[10px] font-bold text-white">
+                            Hero
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -916,7 +953,8 @@ export default function ProductsPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           )}
@@ -1195,13 +1233,13 @@ function Field({
 }
 
 function PriorityArrow({
-  onUp,
   onFirst,
+  onHero,
   disabled,
   overlay,
 }: {
-  onUp: () => void
   onFirst: () => void
+  onHero: () => void
   disabled?: boolean
   overlay?: boolean
 }) {
@@ -1211,13 +1249,13 @@ function PriorityArrow({
     <button
       type="button"
       disabled={disabled}
-      title="Clic : avancer d’une place · Double-clic : afficher en premier"
+      title="Clic : 1ʳᵉ position de la catégorie · Double-clic : hero de la catégorie"
       onClick={(e) => {
         e.stopPropagation()
         if (timer.current) window.clearTimeout(timer.current)
         timer.current = window.setTimeout(() => {
           timer.current = null
-          onUp()
+          onFirst()
         }, 280)
       }}
       onDoubleClick={(e) => {
@@ -1227,7 +1265,7 @@ function PriorityArrow({
           window.clearTimeout(timer.current)
           timer.current = null
         }
-        onFirst()
+        onHero()
       }}
       className={
         overlay

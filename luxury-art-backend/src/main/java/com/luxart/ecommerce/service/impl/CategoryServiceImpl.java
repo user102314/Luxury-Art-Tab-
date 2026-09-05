@@ -47,7 +47,7 @@ public class CategoryServiceImpl implements CategoryService {
             if (available.isEmpty()) {
                 continue;
             }
-            Product chosen = pickShowcaseProduct(available);
+            Product chosen = pickShowcaseProduct(category, available);
             slides.add(CategoryShowcaseDto.builder()
                     .categoryId(category.getId())
                     .nom(category.getNom())
@@ -132,8 +132,19 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Catégorie introuvable: " + id));
     }
 
-    /** Premier produit prioritaire avec au moins 2 images (hero AR), sinon le plus prioritaire. */
-    private Product pickShowcaseProduct(List<Product> available) {
+    /** Produit hero explicite, sinon premier prioritaire avec ≥2 images, sinon le plus prioritaire. */
+    private Product pickShowcaseProduct(Category category, List<Product> available) {
+        Long heroId = category.getHeroProductId();
+        if (heroId != null) {
+            return available.stream()
+                    .filter(p -> heroId.equals(p.getId()))
+                    .findFirst()
+                    .orElseGet(() -> pickByPriority(available));
+        }
+        return pickByPriority(available);
+    }
+
+    private Product pickByPriority(List<Product> available) {
         Comparator<Product> byPriority = Comparator
                 .comparingInt((Product p) -> {
                     Integer order = p.getDisplayOrder();
@@ -154,6 +165,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .id(category.getId())
                 .nom(category.getNom())
                 .description(category.getDescription())
+                .heroProductId(category.getHeroProductId())
                 .build();
     }
 }

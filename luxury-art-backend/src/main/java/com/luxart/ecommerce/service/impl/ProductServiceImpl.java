@@ -9,6 +9,7 @@ import com.luxart.ecommerce.model.entity.Product;
 import com.luxart.ecommerce.model.entity.ProductImage;
 import com.luxart.ecommerce.model.entity.TableauDimension;
 import com.luxart.ecommerce.model.enums.AdminActionType;
+import com.luxart.ecommerce.model.enums.ProductStatut;
 import com.luxart.ecommerce.repository.CategoryRepository;
 import com.luxart.ecommerce.repository.ProductImageRepository;
 import com.luxart.ecommerce.repository.ProductRepository;
@@ -191,6 +192,37 @@ public class ProductServiceImpl implements ProductService {
                 product.getImageUrl(),
                 null,
                 Map.of("toFirst", toFirst, "displayOrder", product.getDisplayOrder()),
+                result,
+                HttpStatus.OK.value()
+        );
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public ProductDto setAsCategoryHero(Long id) {
+        Product product = getEntity(id);
+        Category category = product.getCategorie();
+        if (category == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Produit sans catégorie");
+        }
+        if (product.getStatut() == ProductStatut.ARCHIVE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Un produit archivé ne peut pas être le hero");
+        }
+
+        category.setHeroProductId(product.getId());
+        categoryRepository.save(category);
+
+        ProductDto result = toDto(product, catalogPricingService.minPriceByDimension());
+        adminAuditService.logSuccess(
+                AdminActionType.CATEGORY_HERO,
+                "CATEGORY",
+                category.getId(),
+                product.getRef(),
+                category.getNom(),
+                product.getImageUrl(),
+                null,
+                Map.of("heroProductId", product.getId(), "categoryId", category.getId()),
                 result,
                 HttpStatus.OK.value()
         );

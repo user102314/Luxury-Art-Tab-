@@ -16,4 +16,7 @@ public class CategoryDto {
     private String nom;
 
     private String description;
+
+    /** Produit affiché pour cette catégorie dans le hero. */
+    private Long heroProductId;
 }

@@ -285,7 +285,7 @@ export default function PricingPage() {
               </button>
             </div>
             <p className="text-xs text-zinc-500">
-              La note est optionnelle. Ex. note « 3 » → affichage client : 3 × 90×60 cm
+              La note est optionnelle. Ex. note « 3 » → affichage client : 3*(30/40)
             </p>
           </form>
           <ul className="space-y-2">

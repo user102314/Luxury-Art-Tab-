@@ -162,6 +162,8 @@ export const api = {
     request<void>(`/products/${id}`, { method: 'DELETE' }),
   promoteProduct: (id: number, toFirst = false) =>
     request<Product>(`/products/${id}/priority?toFirst=${toFirst}`, { method: 'POST' }),
+  setProductAsCategoryHero: (id: number) =>
+    request<Product>(`/products/${id}/hero`, { method: 'POST' }),
 
   getCatalogPricing: () => request<CatalogPricing>('/catalog/pricing'),
   createDimension: (data: Partial<TableauDimension>) =>

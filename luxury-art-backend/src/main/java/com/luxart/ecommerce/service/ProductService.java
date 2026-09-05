@@ -10,5 +10,7 @@ public interface ProductService {
     ProductDto create(ProductDto dto);
     ProductDto update(Long id, ProductDto dto);
     ProductDto promote(Long id, boolean toFirst);
+    /** Définit ce produit comme image hero de sa catégorie. */
+    ProductDto setAsCategoryHero(Long id);
     void delete(Long id);
 }

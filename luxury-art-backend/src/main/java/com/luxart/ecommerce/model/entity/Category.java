@@ -25,6 +25,10 @@ public class Category {
     @Column(length = 1000)
     private String description;
 
+    /** Produit qui représente cette catégorie dans le hero / showcase. */
+    @Column(name = "hero_product_id")
+    private Long heroProductId;
+
     @OneToMany(mappedBy = "categorie", cascade = CascadeType.ALL)
     @Builder.Default
     private List<Product> produits = new ArrayList<>();

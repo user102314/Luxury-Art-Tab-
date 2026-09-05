@@ -19,12 +19,12 @@ export function displayDimension(label: string): string {
   return `${label.replaceAll('/', '×')} cm`
 }
 
-/** Affichage boutique : « 3 × 60×40 cm » si note présente, sinon « 60×40 cm ». */
+/** Affichage : « 3*(30/40) » si note, sinon « (30/40) ». */
 export function formatDimensionLabel(dim: { label: string; note?: string | null }): string {
-  const size = dim.label.replaceAll('/', '×')
+  const size = dim.label.trim()
   const note = dim.note?.trim()
-  if (note) return `${note} × ${size} cm`
-  return `${size} cm`
+  if (note) return `${note}*(${size})`
+  return `(${size})`
 }
 
 export function cartLineKey(item: {
@@ -70,6 +70,10 @@ export function availableCadres(catalog: CatalogPricing, dimensionId?: number | 
       .map((t) => t.cadreId),
   )
   return catalog.cadres.filter((c) => priced.has(c.id))
+}
+
+export function dimensionHasPricing(catalog: CatalogPricing, dimensionId?: number | null): boolean {
+  return availableCadres(catalog, dimensionId).length > 0
 }
 
 export function pricedDimensions(product: Product, catalog?: CatalogPricing | null): TableauDimension[] {

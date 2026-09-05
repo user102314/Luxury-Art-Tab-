@@ -296,6 +296,8 @@ export interface Category {
   id: number
   nom: string
   description?: string
+  /** Produit qui représente la catégorie dans le hero. */
+  heroProductId?: number | null
 }
 
 export type ProductStatut = 'DISPONIBLE' | 'RUPTURE_STOCK' | 'ARCHIVE'

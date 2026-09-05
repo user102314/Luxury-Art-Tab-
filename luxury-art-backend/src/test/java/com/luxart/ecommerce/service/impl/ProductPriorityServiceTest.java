@@ -96,4 +96,18 @@ class ProductPriorityServiceTest {
         assertThat(saved.get(1).getDisplayOrder()).isEqualTo(2);
         assertThat(saved.get(2).getId()).isEqualTo(2L);
     }
+
+    @Test
+    void setAsCategoryHeroUpdatesCategoryHeroProductId() {
+        when(productRepository.findById(3L)).thenReturn(Optional.of(c));
+        when(categoryRepository.save(any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(productImageRepository.findByProductIdOrderByOrdreAsc(3L)).thenReturn(List.of());
+
+        ProductDto result = productService.setAsCategoryHero(3L);
+
+        ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
+        verify(categoryRepository).save(captor.capture());
+        assertThat(captor.getValue().getHeroProductId()).isEqualTo(3L);
+        assertThat(result.getId()).isEqualTo(3L);
+    }
 }
