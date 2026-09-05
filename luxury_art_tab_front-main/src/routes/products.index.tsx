@@ -29,7 +29,7 @@ import {
   preferredCategorySlug,
   resolveCategoryBySlug,
 } from '@/lib/seo'
-import { compareProductRefs, refMatchesSearch } from '@/lib/productSort'
+import { compareDisplayOrder, compareProductRefs, refMatchesSearch } from '@/lib/productSort'
 import { catalogPriceBounds, productPriceBounds } from '@/lib/pricing'
 import { ensureStorefrontCatalog, prefetchCatalogPricing } from '@/lib/storefrontLoader'
 
@@ -70,9 +70,10 @@ export const Route = createFileRoute('/products/')({
   component: ProductsPage,
 })
 
-type SortOption = 'ref' | 'price-asc' | 'price-desc'
+type SortOption = 'priority' | 'ref' | 'price-asc' | 'price-desc'
 
 const sortLabels: Record<SortOption, string> = {
+  priority: 'Priorité admin',
   ref: 'Référence',
   'price-asc': 'Prix croissant',
   'price-desc': 'Prix décroissant',
@@ -95,7 +96,7 @@ function ProductsPage() {
     resolveCategoryFilter(categoryFromUrl, seededCategories),
   )
   const [search, setSearch] = useState('')
-  const [sort, setSort] = useState<SortOption>('ref')
+  const [sort, setSort] = useState<SortOption>('priority')
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000])
   const [inStockOnly, setInStockOnly] = useState(false)
   const [arImage, setArImage] = useState<string | null>(null)
@@ -131,7 +132,7 @@ function ProductsPage() {
   )
 
   const globalCatalog = useMemo(
-    () => [...available].sort((a, b) => compareProductRefs(a.ref, b.ref)),
+    () => [...available].sort((a, b) => compareDisplayOrder(a, b)),
     [available],
   )
 
@@ -187,8 +188,11 @@ function ProductsPage() {
           return Number(a.prix ?? 0) - Number(b.prix ?? 0)
         case 'price-desc':
           return Number(b.prix ?? 0) - Number(a.prix ?? 0)
-        default:
+        case 'ref':
           return compareProductRefs(a.ref, b.ref)
+        case 'priority':
+        default:
+          return compareDisplayOrder(a, b)
       }
     })
 

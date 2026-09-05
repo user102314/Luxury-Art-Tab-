@@ -142,7 +142,7 @@ export default function ProductsPage() {
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('ALL')
   const [statutFilter, setStatutFilter] = useState('ALL')
-  const [sort, setSort] = useState<ProductSortKey>('ref')
+  const [sort, setSort] = useState<ProductSortKey>('priorite')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [viewMode, setViewMode] = useState<CatalogView>('grid')
   const [promotingId, setPromotingId] = useState<number | null>(null)
@@ -205,7 +205,13 @@ export default function ProductsPage() {
   const promoteProduct = async (id: number) => {
     setPromotingId(id)
     try {
+      const product = products.find((p) => p.id === id)
       const updated = await api.promoteProduct(id, true)
+      if (product?.categoryId) {
+        setCategoryFilter(String(product.categoryId))
+      }
+      setSort('priorite')
+      setSortDir('asc')
       toast.success(`${updated.ref} est maintenant en 1ʳᵉ position de sa catégorie`)
       refreshProducts()
     } catch (err) {

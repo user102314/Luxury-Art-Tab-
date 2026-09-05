@@ -5,6 +5,7 @@ import { BackButton } from '@/components/BackButton'
 import { ProductCard } from '@/components/ProductCard'
 import { api } from '@/lib/api'
 import { getProductImages } from '@/lib/images'
+import { compareDisplayOrder } from '@/lib/productSort'
 import type { Category, Product } from '@/types/api'
 import { heroCategories } from '@/data/heroCategories'
 import {
@@ -30,7 +31,9 @@ export const Route = createFileRoute('/category/$slug')({
     ])
     const category = resolveCategoryBySlug(params.slug, categories)
     const categoryProducts = category
-      ? products.filter((p) => p.categoryId === category.id && p.statut !== 'ARCHIVE')
+      ? products
+          .filter((p) => p.categoryId === category.id && p.statut !== 'ARCHIVE')
+          .sort((a, b) => compareDisplayOrder(a, b))
       : []
     const hero = heroCategories.find((item) => item.slug === params.slug) ?? null
     return {
