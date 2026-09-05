@@ -12,11 +12,14 @@ import com.luxart.ecommerce.service.AdminAuditService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Instant;
 import java.util.*;
+import jakarta.annotation.PostConstruct;
 
 @Service
 @RequiredArgsConstructor
@@ -25,9 +28,16 @@ public class AdminAuditServiceImpl implements AdminAuditService {
 
     private final AdminAuditLogRepository repository;
     private final ObjectMapper objectMapper;
+    private final PlatformTransactionManager transactionManager;
+    private TransactionTemplate requiresNewTx;
+
+    @PostConstruct
+    void initTx() {
+        requiresNewTx = new TransactionTemplate(transactionManager);
+        requiresNewTx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void logSuccess(
             AdminActionType actionType,
             String entityType,
@@ -40,12 +50,17 @@ public class AdminAuditServiceImpl implements AdminAuditService {
             Object responsePayload,
             int httpStatus
     ) {
-        persist(actionType, entityType, entityId, productRef, categoryName, imageUrl, imageStoragePath,
-                requestPayload, responsePayload, httpStatus, true, null);
+        try {
+            requiresNewTx.executeWithoutResult(status ->
+                    persist(actionType, entityType, entityId, productRef, categoryName, imageUrl, imageStoragePath,
+                            requestPayload, responsePayload, httpStatus, true, null)
+            );
+        } catch (Exception ex) {
+            log.warn("Impossible d'enregistrer le log admin: {}", ex.getMessage());
+        }
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void logFailure(
             AdminActionType actionType,
             String entityType,
@@ -58,8 +73,14 @@ public class AdminAuditServiceImpl implements AdminAuditService {
             int httpStatus,
             String errorMessage
     ) {
-        persist(actionType, entityType, entityId, productRef, categoryName, imageUrl, imageStoragePath,
-                requestPayload, null, httpStatus, false, errorMessage);
+        try {
+            requiresNewTx.executeWithoutResult(status ->
+                    persist(actionType, entityType, entityId, productRef, categoryName, imageUrl, imageStoragePath,
+                            requestPayload, null, httpStatus, false, errorMessage)
+            );
+        } catch (Exception ex) {
+            log.warn("Impossible d'enregistrer le log admin (échec): {}", ex.getMessage());
+        }
     }
 
     @Override
@@ -188,11 +209,7 @@ public class AdminAuditServiceImpl implements AdminAuditService {
                 .clientIp(actor != null ? actor.ip() : null)
                 .build();
 
-        try {
-            repository.save(entry);
-        } catch (Exception ex) {
-            log.warn("Impossible d'enregistrer le log admin: {}", ex.getMessage());
-        }
+        repository.saveAndFlush(entry);
     }
 
     private AdminAuditLogDto toDto(AdminAuditLog log) {
