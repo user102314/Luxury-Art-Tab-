@@ -6,7 +6,7 @@ import {
 import { api } from '@/lib/api'
 import { REFETCH_INTERVAL, STALE_TIME } from '@/lib/queryClient'
 import { queryKeys } from '@/lib/queryKeys'
-import type { Category, News, Product, Testimonial } from '@/types/api'
+import type { Category, CategoryShowcase, News, Product, Testimonial } from '@/types/api'
 
 export function useProducts(options?: {
   initialData?: Product[]
@@ -45,11 +45,13 @@ export function useCatalogPricing() {
   })
 }
 
-export function useCategoryShowcase() {
+export function useCategoryShowcase(options?: { initialData?: CategoryShowcase[] }) {
   return useQuery({
     queryKey: queryKeys.categoryShowcase,
     queryFn: api.getCategoryShowcase,
     refetchInterval: REFETCH_INTERVAL,
+    initialData: options?.initialData,
+    staleTime: 60_000,
     placeholderData: keepPreviousData,
   })
 }

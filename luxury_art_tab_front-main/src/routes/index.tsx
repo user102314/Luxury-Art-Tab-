@@ -4,7 +4,7 @@ import { AnimatedHero } from "@/components/AnimatedHero";
 import { SiteNav } from "@/components/SiteNav";
 import { Reveal } from "@/components/Reveal";
 import { api } from "@/lib/api";
-import { ensureStorefrontCatalog, prefetchCatalogPricing } from "@/lib/storefrontLoader";
+import { ensureStorefrontCatalog, ensureCategoryShowcase, prefetchCatalogPricing } from "@/lib/storefrontLoader";
 import {
   PAGE_COPY,
   buildSeoHead,
@@ -36,12 +36,13 @@ const SiteFooter = lazy(() =>
 export const Route = createFileRoute("/")({
   loader: async () => {
     prefetchCatalogPricing();
-    const [{ products, categories }, news, testimonials] = await Promise.all([
+    const [{ products, categories }, showcase, news, testimonials] = await Promise.all([
       ensureStorefrontCatalog(),
+      ensureCategoryShowcase(),
       api.getPublishedNews().catch(() => []),
       api.getActiveTestimonials().catch(() => []),
     ]);
-    return { products, categories, news, testimonials };
+    return { products, categories, showcase, news, testimonials };
   },
   head: () =>
     buildSeoHead({
@@ -58,12 +59,12 @@ function SectionSkeleton() {
 }
 
 function Index() {
-  const { products, categories, news, testimonials } = Route.useLoaderData();
+  const { products, categories, showcase, news, testimonials } = Route.useLoaderData();
 
   return (
     <main className="flex min-h-screen flex-col bg-background font-[Inter,sans-serif]">
       <SiteNav />
-      <AnimatedHero />
+      <AnimatedHero initialShowcase={showcase} />
       <Suspense fallback={<SectionSkeleton />}>
         <Reveal>
           <ProductShowcase initialProducts={products} initialCategories={categories} />

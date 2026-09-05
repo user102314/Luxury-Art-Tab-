@@ -1,7 +1,7 @@
 import { api } from '@/lib/api'
 import { queryClient } from '@/lib/queryClient'
 import { queryKeys } from '@/lib/queryKeys'
-import type { CatalogPricing, Category, Product } from '@/types/api'
+import type { CatalogPricing, Category, CategoryShowcase, Product } from '@/types/api'
 
 const CATALOG_STALE = 5 * 60_000
 
@@ -29,6 +29,15 @@ export async function ensureStorefrontCatalog(): Promise<{
     }),
   ])
   return { products, categories }
+}
+
+/** Hero dynamique : préchargé avant le paint pour éviter le flash d'images statiques. */
+export async function ensureCategoryShowcase(): Promise<CategoryShowcase[]> {
+  return queryClient.ensureQueryData({
+    queryKey: queryKeys.categoryShowcase,
+    queryFn: () => api.getCategoryShowcase().catch(() => [] as CategoryShowcase[]),
+    staleTime: 60_000,
+  })
 }
 
 export function prefetchCatalogPricing() {
