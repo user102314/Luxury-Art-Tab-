@@ -6,7 +6,6 @@ import com.luxart.ecommerce.model.entity.Category;
 import com.luxart.ecommerce.model.entity.Product;
 import com.luxart.ecommerce.model.enums.ProductStatut;
 import com.luxart.ecommerce.repository.CategoryRepository;
-import com.luxart.ecommerce.repository.ProductImageRepository;
 import com.luxart.ecommerce.repository.ProductRepository;
 import com.luxart.ecommerce.service.AdminAuditService;
 import com.luxart.ecommerce.service.ProductService;
@@ -20,7 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,7 +27,6 @@ class CategoryHeroShowcaseTest {
 
     @Mock CategoryRepository categoryRepository;
     @Mock ProductRepository productRepository;
-    @Mock ProductImageRepository productImageRepository;
     @Mock ProductService productService;
     @Mock AdminAuditService adminAuditService;
 
@@ -62,17 +59,34 @@ class CategoryHeroShowcaseTest {
     }
 
     @Test
-    void showcaseFallsBackWhenHeroMissingFromAvailable() {
+    void showcaseFallsBackToRandomWhenHeroMissingFromAvailable() {
         category.setHeroProductId(404L);
         when(categoryRepository.findAll()).thenReturn(List.of(category));
         when(productRepository.findByCategorieId(10L)).thenReturn(List.of(first, hero));
-        when(productImageRepository.findByProductIdOrderByOrdreAsc(any())).thenReturn(List.of());
-        ProductDto firstDto = ProductDto.builder().id(1L).ref("B 1").categoryId(10L).build();
-        when(productService.findById(1L)).thenReturn(firstDto);
+        when(productService.findById(org.mockito.ArgumentMatchers.anyLong())).thenAnswer(inv -> {
+            Long id = inv.getArgument(0);
+            return ProductDto.builder().id(id).ref("B " + id).categoryId(10L).build();
+        });
 
         List<CategoryShowcaseDto> slides = categoryService.findShowcase();
 
         assertThat(slides).hasSize(1);
-        assertThat(slides.get(0).getProduct().getId()).isEqualTo(1L);
+        assertThat(slides.get(0).getProduct().getId()).isIn(1L, 99L);
+    }
+
+    @Test
+    void showcasePicksRandomWhenNoHeroConfigured() {
+        category.setHeroProductId(null);
+        when(categoryRepository.findAll()).thenReturn(List.of(category));
+        when(productRepository.findByCategorieId(10L)).thenReturn(List.of(first, hero));
+        when(productService.findById(org.mockito.ArgumentMatchers.anyLong())).thenAnswer(inv -> {
+            Long id = inv.getArgument(0);
+            return ProductDto.builder().id(id).ref("B " + id).categoryId(10L).build();
+        });
+
+        List<CategoryShowcaseDto> slides = categoryService.findShowcase();
+
+        assertThat(slides).hasSize(1);
+        assertThat(slides.get(0).getProduct().getId()).isIn(1L, 99L);
     }
 }

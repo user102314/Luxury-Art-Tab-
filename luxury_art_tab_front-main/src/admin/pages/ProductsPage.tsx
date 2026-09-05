@@ -28,6 +28,7 @@ import {
   ArrowUp,
   LayoutGrid,
   List,
+  Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { api, formatCurrency, formatDate } from '../lib/api'
@@ -218,7 +219,8 @@ export default function ProductsPage() {
     setPromotingId(id)
     try {
       const updated = await api.setProductAsCategoryHero(id)
-      toast.success(`${updated.ref} représente maintenant sa catégorie dans le hero`)
+      const catName = categoryMap[updated.categoryId] ?? 'sa catégorie'
+      toast.success(`${updated.ref} présente maintenant « ${catName} » dans le hero`)
       refreshProducts()
       void invalidate.categories()
     } catch (err) {
@@ -854,7 +856,6 @@ export default function ProductsPage() {
                       overlay
                       disabled={promotingId === p.id}
                       onFirst={() => promoteProduct(p.id)}
-                      onHero={() => setAsCategoryHero(p.id)}
                     />
                   </div>
                   <div className="space-y-1 p-3">
@@ -862,6 +863,18 @@ export default function ProductsPage() {
                     <p className="truncate text-sm text-zinc-300">
                       {categoryMap[p.categoryId] ?? `#${p.categoryId}`}
                     </p>
+                    <button
+                      type="button"
+                      disabled={promotingId === p.id || isHero}
+                      onClick={() => setAsCategoryHero(p.id)}
+                      className={`mt-1 w-full rounded-lg px-2 py-1.5 text-[11px] font-semibold transition ${
+                        isHero
+                          ? 'bg-brand-red/20 text-brand-red'
+                          : 'bg-white/5 text-zinc-300 hover:bg-gold-500/20 hover:text-gold-300'
+                      } disabled:opacity-50`}
+                    >
+                      {isHero ? 'Présente la catégorie' : 'Présenter la catégorie'}
+                    </button>
                     <div className="flex gap-1 pt-1">
                       <ActionBtn icon={Eye} onClick={() => openDetail(p.id)} title="Voir détails" />
                       <ActionBtn icon={Pencil} onClick={() => openEdit(p)} title="Modifier" />
@@ -896,14 +909,18 @@ export default function ProductsPage() {
                     className="border-b border-white/5 hover:bg-white/[0.02]"
                   >
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="w-8 font-mono text-xs text-gold-400">
                           {(p.displayOrder ?? 0) > 0 ? `#${p.displayOrder}` : '—'}
                         </span>
                         <PriorityArrow
                           disabled={promotingId === p.id}
                           onFirst={() => promoteProduct(p.id)}
-                          onHero={() => setAsCategoryHero(p.id)}
+                        />
+                        <HeroPresentButton
+                          active={isHero}
+                          disabled={promotingId === p.id}
+                          onClick={() => setAsCategoryHero(p.id)}
                         />
                         {isHero && (
                           <span className="rounded-full bg-brand-red px-2 py-0.5 text-[10px] font-bold text-white">
@@ -1234,38 +1251,21 @@ function Field({
 
 function PriorityArrow({
   onFirst,
-  onHero,
   disabled,
   overlay,
 }: {
   onFirst: () => void
-  onHero: () => void
   disabled?: boolean
   overlay?: boolean
 }) {
-  const timer = useRef<number | null>(null)
-
   return (
     <button
       type="button"
       disabled={disabled}
-      title="Clic : 1ʳᵉ position de la catégorie · Double-clic : hero de la catégorie"
+      title="Mettre en 1ʳᵉ position dans la catégorie (catalogue)"
       onClick={(e) => {
         e.stopPropagation()
-        if (timer.current) window.clearTimeout(timer.current)
-        timer.current = window.setTimeout(() => {
-          timer.current = null
-          onFirst()
-        }, 280)
-      }}
-      onDoubleClick={(e) => {
-        e.stopPropagation()
-        e.preventDefault()
-        if (timer.current) {
-          window.clearTimeout(timer.current)
-          timer.current = null
-        }
-        onHero()
+        onFirst()
       }}
       className={
         overlay
@@ -1274,6 +1274,50 @@ function PriorityArrow({
       }
     >
       <ArrowUp className="h-4 w-4" />
+    </button>
+  )
+}
+
+function HeroPresentButton({
+  onClick,
+  active,
+  disabled,
+  overlay,
+}: {
+  onClick: () => void
+  active?: boolean
+  disabled?: boolean
+  overlay?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled || active}
+      title={
+        active
+          ? 'Ce produit présente déjà la catégorie dans le hero'
+          : 'Présenter ce produit pour la catégorie dans le hero'
+      }
+      onClick={(e) => {
+        e.stopPropagation()
+        onClick()
+      }}
+      className={
+        overlay
+          ? `absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[10px] font-bold shadow-lg transition disabled:opacity-70 ${
+              active
+                ? 'bg-brand-red text-white'
+                : 'bg-black/75 text-sand hover:bg-gold-500 hover:text-ink-950'
+            }`
+          : `inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[10px] font-semibold transition disabled:opacity-70 ${
+              active
+                ? 'bg-brand-red/20 text-brand-red'
+                : 'bg-white/10 text-zinc-300 hover:bg-gold-500/20 hover:text-gold-300'
+            }`
+      }
+    >
+      <Sparkles className="h-3.5 w-3.5" />
+      {active ? 'Présente' : 'Présenter la catégorie'}
     </button>
   )
 }

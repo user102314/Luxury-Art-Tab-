@@ -8,7 +8,6 @@ import com.luxart.ecommerce.model.entity.Product;
 import com.luxart.ecommerce.model.enums.AdminActionType;
 import com.luxart.ecommerce.model.enums.ProductStatut;
 import com.luxart.ecommerce.repository.CategoryRepository;
-import com.luxart.ecommerce.repository.ProductImageRepository;
 import com.luxart.ecommerce.repository.ProductRepository;
 import com.luxart.ecommerce.service.CategoryService;
 import com.luxart.ecommerce.service.ProductService;
@@ -18,7 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +26,6 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
-    private final ProductImageRepository productImageRepository;
     private final ProductService productService;
     private final AdminAuditService adminAuditService;
 
@@ -132,32 +129,24 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Catégorie introuvable: " + id));
     }
 
-    /** Produit hero explicite, sinon premier prioritaire avec ≥2 images, sinon le plus prioritaire. */
+    /** Produit hero explicite, sinon tirage aléatoire parmi les produits disponibles. */
     private Product pickShowcaseProduct(Category category, List<Product> available) {
         Long heroId = category.getHeroProductId();
         if (heroId != null) {
             return available.stream()
                     .filter(p -> heroId.equals(p.getId()))
                     .findFirst()
-                    .orElseGet(() -> pickByPriority(available));
+                    .orElseGet(() -> pickRandom(available));
         }
-        return pickByPriority(available);
+        return pickRandom(available);
     }
 
-    private Product pickByPriority(List<Product> available) {
-        Comparator<Product> byPriority = Comparator
-                .comparingInt((Product p) -> {
-                    Integer order = p.getDisplayOrder();
-                    return order == null || order <= 0 ? Integer.MAX_VALUE : order;
-                })
-                .thenComparing(Product::getId);
-        return available.stream()
-                .sorted(byPriority)
-                .filter(p -> productImageRepository.findByProductIdOrderByOrdreAsc(p.getId()).size() >= 2)
-                .findFirst()
-                .orElseGet(() -> available.stream()
-                        .min(byPriority)
-                        .orElseThrow());
+    private Product pickRandom(List<Product> available) {
+        if (available.isEmpty()) {
+            throw new IllegalStateException("Aucun produit disponible pour le showcase");
+        }
+        int index = java.util.concurrent.ThreadLocalRandom.current().nextInt(available.size());
+        return available.get(index);
     }
 
     private CategoryDto toDto(Category category) {
