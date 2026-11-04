@@ -2,6 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import {
+  Camera,
   CheckCircle2,
   ChevronDown,
   MessageSquare,
@@ -16,6 +17,7 @@ import { SiteFooter } from '@/components/SiteFooter'
 import { BackButton } from '@/components/BackButton'
 import { LazyArViewer } from '@/components/LazyArViewer'
 import { ProductImageGallery } from '@/components/ProductImageGallery'
+import { ProductWallSimulator } from '@/components/ProductWallSimulator'
 import { api } from '@/lib/api'
 import { queryKeys } from '@/lib/queryKeys'
 import { REFETCH_INTERVAL } from '@/lib/queryClient'
@@ -592,6 +594,15 @@ function ProductDetailPage() {
                   : 'Indisponible'}
             </button>
 
+            <button
+              type="button"
+              onClick={() => setArImage(simulationImage || image)}
+              className="mt-3 flex w-full items-center justify-center gap-2.5 rounded-full border border-gold/60 bg-gold/15 py-3 text-sm font-bold text-gold transition hover:bg-gold/25 active:scale-95 shadow-sm"
+            >
+              <Camera className="h-4 w-4 text-gold" />
+              <span>Tester sur votre mur réel (AR)</span>
+            </button>
+
             <div className="mt-3 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
               <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-green" />
               <span>Impression soignée · Formats personnalisés · Retours sous conditions</span>
@@ -622,6 +633,16 @@ function ProductDetailPage() {
             </div>
           </aside>
         </div>
+
+        <ProductWallSimulator
+          productTitle={productVisibleTitle(product.ref, categoryName)}
+          productRef={product.ref}
+          imageUrl={image}
+          simulationImageUrl={simulationImage}
+          selectedDimensionLabel={selectedDim ? formatDimensionLabel(selectedDim) : undefined}
+          selectedCadreNom={selectedCadre?.nom}
+          onLaunchAr={(src) => setArImage(src)}
+        />
 
         {/* Bloc unique « satisfaction » : synthèse à gauche, contributions à droite */}
         <section

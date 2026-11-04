@@ -416,6 +416,20 @@ function ProductsPage() {
             </div>
           ) : (
             <>
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gold/40 bg-gradient-to-r from-gold/15 via-sand to-sand p-3.5 text-xs shadow-sm sm:p-4 sm:text-sm">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold/25 text-gold font-bold">
+                    AR
+                  </span>
+                  <div>
+                    <span className="font-bold text-foreground">Visualisation en Réalité Augmentée :</span>{' '}
+                    <span className="text-muted-foreground">
+                      Cliquez sur <strong>« Sur mon mur »</strong> sur un tableau pour l&apos;essayer directement chez vous avec votre caméra.
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 {visibleProducts.map((p, i) => (
                   <ProductCard

@@ -17,6 +17,9 @@ import {
 const ProductShowcase = lazy(() =>
   import("@/components/ProductShowcase").then((m) => ({ default: m.ProductShowcase }))
 );
+const ArWallExperienceSection = lazy(() =>
+  import("@/components/ArWallExperienceSection").then((m) => ({ default: m.ArWallExperienceSection }))
+);
 const TestimonialsSection = lazy(() =>
   import("@/components/TestimonialsSection").then((m) => ({ default: m.TestimonialsSection }))
 );
@@ -68,6 +71,17 @@ function Index() {
       <Suspense fallback={<SectionSkeleton />}>
         <Reveal>
           <ProductShowcase initialProducts={products} initialCategories={categories} />
+        </Reveal>
+      </Suspense>
+      <Suspense fallback={<SectionSkeleton />}>
+        <Reveal>
+          <ArWallExperienceSection
+            sampleImageUrl={
+              products.length > 0
+                ? (getSimulationImage(products[0]) || getProductImage(products[0]))
+                : undefined
+            }
+          />
         </Reveal>
       </Suspense>
       <Suspense fallback={<SectionSkeleton />}>

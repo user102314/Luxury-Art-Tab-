@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, Expand, Heart } from 'lucide-react'
+import { Camera, ChevronLeft, ChevronRight, Expand, Heart, Sparkles } from 'lucide-react'
 
 type ProductImageGalleryProps = {
   images: string[]
   alt: string
   liked?: boolean
   onLike?: () => void
-  /** URL image 2 (simulation) — le bouton AR n'apparaît que si définie */
+  /** URL image 2 (simulation) ou image principale */
   simulationImageUrl?: string | null
   onAr?: (imageUrl: string) => void
 }
@@ -44,6 +44,7 @@ export function ProductImageGallery({
 
   const current = gallery[active] ?? gallery[0]
   const multi = gallery.length > 1
+  const arTargetImage = simulationImageUrl || current
 
   const go = (dir: -1 | 1) => {
     if (!multi) return
@@ -119,22 +120,31 @@ export function ProductImageGallery({
               </>
             )}
 
-            <div className="absolute bottom-2 right-2 z-10 flex max-w-[calc(100%-1rem)] items-center gap-1.5 sm:bottom-3 sm:right-3 sm:gap-2">
+            {/* Barre de contrôles et Bouton AR innovant */}
+            <div className="absolute bottom-2.5 right-2.5 z-10 flex max-w-[calc(100%-1.25rem)] items-center gap-2 sm:bottom-3.5 sm:right-3.5">
               <button
                 type="button"
                 onClick={() => setLightbox(true)}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sand/95 text-foreground shadow-md transition hover:scale-105 sm:h-10 sm:w-10"
-                aria-label="Agrandir"
+                aria-label="Agrandir l'image"
+                title="Agrandir"
               >
                 <Expand className="h-4 w-4" />
               </button>
-              {simulationImageUrl && onAr && (
+
+              {onAr && arTargetImage && (
                 <button
                   type="button"
-                  onClick={() => onAr(simulationImageUrl)}
-                  className="flex items-center gap-1.5 rounded-full bg-accent-green px-3 py-2 text-xs font-semibold text-sand shadow-lg hover:opacity-90 sm:gap-2 sm:px-4 sm:text-sm"
+                  onClick={() => onAr(arTargetImage)}
+                  className="group relative flex items-center gap-2 rounded-full border border-gold/50 bg-foliage/95 px-3.5 py-2 text-xs font-bold text-sand shadow-[0_8px_20px_-4px_rgba(74,93,79,0.7)] backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-foliage hover:border-gold sm:px-4 sm:py-2.5 sm:text-sm"
+                  title="Projeter ce tableau sur votre mur réel avec la caméra"
                 >
-                  Voir en AR
+                  <span className="relative flex h-2 w-2 shrink-0">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-gold" />
+                  </span>
+                  <Camera className="h-4 w-4 text-gold transition-transform group-hover:rotate-6" />
+                  <span className="font-semibold tracking-wide">Tester sur mon mur</span>
                 </button>
               )}
             </div>

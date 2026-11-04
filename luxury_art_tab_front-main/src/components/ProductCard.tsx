@@ -1,7 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
+import { Camera } from 'lucide-react'
 import type { Product } from '@/types/api'
-import { getProductImage, getSimulationImage, hasSimulationImage, IMAGE_WIDTH, fallbackFromBrokenImage } from '@/lib/images'
+import { getProductImage, getSimulationImage, IMAGE_WIDTH, fallbackFromBrokenImage } from '@/lib/images'
 import { prefetchProductDetail } from '@/hooks/useStorefrontQueries'
 import { productVisibleTitle } from '@/lib/seo'
 import { formatStartingPrice } from '@/lib/pricing'
@@ -26,8 +27,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
   const { client } = useAuth()
   const liked = isFavorite(product.id)
   const image = getProductImage(product, compact ? IMAGE_WIDTH.thumb : IMAGE_WIDTH.card)
-  const simulationImage = getSimulationImage(product)
-  const canSimulate = hasSimulationImage(product)
+  const simulationImage = getSimulationImage(product) || image
   const outOfStock = product.statut === 'RUPTURE_STOCK'
 
   const handleProductClick = () => {
@@ -113,7 +113,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
             </svg>
           </button>
 
-          {onAr && canSimulate && simulationImage && (
+          {onAr && simulationImage && (
             <button
               type="button"
               onClick={(e) => {
@@ -121,23 +121,16 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
                 e.stopPropagation()
                 onAr(simulationImage)
               }}
-              className={`absolute flex items-center justify-center rounded-full bg-accent-green text-sand transition hover:opacity-90 ${
-                compact ? 'bottom-2.5 right-2.5 h-8 w-8' : 'bottom-4 right-4 h-10 w-10'
+              className={`absolute z-10 flex items-center gap-1.5 rounded-full border border-gold/45 bg-foliage/90 text-sand shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-foliage hover:border-gold active:scale-95 ${
+                compact
+                  ? 'bottom-2.5 right-2 px-2.5 py-1 text-[11px] font-bold'
+                  : 'bottom-3 right-3 px-3.5 py-1.5 text-xs font-bold'
               }`}
-              aria-label="Tester en AR"
-              title="Voir en réalité augmentée"
+              aria-label="Tester ce tableau sur votre mur réel"
+              title="Tester ce tableau en direct sur votre mur avec votre caméra"
             >
-              <svg
-                width={compact ? 15 : 18}
-                height={compact ? 15 : 18}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
+              <Camera className={compact ? 'h-3 w-3 text-gold' : 'h-3.5 w-3.5 text-gold'} />
+              <span>{compact ? 'Sur mon mur' : 'Tester sur mon mur'}</span>
             </button>
           )}
         </div>
