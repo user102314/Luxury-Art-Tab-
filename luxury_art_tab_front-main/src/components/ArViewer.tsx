@@ -22,6 +22,7 @@ type ArViewerProps = {
 
 export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const artworkImgRef = useRef<HTMLImageElement>(null)
   const [error, setError] = useState<string | null>(null)
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [scale, setScale] = useState(1)
@@ -34,14 +35,17 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
   const dragStart = useRef({ x: 0, y: 0 })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Nettoyage de la capture temporaire
-  const clearCapturedPhoto = () => {
+  // Nettoyage et suppression de la capture temporaire
+  const clearCapturedPhoto = (showToast = false) => {
     if (timerRef.current) {
       clearInterval(timerRef.current)
       timerRef.current = null
     }
     setCapturedPhoto(null)
     setTimeLeft(60)
+    if (showToast) {
+      toast.info('Capture supprimée')
+    }
   }
 
   // Timer automatique de 60 secondes pour la capture locale
@@ -52,7 +56,7 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
         setTimeLeft((prev) => {
           if (prev <= 1) {
             clearCapturedPhoto()
-            toast.info('La capture temporaire a expiré')
+            toast.info('La capture temporaire a expiré et a été supprimée')
             return 60
           }
           return prev - 1
@@ -131,6 +135,15 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
     setIsDragging(false)
   }
 
+  const handleZoom = (delta: number) => {
+    setScale((prev) => Math.min(Math.max(0.4, prev + delta), 2.5))
+  }
+
+  const handleReset = () => {
+    setPosition({ x: 0, y: 0 })
+    setScale(1)
+  }
+
   const handleFallbackUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -139,89 +152,234 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
     setError(null)
   }
 
-  // Prise de capture photo (reste en mémoire locale avec aperçu, téléchargeable au choix)
+  // Chargeur d'image robuste qui évite le blocage CORS/403 et le tainted canvas
+  const loadSafeArtImage = async (src: string): Promise<HTMLImageElement | null> => {
+    if (!src) return null
+
+    // 1. Si déjà en blob ou data URI
+    if (src.startsWith('blob:') || src.startsWith('data:')) {
+      return new Promise((resolve) => {
+        const img = new Image()
+        img.onload = () => resolve(img)
+        img.onerror = () => resolve(null)
+        img.src = src
+      })
+    }
+
+    // 2. Si URL externe HTTP/HTTPS, passer par la route proxy serveur interne
+    if (src.startsWith('http://') || src.startsWith('https://')) {
+      try {
+        const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(src)}`
+        const proxyImg = new Image()
+        proxyImg.crossOrigin = 'anonymous'
+        const ok = await new Promise<boolean>((resolve) => {
+          proxyImg.onload = () => resolve(true)
+          proxyImg.onerror = () => resolve(false)
+          proxyImg.src = proxyUrl
+        })
+        if (ok && proxyImg.naturalWidth > 0) {
+          return proxyImg
+        }
+      } catch (e) {
+        console.warn('Proxy load failed:', e)
+      }
+    }
+
+    // 3. Fallback direct avec new Image
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => resolve(img.naturalWidth > 0 ? img : null)
+      img.onerror = () => {
+        // En dernier recours sans crossOrigin
+        const fallback = new Image()
+        fallback.onload = () => resolve(fallback.naturalWidth > 0 ? fallback : null)
+        fallback.onerror = () => resolve(null)
+        fallback.src = src
+      }
+      img.src = src
+    })
+  }
+
+  // Prise de capture photo
   const handleCapturePhoto = async () => {
     try {
       setIsCapturing(true)
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
-      if (!ctx) return
+      if (!ctx) {
+        toast.error('Canvas non disponible.')
+        return
+      }
 
       const width = window.innerWidth
       const height = window.innerHeight
       canvas.width = width
       canvas.height = height
 
-      // 1. Dessiner le fond (vidéo ou image importée)
-      if (videoRef.current && !fallbackImage) {
-        ctx.drawImage(videoRef.current, 0, 0, width, height)
-      } else if (fallbackImage) {
-        const bgImg = new Image()
-        bgImg.crossOrigin = 'anonymous'
-        bgImg.src = fallbackImage
-        await new Promise((resolve) => {
-          bgImg.onload = resolve
-          bgImg.onerror = resolve
-        })
-        ctx.drawImage(bgImg, 0, 0, width, height)
-      } else {
+      // 1. Dessiner le fond (vidéo caméra ou photo importée ou fond studio)
+      let bgDrawn = false
+      if (
+        videoRef.current &&
+        !fallbackImage &&
+        videoRef.current.readyState >= 2 &&
+        videoRef.current.videoWidth > 0
+      ) {
+        try {
+          const vw = videoRef.current.videoWidth
+          const vh = videoRef.current.videoHeight
+          const hRatio = width / vw
+          const vRatio = height / vh
+          const ratio = Math.max(hRatio, vRatio)
+          const centerShiftX = (width - vw * ratio) / 2
+          const centerShiftY = (height - vh * ratio) / 2
+          ctx.drawImage(
+            videoRef.current,
+            0,
+            0,
+            vw,
+            vh,
+            centerShiftX,
+            centerShiftY,
+            vw * ratio,
+            vh * ratio
+          )
+          bgDrawn = true
+        } catch (e) {
+          console.warn('Erreur rendu vidéo sur canvas:', e)
+        }
+      }
+
+      if (!bgDrawn && fallbackImage) {
+        try {
+          const bgImg = new Image()
+          if (!fallbackImage.startsWith('blob:')) {
+            bgImg.crossOrigin = 'anonymous'
+          }
+          bgImg.src = fallbackImage
+          await new Promise((resolve) => {
+            bgImg.onload = resolve
+            bgImg.onerror = resolve
+          })
+          if (bgImg.naturalWidth > 0) {
+            const iw = bgImg.naturalWidth
+            const ih = bgImg.naturalHeight
+            const hRatio = width / iw
+            const vRatio = height / ih
+            const ratio = Math.max(hRatio, vRatio)
+            const centerShiftX = (width - iw * ratio) / 2
+            const centerShiftY = (height - ih * ratio) / 2
+            ctx.drawImage(
+              bgImg,
+              0,
+              0,
+              iw,
+              ih,
+              centerShiftX,
+              centerShiftY,
+              iw * ratio,
+              ih * ratio
+            )
+            bgDrawn = true
+          }
+        } catch (e) {
+          console.warn('Erreur rendu fallback image sur canvas:', e)
+        }
+      }
+
+      if (!bgDrawn) {
         ctx.fillStyle = '#1A211C'
         ctx.fillRect(0, 0, width, height)
       }
 
-      // 2. Dessiner le tableau à sa position exacte
-      const artImg = new Image()
-      artImg.crossOrigin = 'anonymous'
-      artImg.src = imageSrc
-      await new Promise((resolve) => {
-        artImg.onload = resolve
-        artImg.onerror = resolve
-      })
+      // 2. Charger et dessiner le tableau
+      const artImg = await loadSafeArtImage(imageSrc)
+      const naturalW = artImg?.naturalWidth || artworkImgRef.current?.naturalWidth || 400
+      const naturalH = artImg?.naturalHeight || artworkImgRef.current?.naturalHeight || 300
 
       const baseWidth = Math.min(width * 0.7, 400) * scale
-      const aspectRatio = artImg.naturalHeight / (artImg.naturalWidth || 1)
+      const aspectRatio = naturalH / (naturalW || 1)
       const baseHeight = baseWidth * aspectRatio
 
       const centerX = width / 2 + position.x
       const centerY = height / 2 + position.y
+      const xPos = centerX - baseWidth / 2
+      const yPos = centerY - baseHeight / 2
 
       ctx.save()
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.45)'
-      ctx.shadowBlur = 24
-      ctx.shadowOffsetY = 14
-      ctx.drawImage(
-        artImg,
-        centerX - baseWidth / 2,
-        centerY - baseHeight / 2,
-        baseWidth,
-        baseHeight
-      )
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.55)'
+      ctx.shadowBlur = 26
+      ctx.shadowOffsetY = 16
+
+      if (artImg && artImg.naturalWidth > 0) {
+        ctx.drawImage(artImg, xPos, yPos, baseWidth, baseHeight)
+      } else if (artworkImgRef.current && artworkImgRef.current.complete) {
+        try {
+          ctx.drawImage(artworkImgRef.current, xPos, yPos, baseWidth, baseHeight)
+        } catch (e) {
+          console.warn('DOM img draw failed:', e)
+        }
+      } else {
+        ctx.fillStyle = '#2C352E'
+        ctx.strokeStyle = '#D4AF37'
+        ctx.lineWidth = 4
+        ctx.fillRect(xPos, yPos, baseWidth, baseHeight)
+        ctx.strokeRect(xPos, yPos, baseWidth, baseHeight)
+      }
       ctx.restore()
 
-      // 3. Filigrane discret Luxury Art
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)'
-      ctx.font = 'bold 15px Inter, sans-serif'
-      ctx.fillText('Luxury Art — Simulation Mur Réel', 24, height - 28)
+      // Ligne d'accroche stylisée
+      ctx.strokeStyle = 'rgba(212, 175, 55, 0.9)'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.moveTo(centerX, yPos)
+      ctx.lineTo(centerX, yPos - 12)
+      ctx.stroke()
 
-      const photoUrl = canvas.toDataURL('image/png')
-      setCapturedPhoto(photoUrl)
-      toast.success('Capture prise ! Vous pouvez la télécharger ou continuer.')
+      // 3. Filigrane discret Luxury Art
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
+      ctx.font = 'bold 15px Inter, sans-serif'
+      ctx.fillText('Luxury Art — Simulation Mur Réel (luxuryart.tn)', 24, height - 28)
+
+      // 4. Génération de l'image de prévisualisation
+      let photoUrl: string | null = null
+      try {
+        photoUrl = canvas.toDataURL('image/png')
+      } catch (taintErr) {
+        console.warn('Canvas toDataURL tainted, essai via toBlob:', taintErr)
+      }
+
+      if (!photoUrl) {
+        const blob = await new Promise<Blob | null>((resolve) =>
+          canvas.toBlob((b) => resolve(b), 'image/png')
+        )
+        if (blob) {
+          photoUrl = URL.createObjectURL(blob)
+        }
+      }
+
+      if (photoUrl) {
+        setCapturedPhoto(photoUrl)
+      } else {
+        toast.error('Impossible de générer le fichier photo.')
+      }
     } catch (err) {
       console.error('Erreur capture photo:', err)
-      toast.error('Impossible de prendre la capture.')
+      toast.error('Une erreur est survenue lors de la capture.')
     } finally {
       setIsCapturing(false)
     }
   }
 
-  // Téléchargement effectif uniquement si l'utilisateur le demande explicitement
+  // Téléchargement effectif sur l'appareil
   const handleDownloadCapturedPhoto = () => {
     if (!capturedPhoto) return
     const link = document.createElement('a')
     link.download = `simulation-mur-luxury-art-${Date.now()}.png`
     link.href = capturedPhoto
     link.click()
-    toast.success('Photo enregistrée dans vos téléchargements !')
+    toast.success('Photo téléchargée avec succès sur votre appareil !')
+    clearCapturedPhoto(false)
   }
 
   return (
@@ -330,6 +488,7 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
         >
           <div className="relative">
             <img
+              ref={artworkImgRef}
               src={imageSrc}
               alt="Simulation du tableau sur le mur"
               className="max-h-[55vh] max-w-[85vw] object-contain pointer-events-none drop-shadow-[0_22px_35px_rgba(0,0,0,0.6)]"
@@ -389,33 +548,33 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
         </p>
       </div>
 
-      {/* Modal / Aperçu de la capture avec choix de téléchargement ou suppression auto 1 min */}
+      {/* Modal / Confirmation de téléchargement de la capture */}
       {capturedPhoto && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-in fade-in duration-300"
-          onClick={clearCapturedPhoto}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-in fade-in duration-300"
+          onClick={() => clearCapturedPhoto(false)}
         >
           <div
-            className="relative flex w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-gold/40 bg-foliage p-5 shadow-2xl text-sand sm:p-6"
+            className="relative flex w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-gold/50 bg-[#161D18] p-5 shadow-2xl text-sand sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Barre haute du modal */}
             <div className="flex items-center justify-between pb-3 border-b border-sand/15">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-gold" />
-                <h4 className="font-display text-sm font-bold sm:text-base">
-                  Aperçu de votre mur
+                <h4 className="font-display text-sm font-bold sm:text-base text-sand">
+                  Télécharger votre simulation ?
                 </h4>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full bg-sand/10 px-2.5 py-0.5 text-[11px] font-medium text-gold">
-                  <Clock className="h-3 w-3" />
+                <span className="inline-flex items-center gap-1 rounded-full bg-sand/10 px-2.5 py-0.5 text-[11px] font-medium text-gold border border-gold/30">
+                  <Clock className="h-3 w-3 animate-pulse" />
                   Expire dans {timeLeft}s
                 </span>
                 <button
                   type="button"
-                  onClick={clearCapturedPhoto}
+                  onClick={() => clearCapturedPhoto(true)}
                   className="rounded-full bg-sand/10 p-1.5 text-sand transition hover:bg-sand/20"
                   aria-label="Fermer"
                 >
@@ -425,7 +584,7 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
             </div>
 
             {/* Image de la capture */}
-            <div className="relative my-4 aspect-[4/3] w-full overflow-hidden rounded-2xl border border-sand/20 bg-black/40 shadow-inner">
+            <div className="relative my-4 aspect-[4/3] w-full overflow-hidden rounded-2xl border border-sand/20 bg-black/50 shadow-inner">
               <img
                 src={capturedPhoto}
                 alt="Aperçu simulation mur"
@@ -433,11 +592,11 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
               />
             </div>
 
-            <p className="text-center text-xs text-sand/75">
-              Cette photo reste temporairement en mémoire locale pendant 1 minute.
+            <p className="text-center text-xs text-sand/80">
+              Souhaitez-vous enregistrer cette capture sur votre appareil avant qu’elle ne soit supprimée ?
             </p>
 
-            {/* Actions : Télécharger ou Supprimer / Fermer */}
+            {/* Actions : Télécharger ou Supprimer */}
             <div className="mt-4 flex flex-col gap-2.5 sm:flex-row">
               <button
                 type="button"
@@ -445,16 +604,16 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
                 className="flex-1 inline-flex items-center justify-center gap-2 rounded-full border border-gold bg-gold py-3 px-5 text-xs font-bold text-sand shadow-lg transition hover:brightness-110 active:scale-95"
               >
                 <Download className="h-4 w-4" />
-                <span>Télécharger la photo</span>
+                <span>Oui, télécharger la photo</span>
               </button>
 
               <button
                 type="button"
-                onClick={clearCapturedPhoto}
-                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-sand/20 bg-sand/10 py-3 px-4 text-xs font-semibold text-sand transition hover:bg-sand/20 active:scale-95"
+                onClick={() => clearCapturedPhoto(true)}
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-sand/20 bg-sand/10 py-3 px-4 text-xs font-semibold text-sand transition hover:bg-red-500/20 hover:text-red-300 hover:border-red-400/40 active:scale-95"
               >
-                <Trash2 className="h-3.5 w-3.5 text-sand/80" />
-                <span>Fermer / Supprimer</span>
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Non, supprimer la capture</span>
               </button>
             </div>
           </div>

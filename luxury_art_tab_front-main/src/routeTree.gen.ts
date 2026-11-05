@@ -23,6 +23,7 @@ import { Route as ProductsIndexRouteImport } from './routes/products.index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProductsIdRouteImport } from './routes/products.$id'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as ApiProxyImageRouteImport } from './routes/api.proxy-image'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminAppRouteRouteImport } from './routes/admin/_app/route'
 import { Route as AdminAppWhatsappOrdersRouteImport } from './routes/admin/_app/whatsapp-orders'
@@ -112,6 +113,11 @@ const ProductsIdRoute = ProductsIdRouteImport.update({
 const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiProxyImageRoute = ApiProxyImageRouteImport.update({
+  id: '/api/proxy-image',
+  path: '/api/proxy-image',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
@@ -226,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/login': typeof AdminLoginRoute
+  '/api/proxy-image': typeof ApiProxyImageRoute
   '/category/$slug': typeof CategorySlugRoute
   '/products/$id': typeof ProductsIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -261,6 +268,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AdminIndexRoute
   '/admin/login': typeof AdminLoginRoute
+  '/api/proxy-image': typeof ApiProxyImageRoute
   '/category/$slug': typeof CategorySlugRoute
   '/products/$id': typeof ProductsIdRoute
   '/products': typeof ProductsIndexRoute
@@ -297,6 +305,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/_app': typeof AdminAppRouteRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/api/proxy-image': typeof ApiProxyImageRoute
   '/category/$slug': typeof CategorySlugRoute
   '/products/$id': typeof ProductsIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -334,6 +343,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/admin/login'
+    | '/api/proxy-image'
     | '/category/$slug'
     | '/products/$id'
     | '/admin/'
@@ -369,6 +379,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin'
     | '/admin/login'
+    | '/api/proxy-image'
     | '/category/$slug'
     | '/products/$id'
     | '/products'
@@ -404,6 +415,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin/_app'
     | '/admin/login'
+    | '/api/proxy-image'
     | '/category/$slug'
     | '/products/$id'
     | '/admin/'
@@ -439,6 +451,7 @@ export interface RootRouteChildren {
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiProxyImageRoute: typeof ApiProxyImageRoute
   CategorySlugRoute: typeof CategorySlugRoute
   ProductsIdRoute: typeof ProductsIdRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
@@ -542,6 +555,13 @@ declare module '@tanstack/react-router' {
       path: '/category/$slug'
       fullPath: '/category/$slug'
       preLoaderRoute: typeof CategorySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/proxy-image': {
+      id: '/api/proxy-image'
+      path: '/api/proxy-image'
+      fullPath: '/api/proxy-image'
+      preLoaderRoute: typeof ApiProxyImageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/login': {
@@ -760,6 +780,7 @@ const rootRouteChildren: RootRouteChildren = {
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiProxyImageRoute: ApiProxyImageRoute,
   CategorySlugRoute: CategorySlugRoute,
   ProductsIdRoute: ProductsIdRoute,
   ProductsIndexRoute: ProductsIndexRoute,
