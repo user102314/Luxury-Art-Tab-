@@ -4,6 +4,7 @@ import { AnimatedHero } from "@/components/AnimatedHero";
 import { SiteNav } from "@/components/SiteNav";
 import { Reveal } from "@/components/Reveal";
 import { api } from "@/lib/api";
+import { getSimulationImage, getProductImage } from "@/lib/images";
 import { ensureStorefrontCatalog, ensureCategoryShowcase, prefetchCatalogPricing } from "@/lib/storefrontLoader";
 import {
   PAGE_COPY,
