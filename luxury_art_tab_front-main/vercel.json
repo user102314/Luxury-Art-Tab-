@@ -1,11 +1,13 @@
 {
   "framework": "tanstack-start",
   "env": {
-    "VITE_API_URL": "https://api.luxury-art.tn/api"
+    "VITE_API_URL": "https://api.luxury-art.tn/api",
+    "DANGEROUSLY_DEPLOY_VULNERABLE_TANSTACK_START_XSS": "1"
   },
   "build": {
     "env": {
-      "VITE_API_URL": "https://api.luxury-art.tn/api"
+      "VITE_API_URL": "https://api.luxury-art.tn/api",
+      "DANGEROUSLY_DEPLOY_VULNERABLE_TANSTACK_START_XSS": "1"
     }
   }
 }
