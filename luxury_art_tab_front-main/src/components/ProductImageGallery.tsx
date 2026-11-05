@@ -84,6 +84,19 @@ export function ProductImageGallery({
               className="absolute inset-0 h-full w-full max-w-full object-contain object-center"
             />
 
+            {/* Badge AR informatif en haut à gauche de la photo */}
+            {onAr && arTargetImage && (
+              <button
+                type="button"
+                onClick={() => onAr(arTargetImage)}
+                className="absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-full border border-gold/50 bg-foliage/90 px-3 py-1 text-xs font-bold text-sand backdrop-blur-md shadow-md transition hover:bg-foliage hover:scale-105 active:scale-95"
+                title="Cliquer pour voir ce tableau sur votre mur réel"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-gold" />
+                <span>Testable sur votre mur (AR)</span>
+              </button>
+            )}
+
             {onLike && (
               <button
                 type="button"
@@ -120,7 +133,7 @@ export function ProductImageGallery({
               </>
             )}
 
-            {/* Barre de contrôles et Bouton AR innovant */}
+            {/* Barre de contrôles et Bouton d'action AR remarquable */}
             <div className="absolute bottom-2.5 right-2.5 z-10 flex max-w-[calc(100%-1.25rem)] items-center gap-2 sm:bottom-3.5 sm:right-3.5">
               <button
                 type="button"
@@ -136,15 +149,15 @@ export function ProductImageGallery({
                 <button
                   type="button"
                   onClick={() => onAr(arTargetImage)}
-                  className="group relative flex items-center gap-2 rounded-full border border-gold/50 bg-foliage/95 px-3.5 py-2 text-xs font-bold text-sand shadow-[0_8px_20px_-4px_rgba(74,93,79,0.7)] backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-foliage hover:border-gold sm:px-4 sm:py-2.5 sm:text-sm"
+                  className="group relative flex items-center gap-2 rounded-full border-2 border-gold/60 bg-foliage/95 px-4 py-2.5 text-xs font-bold text-sand shadow-[0_10px_25px_-5px_rgba(74,93,79,0.8)] backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-foliage hover:border-gold sm:px-5 sm:py-3 sm:text-sm"
                   title="Projeter ce tableau sur votre mur réel avec la caméra"
                 >
-                  <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="relative flex h-2.5 w-2.5 shrink-0">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold opacity-75" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-gold" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-gold" />
                   </span>
-                  <Camera className="h-4 w-4 text-gold transition-transform group-hover:rotate-6" />
-                  <span className="font-semibold tracking-wide">Tester sur mon mur</span>
+                  <Camera className="h-4 w-4 text-gold transition-transform group-hover:rotate-12" />
+                  <span className="tracking-wide font-extrabold">Tester sur votre mur réel</span>
                 </button>
               )}
             </div>

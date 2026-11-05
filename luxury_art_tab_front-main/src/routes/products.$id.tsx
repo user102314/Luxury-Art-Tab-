@@ -594,14 +594,52 @@ function ProductDetailPage() {
                   : 'Indisponible'}
             </button>
 
-            <button
-              type="button"
-              onClick={() => setArImage(simulationImage || image)}
-              className="mt-3 flex w-full items-center justify-center gap-2.5 rounded-full border border-gold/60 bg-gold/15 py-3 text-sm font-bold text-gold transition hover:bg-gold/25 active:scale-95 shadow-sm"
-            >
-              <Camera className="h-4 w-4 text-gold" />
-              <span>Tester sur votre mur réel (AR)</span>
-            </button>
+            {/* Bloc d'appel à l'action AR mis en avant */}
+            <div className="mt-5 overflow-hidden rounded-2xl border-2 border-gold/50 bg-gradient-to-br from-gold/15 via-sand to-beige/40 p-4 shadow-md sm:p-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-foliage text-gold shadow-md">
+                  <Camera className="h-6 w-6" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-gold/25 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-gold">
+                      Exclusivité
+                    </span>
+                    <span className="text-xs font-bold text-foreground">
+                      Visualisation sur votre mur réel
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    Hésitation sur la dimension ou l'effet chez vous ? Projetez ce tableau <strong>à taille réelle sur votre mur</strong> avec la caméra de votre smartphone !
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => setArImage(simulationImage || image)}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-gold bg-foliage py-3 px-4 text-xs font-bold text-sand shadow-lg transition hover:bg-foliage/90 hover:scale-[1.02] active:scale-95"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-gold" />
+                  </span>
+                  <Camera className="h-4 w-4 text-gold" />
+                  <span>Tester sur mon mur réel (AR)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    document.getElementById('simulateur-mural')?.scrollIntoView({ behavior: 'smooth' })
+                  }}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-sand px-3 py-3 text-xs font-semibold text-foreground transition hover:bg-beige/60"
+                  title="Voir dans le simulateur 3D"
+                >
+                  <span>Simulateur 3D ↓</span>
+                </button>
+              </div>
+            </div>
 
             <div className="mt-3 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
               <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-green" />

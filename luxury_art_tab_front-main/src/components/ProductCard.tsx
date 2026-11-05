@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { Camera } from 'lucide-react'
+import { Camera, Sparkles } from 'lucide-react'
 import type { Product } from '@/types/api'
 import { getProductImage, getSimulationImage, IMAGE_WIDTH, fallbackFromBrokenImage } from '@/lib/images'
 import { prefetchProductDetail } from '@/hooks/useStorefrontQueries'
@@ -79,21 +79,32 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
             />
           </div>
 
-          {outOfStock && (
+          {/* Badge rupture ou badge AR */}
+          {outOfStock ? (
             <span
-              className={`absolute left-3 top-3 rounded-full bg-brand-red font-bold uppercase tracking-wider text-sand ${
+              className={`absolute left-3 top-3 z-10 rounded-full bg-brand-red font-bold uppercase tracking-wider text-sand ${
                 compact ? 'px-2 py-0.5 text-[10px]' : 'left-4 top-4 px-3 py-1 text-xs'
               }`}
             >
               Rupture
             </span>
+          ) : (
+            <span
+              className={`absolute left-2.5 top-2.5 z-10 flex items-center gap-1 rounded-full border border-gold/40 bg-foliage/80 font-semibold text-sand shadow-sm backdrop-blur-md sm:left-3 sm:top-3 ${
+                compact ? 'px-2 py-0.5 text-[9px]' : 'px-2.5 py-0.5 text-[11px]'
+              }`}
+            >
+              <Sparkles className="h-3 w-3 text-gold" />
+              <span>Test mural AR</span>
+            </span>
           )}
 
+          {/* Bouton favoris */}
           <button
             type="button"
             onClick={handleLike}
             aria-label={liked ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-            className={`absolute flex items-center justify-center rounded-full backdrop-blur transition-all duration-300 ${
+            className={`absolute z-10 flex items-center justify-center rounded-full backdrop-blur transition-all duration-300 ${
               compact ? 'right-2.5 top-2.5 h-8 w-8' : 'right-4 top-4 h-10 w-10'
             } ${
               liked
@@ -113,25 +124,32 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
             </svg>
           </button>
 
+          {/* Bandeau d'action proéminent : Test sur votre mur réel */}
           {onAr && simulationImage && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                onAr(simulationImage)
-              }}
-              className={`absolute z-10 flex items-center gap-1.5 rounded-full border border-gold/45 bg-foliage/90 text-sand shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-foliage hover:border-gold active:scale-95 ${
-                compact
-                  ? 'bottom-2.5 right-2 px-2.5 py-1 text-[11px] font-bold'
-                  : 'bottom-3 right-3 px-3.5 py-1.5 text-xs font-bold'
-              }`}
-              aria-label="Tester ce tableau sur votre mur réel"
-              title="Tester ce tableau en direct sur votre mur avec votre caméra"
-            >
-              <Camera className={compact ? 'h-3 w-3 text-gold' : 'h-3.5 w-3.5 text-gold'} />
-              <span>{compact ? 'Sur mon mur' : 'Tester sur mon mur'}</span>
-            </button>
+            <div className="absolute inset-x-2 bottom-2 z-10 sm:inset-x-3 sm:bottom-3">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onAr(simulationImage)
+                }}
+                className={`w-full flex items-center justify-center gap-1.5 rounded-xl border border-gold/50 bg-foliage/95 font-bold text-sand shadow-[0_8px_20px_-4px_rgba(0,0,0,0.5)] backdrop-blur-md transition-all duration-300 hover:scale-[1.02] hover:bg-foliage hover:border-gold active:scale-95 group ${
+                  compact ? 'py-1.5 px-2 text-[11px]' : 'py-2 px-3 text-xs'
+                }`}
+                aria-label="Tester ce tableau sur votre mur réel"
+                title="Tester ce tableau en direct sur votre mur avec votre caméra"
+              >
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-gold" />
+                </span>
+                <Camera className="h-3.5 w-3.5 text-gold transition-transform group-hover:rotate-12" />
+                <span className="truncate tracking-wide">
+                  {compact ? 'Tester sur mon mur' : 'Tester sur votre mur réel (AR)'}
+                </span>
+              </button>
+            </div>
           )}
         </div>
 

@@ -96,7 +96,7 @@ export function ProductWallSimulator({
   }
 
   return (
-    <section className="mt-12 overflow-hidden rounded-3xl border border-gold/30 bg-gradient-to-b from-sand via-beige/20 to-sand p-6 shadow-[0_20px_50px_-25px_rgba(74,93,79,0.5)] sm:p-8 md:p-10">
+    <section id="simulateur-mural" className="mt-12 overflow-hidden rounded-3xl border border-gold/30 bg-gradient-to-b from-sand via-beige/20 to-sand p-6 shadow-[0_20px_50px_-25px_rgba(74,93,79,0.5)] sm:p-8 md:p-10">
       {/* En-tête prestigieux */}
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>

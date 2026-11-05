@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, Camera, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCategoryShowcase } from "@/hooks/useStorefrontQueries";
 import { getProductImage, getShowcaseHeroImage, IMAGE_WIDTH } from "@/lib/images";
 import type { CategoryShowcase } from "@/types/api";
@@ -410,15 +410,31 @@ export function AnimatedHero({
           livraison partout en Tunisie.
         </p>
 
-        <Link
-          to="/products"
-          search={{ category: undefined }}
-          preload="intent"
-          className="mt-5 inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background shadow-[0_16px_34px_-18px_rgba(0,0,0,0.7)] transition hover:scale-[1.03]"
-        >
-          Voir toute la galerie
-          <ArrowRight className="h-4 w-4" />
-        </Link>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+          <Link
+            to="/products"
+            search={{ category: undefined }}
+            preload="intent"
+            className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background shadow-[0_16px_34px_-18px_rgba(0,0,0,0.7)] transition hover:scale-[1.03]"
+          >
+            Voir toute la galerie
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <button
+            type="button"
+            onClick={() => {
+              document.getElementById('experience-ar')?.scrollIntoView({ behavior: 'smooth' })
+            }}
+            className="inline-flex items-center gap-2 rounded-full border border-gold/60 bg-gold/15 px-5 py-3 text-sm font-bold text-gold transition hover:bg-gold/25 active:scale-95 shadow-sm"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-gold" />
+            </span>
+            <Camera className="h-4 w-4 text-gold" />
+            <span>Tester sur votre mur (AR)</span>
+          </button>
+        </div>
       </div>
     </section>
   );

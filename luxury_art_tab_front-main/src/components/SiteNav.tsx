@@ -173,6 +173,18 @@ export function SiteNav() {
 
               <button
                 type="button"
+                onClick={() => scrollToId('experience-ar')}
+                className={`${navLinkClass} inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-gold hover:text-gold`}
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-gold" />
+                </span>
+                <span>Tester sur mur (AR)</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => scrollToId('nouveautes')}
                 className={`${navLinkClass} rounded-full px-3 py-2`}
               >
@@ -346,6 +358,23 @@ export function SiteNav() {
                   </Link>
                 </div>
               )}
+
+              <button
+                type="button"
+                onClick={() => scrollToId('experience-ar')}
+                className={`${mobileLinkClass} flex w-full items-center justify-between text-gold`}
+              >
+                <span className="flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-gold" />
+                  </span>
+                  <span>Tester sur votre mur (AR)</span>
+                </span>
+                <span className="rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-bold">
+                  Nouveau
+                </span>
+              </button>
 
               <button
                 type="button"
