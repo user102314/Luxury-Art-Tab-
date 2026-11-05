@@ -1,5 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { Camera, Download, HelpCircle, Move, RotateCcw, X, ZoomIn, ZoomOut, Upload } from 'lucide-react'
+import {
+  Camera,
+  Download,
+  Move,
+  RotateCcw,
+  X,
+  ZoomIn,
+  ZoomOut,
+  Upload,
+  Clock,
+  Trash2,
+  Sparkles,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 type ArViewerProps = {
@@ -16,8 +28,45 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [isCapturing, setIsCapturing] = useState(false)
   const [fallbackImage, setFallbackImage] = useState<string | null>(null)
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null)
+  const [timeLeft, setTimeLeft] = useState(60)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const dragStart = useRef({ x: 0, y: 0 })
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Nettoyage de la capture temporaire
+  const clearCapturedPhoto = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+    setCapturedPhoto(null)
+    setTimeLeft(60)
+  }
+
+  // Timer automatique de 60 secondes pour la capture locale
+  useEffect(() => {
+    if (capturedPhoto) {
+      setTimeLeft(60)
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearCapturedPhoto()
+            toast.info('La capture temporaire a expiré')
+            return 60
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+    }
+  }, [capturedPhoto])
 
   useEffect(() => {
     let stream: MediaStream | null = null
@@ -27,6 +76,7 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
       setPosition({ x: 0, y: 0 })
       setScale(1)
       setFallbackImage(null)
+      clearCapturedPhoto()
 
       navigator.mediaDevices
         ?.getUserMedia({
@@ -58,6 +108,7 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
       if (stream) {
         stream.getTracks().forEach((track) => track.stop())
       }
+      clearCapturedPhoto()
     }
   }, [isOpen])
 
@@ -88,7 +139,7 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
     setError(null)
   }
 
-  // Capture photo instantanée du mur avec le tableau
+  // Prise de capture photo (reste en mémoire locale avec aperçu, téléchargeable au choix)
   const handleCapturePhoto = async () => {
     try {
       setIsCapturing(true)
@@ -148,22 +199,29 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
       ctx.restore()
 
       // 3. Filigrane discret Luxury Art
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.75)'
-      ctx.font = '14px Inter, sans-serif'
-      ctx.fillText('Luxury Art — Simulation Mur', 20, height - 25)
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)'
+      ctx.font = 'bold 15px Inter, sans-serif'
+      ctx.fillText('Luxury Art — Simulation Mur Réel', 24, height - 28)
 
-      // Téléchargement
-      const link = document.createElement('a')
-      link.download = `simulation-mur-luxury-art-${Date.now()}.png`
-      link.href = canvas.toDataURL('image/png')
-      link.click()
-      toast.success('Photo de votre mur enregistrée !')
+      const photoUrl = canvas.toDataURL('image/png')
+      setCapturedPhoto(photoUrl)
+      toast.success('Capture prise ! Vous pouvez la télécharger ou continuer.')
     } catch (err) {
       console.error('Erreur capture photo:', err)
-      toast.error('Impossible d’enregistrer la photo.')
+      toast.error('Impossible de prendre la capture.')
     } finally {
       setIsCapturing(false)
     }
+  }
+
+  // Téléchargement effectif uniquement si l'utilisateur le demande explicitement
+  const handleDownloadCapturedPhoto = () => {
+    if (!capturedPhoto) return
+    const link = document.createElement('a')
+    link.download = `simulation-mur-luxury-art-${Date.now()}.png`
+    link.href = capturedPhoto
+    link.click()
+    toast.success('Photo enregistrée dans vos téléchargements !')
   }
 
   return (
@@ -330,6 +388,78 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
           Échelle indicative ajustable · Aucun accessoire requis
         </p>
       </div>
+
+      {/* Modal / Aperçu de la capture avec choix de téléchargement ou suppression auto 1 min */}
+      {capturedPhoto && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-in fade-in duration-300"
+          onClick={clearCapturedPhoto}
+        >
+          <div
+            className="relative flex w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-gold/40 bg-foliage p-5 shadow-2xl text-sand sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Barre haute du modal */}
+            <div className="flex items-center justify-between pb-3 border-b border-sand/15">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-gold" />
+                <h4 className="font-display text-sm font-bold sm:text-base">
+                  Aperçu de votre mur
+                </h4>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-sand/10 px-2.5 py-0.5 text-[11px] font-medium text-gold">
+                  <Clock className="h-3 w-3" />
+                  Expire dans {timeLeft}s
+                </span>
+                <button
+                  type="button"
+                  onClick={clearCapturedPhoto}
+                  className="rounded-full bg-sand/10 p-1.5 text-sand transition hover:bg-sand/20"
+                  aria-label="Fermer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Image de la capture */}
+            <div className="relative my-4 aspect-[4/3] w-full overflow-hidden rounded-2xl border border-sand/20 bg-black/40 shadow-inner">
+              <img
+                src={capturedPhoto}
+                alt="Aperçu simulation mur"
+                className="h-full w-full object-contain"
+              />
+            </div>
+
+            <p className="text-center text-xs text-sand/75">
+              Cette photo reste temporairement en mémoire locale pendant 1 minute.
+            </p>
+
+            {/* Actions : Télécharger ou Supprimer / Fermer */}
+            <div className="mt-4 flex flex-col gap-2.5 sm:flex-row">
+              <button
+                type="button"
+                onClick={handleDownloadCapturedPhoto}
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-full border border-gold bg-gold py-3 px-5 text-xs font-bold text-sand shadow-lg transition hover:brightness-110 active:scale-95"
+              >
+                <Download className="h-4 w-4" />
+                <span>Télécharger la photo</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={clearCapturedPhoto}
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-sand/20 bg-sand/10 py-3 px-4 text-xs font-semibold text-sand transition hover:bg-sand/20 active:scale-95"
+              >
+                <Trash2 className="h-3.5 w-3.5 text-sand/80" />
+                <span>Fermer / Supprimer</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
