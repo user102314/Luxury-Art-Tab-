@@ -178,7 +178,7 @@ export function ProductWallSimulator({
               className="inline-flex items-center gap-1.5 rounded-lg border border-gold/40 bg-sand px-3 py-1 text-xs font-semibold text-gold transition hover:bg-gold/10"
             >
               <Upload className="h-3 w-3" />
-              {customWall ? 'Changer de mur' : 'Importer mon mur'}
+              {customWall ? 'Changer de mur' : 'Importer votre mur'}
             </button>
             <input
               ref={fileInputRef}

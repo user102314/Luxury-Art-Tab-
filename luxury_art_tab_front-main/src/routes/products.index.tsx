@@ -424,7 +424,7 @@ function ProductsPage() {
                   <div>
                     <span className="font-bold text-foreground">Visualisation en Réalité Augmentée :</span>{' '}
                     <span className="text-muted-foreground">
-                      Cliquez sur <strong>« Sur mon mur »</strong> sur un tableau pour l&apos;essayer directement chez vous avec votre caméra.
+                      Cliquez sur <strong>« Tester sur votre mur »</strong> sur un tableau pour l&apos;essayer directement chez vous avec votre caméra.
                     </span>
                   </div>
                 </div>

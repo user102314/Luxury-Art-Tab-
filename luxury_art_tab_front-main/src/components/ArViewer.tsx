@@ -415,7 +415,7 @@ export function ArViewer({ isOpen, onClose, imageSrc }: ArViewerProps) {
               className="inline-flex items-center justify-center gap-2 rounded-full border border-gold bg-gold px-6 py-2.5 text-xs font-bold text-sand shadow transition hover:brightness-110"
             >
               <Upload className="h-4 w-4" />
-              Importer une photo de mon mur
+              Importer une photo de votre mur
             </button>
             <button
               type="button"

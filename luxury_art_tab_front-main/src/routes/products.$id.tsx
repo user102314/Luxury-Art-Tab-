@@ -626,7 +626,7 @@ function ProductDetailPage() {
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-gold" />
                   </span>
                   <Camera className="h-4 w-4 text-gold" />
-                  <span>Tester sur mon mur réel (AR)</span>
+                  <span>Tester sur votre mur réel (AR)</span>
                 </button>
                 <button
                   type="button"

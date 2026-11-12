@@ -146,7 +146,7 @@ export function ProductCard({ product, categoryName, index = 0, onAr, compact = 
                 </span>
                 <Camera className="h-3.5 w-3.5 text-gold transition-transform group-hover:rotate-12" />
                 <span className="truncate tracking-wide">
-                  {compact ? 'Tester sur mon mur' : 'Tester sur votre mur réel (AR)'}
+                  {compact ? 'Tester sur votre mur' : 'Tester sur votre mur réel (AR)'}
                 </span>
               </button>
             </div>
