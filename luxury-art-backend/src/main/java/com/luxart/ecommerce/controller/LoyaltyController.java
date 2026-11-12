@@ -43,6 +43,17 @@ public class LoyaltyController {
         return loyaltyService.activateProgram(id);
     }
 
+    @PatchMapping("/programs/{id}/deactivate")
+    public LoyaltyProgramDto deactivateProgram(@PathVariable Long id) {
+        return loyaltyService.deactivateProgram(id);
+    }
+
+    @PatchMapping("/programs/deactivate-all")
+    public ResponseEntity<Void> deactivateAllPrograms() {
+        loyaltyService.deactivateAllPrograms();
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/programs/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteProgram(@PathVariable Long id) {

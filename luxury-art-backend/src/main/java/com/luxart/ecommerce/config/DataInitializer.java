@@ -44,7 +44,7 @@ public class DataInitializer {
                     .commandesRequises(3)
                     .typeRecompense(LoyaltyRewardType.FREE_TABLEAU)
                     .valeurRecompense(java.math.BigDecimal.ONE)
-                    .actif(true)
+                    .actif(false)
                     .build());
             log.info("Programme fidélité par défaut créé");
         }

@@ -72,6 +72,8 @@ public class LoyaltyServiceImpl implements LoyaltyService {
         if (Boolean.TRUE.equals(dto.getActif())) {
             deactivateAllExcept(id);
             program.setActif(true);
+        } else if (Boolean.FALSE.equals(dto.getActif())) {
+            program.setActif(false);
         }
         return toProgramDto(programRepository.save(program));
     }
@@ -83,6 +85,20 @@ public class LoyaltyServiceImpl implements LoyaltyService {
         LoyaltyProgram program = getProgramEntity(id);
         program.setActif(true);
         return toProgramDto(programRepository.save(program));
+    }
+
+    @Override
+    @Transactional
+    public LoyaltyProgramDto deactivateProgram(Long id) {
+        LoyaltyProgram program = getProgramEntity(id);
+        program.setActif(false);
+        return toProgramDto(programRepository.save(program));
+    }
+
+    @Override
+    @Transactional
+    public void deactivateAllPrograms() {
+        deactivateAll();
     }
 
     @Override

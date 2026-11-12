@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Gift, X } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import { api } from '@/lib/api'
 
 const DISMISS_KEY = 'luxart_login_invite_dismissed'
 
@@ -12,8 +13,23 @@ export function LoginInviteModal() {
   useEffect(() => {
     if (client) return
     if (sessionStorage.getItem(DISMISS_KEY)) return
-    const timer = window.setTimeout(() => setOpen(true), 5000)
-    return () => window.clearTimeout(timer)
+    let cancelled = false
+    let timer: number | undefined
+
+    api
+      .getActiveLoyaltyProgram()
+      .then((program) => {
+        if (cancelled || !program) return
+        timer = window.setTimeout(() => setOpen(true), 5000)
+      })
+      .catch(() => {
+        // Ne pas afficher la fenêtre fidélité si le programme est désactivé ou indisponible
+      })
+
+    return () => {
+      cancelled = true
+      if (timer !== undefined) window.clearTimeout(timer)
+    }
   }, [client])
 
   if (!open || client) return null

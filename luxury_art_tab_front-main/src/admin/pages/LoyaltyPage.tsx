@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Gift, Plus, RefreshCw, Star, Users } from 'lucide-react'
 import StatCard, { formatCurrency } from '../components/StatCard'
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
@@ -83,6 +83,18 @@ export default function LoyaltyPage() {
     await invalidate.loyaltyStats()
   }
 
+  const handleDeactivate = async (id: number) => {
+    await api.deactivateLoyaltyProgram(id)
+    await invalidate.loyaltyPrograms()
+    await invalidate.loyaltyStats()
+  }
+
+  const handleDeactivateAll = async () => {
+    await api.deactivateAllLoyaltyPrograms()
+    await invalidate.loyaltyPrograms()
+    await invalidate.loyaltyStats()
+  }
+
   if (isLoading) return <PageSkeleton rows={8} />
 
   const active = stats?.programmeActif
@@ -111,12 +123,37 @@ export default function LoyaltyPage() {
         </button>
       </div>
 
-      {active && (
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-          Forfait actif : <strong>{active.nom}</strong> — {active.commandesRequises} commandes livrées →{' '}
-          {active.typeRecompense === 'FREE_TABLEAU'
-            ? `${active.valeurRecompense} tableau(x) gratuit(s)`
-            : `${active.valeurRecompense} TND de réduction`}
+      {active ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+          <div>
+            <span className="font-semibold text-emerald-300">Programme de fidélité activé :</span>{' '}
+            <strong>{active.nom}</strong> — {active.commandesRequises} commandes livrées →{' '}
+            {active.typeRecompense === 'FREE_TABLEAU'
+              ? `${active.valeurRecompense} tableau(x) gratuit(s)`
+              : `${active.valeurRecompense} TND de réduction`}
+          </div>
+          <button
+            type="button"
+            onClick={handleDeactivateAll}
+            className="rounded-lg border border-rose-500/40 bg-rose-500/15 px-3 py-1.5 text-xs font-medium text-rose-200 transition hover:bg-rose-500/25"
+          >
+            Désactiver le programme
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+          <div>
+            <span className="font-semibold text-amber-300">Programme de fidélité désactivé</span> — Aucun forfait actif pour le moment. Les clients ne voient pas l&apos;invitation au club fidélité sur le site.
+          </div>
+          {programs.length > 0 && (
+            <button
+              type="button"
+              onClick={() => handleActivate(programs[0].id)}
+              className="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-1.5 text-xs font-medium text-emerald-200 transition hover:bg-emerald-500/25"
+            >
+              Activer « {programs[0].nom} »
+            </button>
+          )}
         </div>
       )}
 
@@ -205,7 +242,16 @@ export default function LoyaltyPage() {
                     </p>
                   </div>
                   {p.actif ? (
-                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-300">Actif</span>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-300">Actif</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeactivate(p.id)}
+                        className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-xs text-rose-300 hover:bg-rose-500/20"
+                      >
+                        Désactiver
+                      </button>
+                    </div>
                   ) : (
                     <button type="button" onClick={() => handleActivate(p.id)} className="btn-ghost text-xs">
                       Activer

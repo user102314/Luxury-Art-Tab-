@@ -347,6 +347,10 @@ export const api = {
     request<LoyaltyProgram>(`/loyalty/programs/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   activateLoyaltyProgram: (id: number) =>
     request<LoyaltyProgram>(`/loyalty/programs/${id}/activate`, { method: 'PATCH' }),
+  deactivateLoyaltyProgram: (id: number) =>
+    request<LoyaltyProgram>(`/loyalty/programs/${id}/deactivate`, { method: 'PATCH' }),
+  deactivateAllLoyaltyPrograms: () =>
+    request<void>('/loyalty/programs/deactivate-all', { method: 'PATCH' }),
   deleteLoyaltyProgram: (id: number) =>
     request<void>(`/loyalty/programs/${id}`, { method: 'DELETE' }),
   getLoyaltyStats: () => request<LoyaltyStats>('/loyalty/stats'),

@@ -11,6 +11,8 @@ public interface LoyaltyService {
     LoyaltyProgramDto createProgram(LoyaltyProgramDto dto);
     LoyaltyProgramDto updateProgram(Long id, LoyaltyProgramDto dto);
     LoyaltyProgramDto activateProgram(Long id);
+    LoyaltyProgramDto deactivateProgram(Long id);
+    void deactivateAllPrograms();
     void deleteProgram(Long id);
 
     ClientProfileDto getProfileByUserId(Long userId);
