@@ -61,6 +61,9 @@ function CheckoutPage() {
           productId: item.productId,
           quantite: item.quantite,
           prixUnitaire: item.prixUnitaire,
+          taille: item.taille,
+          encadrement: item.encadrement,
+          couleur: item.couleur,
         })),
       })
 

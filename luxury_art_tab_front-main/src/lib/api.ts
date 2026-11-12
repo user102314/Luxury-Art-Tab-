@@ -166,7 +166,14 @@ export const api = {
     clientUserId?: number
     adresseLivraison: string
     telephone?: string
-    items: { productId: number; quantite: number; prixUnitaire: number }[]
+    items: {
+      productId: number
+      quantite: number
+      prixUnitaire: number
+      taille?: string
+      encadrement?: string
+      couleur?: string
+    }[]
   }) => {
     try {
       return await request<{ orderId: number; userId: number; total: number }>(
@@ -203,6 +210,9 @@ export const api = {
             productId: item.productId,
             quantite: item.quantite,
             prixUnitaire: item.prixUnitaire,
+            taille: item.taille,
+            encadrement: item.encadrement,
+            couleur: item.couleur,
           }),
         })
       }

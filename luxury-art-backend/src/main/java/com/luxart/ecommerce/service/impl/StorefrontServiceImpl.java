@@ -78,6 +78,9 @@ public class StorefrontServiceImpl implements StorefrontService {
                     .product(product)
                     .quantite(line.getQuantite())
                     .prixUnitaire(line.getPrixUnitaire())
+                    .taille(blankToNull(line.getTaille()))
+                    .encadrement(blankToNull(line.getEncadrement()))
+                    .couleur(blankToNull(line.getCouleur()))
                     .build();
             orderItemRepository.save(item);
         }

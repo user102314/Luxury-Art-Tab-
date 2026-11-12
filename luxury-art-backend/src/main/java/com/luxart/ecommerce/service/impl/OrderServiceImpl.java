@@ -556,6 +556,9 @@ public class OrderServiceImpl implements OrderService {
                         .productNom(item.getProduct().getRef())
                         .quantite(item.getQuantite())
                         .prixUnitaire(item.getPrixUnitaire())
+                        .taille(item.getTaille())
+                        .encadrement(item.getEncadrement())
+                        .couleur(item.getCouleur())
                         .build()).toList())
                 .build();
     }

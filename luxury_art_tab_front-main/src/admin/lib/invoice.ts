@@ -186,7 +186,9 @@ export function generateInvoicePdf(order: Order): jsPDF {
         doc.addPage()
         y = 20
       }
-      const nom = item.productNom ?? `Produit #${item.productId}`
+      const baseNom = item.productNom ?? `Produit #${item.productId}`
+      const variants = [item.taille, item.encadrement, item.couleur].filter(Boolean).join(' / ')
+      const nom = variants ? `${baseNom} (${variants})` : baseNom
       const qte = item.quantite
       const unit = Number(item.prixUnitaire) || 0
       const line = unit * qte

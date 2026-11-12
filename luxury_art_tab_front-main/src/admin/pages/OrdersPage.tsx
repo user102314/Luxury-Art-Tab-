@@ -475,28 +475,55 @@ export default function OrdersPage() {
                   : 'Aucun article (import Colissimo)'}
               </p>
             ) : (
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-white/10 text-xs uppercase text-zinc-500">
-                    <th className="py-2">Produit</th>
-                    <th className="py-2">Qté</th>
-                    <th className="py-2">Prix unit.</th>
-                    <th className="py-2 text-right">Sous-total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {detail.items!.map((item, i) => (
-                    <tr key={item.id ?? i} className="border-b border-white/5">
-                      <td className="py-3 text-white">{item.productNom ?? `Produit #${item.productId}`}</td>
-                      <td className="py-3 text-zinc-300">{item.quantite}</td>
-                      <td className="py-3 text-zinc-300">{formatCurrency(Number(item.prixUnitaire) || 0)}</td>
-                      <td className="py-3 text-right text-gold-400">
-                        {formatCurrency((Number(item.prixUnitaire) || 0) * item.quantite)}
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10 text-xs uppercase text-zinc-500">
+                      <th className="py-2 pr-3">Produit</th>
+                      <th className="py-2 pr-3">Dimensions</th>
+                      <th className="py-2 pr-3">Bordure / Couleur</th>
+                      <th className="py-2 pr-3">Qté</th>
+                      <th className="py-2 pr-3">Prix unit.</th>
+                      <th className="py-2 text-right">Sous-total</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {detail.items!.map((item, i) => {
+                      const cadreInfo = [item.encadrement, item.couleur].filter(Boolean).join(' • ')
+                      return (
+                        <tr key={item.id ?? i} className="border-b border-white/5">
+                          <td className="py-3 pr-3 font-medium text-white">
+                            {item.productNom ?? `Produit #${item.productId}`}
+                          </td>
+                          <td className="py-3 pr-3">
+                            {item.taille ? (
+                              <span className="inline-flex items-center rounded-md bg-white/10 px-2 py-0.5 text-xs font-medium text-gold-300">
+                                {item.taille}
+                              </span>
+                            ) : (
+                              <span className="text-zinc-500">—</span>
+                            )}
+                          </td>
+                          <td className="py-3 pr-3 text-zinc-300">
+                            {cadreInfo ? (
+                              <span className="inline-flex items-center rounded-md bg-white/10 px-2 py-0.5 text-xs font-medium text-zinc-200">
+                                {cadreInfo}
+                              </span>
+                            ) : (
+                              <span className="text-zinc-500">—</span>
+                            )}
+                          </td>
+                          <td className="py-3 pr-3 text-zinc-300">{item.quantite}</td>
+                          <td className="py-3 pr-3 text-zinc-300">{formatCurrency(Number(item.prixUnitaire) || 0)}</td>
+                          <td className="py-3 text-right text-gold-400">
+                            {formatCurrency((Number(item.prixUnitaire) || 0) * item.quantite)}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>

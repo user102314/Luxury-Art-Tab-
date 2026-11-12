@@ -31,4 +31,13 @@ public class OrderItem {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal prixUnitaire;
+
+    @Column(length = 100)
+    private String taille;
+
+    @Column(length = 100)
+    private String encadrement;
+
+    @Column(length = 100)
+    private String couleur;
 }

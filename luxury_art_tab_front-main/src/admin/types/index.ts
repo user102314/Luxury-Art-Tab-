@@ -23,6 +23,9 @@ export interface OrderItem {
   productNom?: string
   quantite: number
   prixUnitaire: number
+  taille?: string
+  encadrement?: string
+  couleur?: string
 }
 
 export interface Order {

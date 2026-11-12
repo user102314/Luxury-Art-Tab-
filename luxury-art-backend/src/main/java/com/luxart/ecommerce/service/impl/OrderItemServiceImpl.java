@@ -39,6 +39,9 @@ public class OrderItemServiceImpl implements OrderItemService {
                 .product(getProduct(dto.getProductId()))
                 .quantite(dto.getQuantite())
                 .prixUnitaire(dto.getPrixUnitaire())
+                .taille(dto.getTaille())
+                .encadrement(dto.getEncadrement())
+                .couleur(dto.getCouleur())
                 .build();
         return toDto(orderItemRepository.save(item));
     }
@@ -50,6 +53,9 @@ public class OrderItemServiceImpl implements OrderItemService {
         item.setProduct(getProduct(dto.getProductId()));
         item.setQuantite(dto.getQuantite());
         item.setPrixUnitaire(dto.getPrixUnitaire());
+        item.setTaille(dto.getTaille());
+        item.setEncadrement(dto.getEncadrement());
+        item.setCouleur(dto.getCouleur());
         return toDto(orderItemRepository.save(item));
     }
 
@@ -80,6 +86,9 @@ public class OrderItemServiceImpl implements OrderItemService {
                 .productId(item.getProduct().getId())
                 .quantite(item.getQuantite())
                 .prixUnitaire(item.getPrixUnitaire())
+                .taille(item.getTaille())
+                .encadrement(item.getEncadrement())
+                .couleur(item.getCouleur())
                 .build();
     }
 }

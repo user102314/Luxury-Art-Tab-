@@ -51,5 +51,11 @@ public class StorefrontCheckoutRequest {
         @NotNull
         @Positive
         private BigDecimal prixUnitaire;
+
+        private String taille;
+
+        private String encadrement;
+
+        private String couleur;
     }
 }
