@@ -23,12 +23,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        String[] origins = Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .filter(StringUtils::hasText)
-                .toArray(String[]::new);
-
         registry.addHandler(orderNotificationWebSocketHandler, "/ws/admin/orders")
-                .setAllowedOrigins(origins);
+                .setAllowedOriginPatterns("*");
     }
 }

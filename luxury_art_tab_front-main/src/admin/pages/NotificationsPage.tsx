@@ -1,9 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Bell, CheckCheck, MapPin, Package, Phone, RefreshCw, Truck } from 'lucide-react'
+import { Bell, BellRing, CheckCheck, CheckCircle2, MapPin, Package, Phone, RefreshCw, Truck, Volume2 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
+import { toast } from 'sonner'
 import { api, formatCurrency, formatDate, ORDER_CANAL_LABELS, ORDER_STATUS_LABELS } from '../lib/api'
+import {
+  getNotificationPermission,
+  requestAdminNotificationPermission,
+  showDeviceNotification,
+  type DeviceNotifPermission,
+} from '../lib/browserNotifications'
+import { playNewOrderSound, unlockNotificationAudio } from '../lib/notificationSound'
 import { queryKeys } from '../lib/queryKeys'
 import { PageSkeleton } from '../components/QueryStatusBar'
 import { ListToolbar } from '../components/ListToolbar'
@@ -65,6 +73,38 @@ export default function NotificationsPage() {
   const [typeFilter, setTypeFilter] = useState('ALL')
   const [readFilter, setReadFilter] = useState('ALL')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [permission, setPermission] = useState<DeviceNotifPermission>(() =>
+    getNotificationPermission(),
+  )
+
+  const handleEnableDeviceAlerts = async () => {
+    const res = await requestAdminNotificationPermission()
+    setPermission(res)
+    if (res === 'granted') {
+      toast.success('Notifications activées sur cet appareil')
+    } else if (res === 'denied') {
+      toast.error('Notifications bloquées dans les paramètres du navigateur.')
+    }
+  }
+
+  const handleTestDeviceAlert = async () => {
+    unlockNotificationAudio()
+    playNewOrderSound()
+    if (permission === 'default') {
+      const res = await requestAdminNotificationPermission()
+      setPermission(res)
+      if (res === 'granted') return
+    }
+    const ok = await showDeviceNotification({
+      title: 'Test notification — Luxury Art',
+      body: 'Nouvelle commande exemple : 150 TND',
+      tag: `test-${Date.now()}`,
+      url: '/admin/orders',
+    })
+    if (!ok) {
+      toast.info('Sonnerie jouée. Activez les notifications navigateur pour les alertes OS.')
+    }
+  }
 
   const filtered = useMemo(() => {
     let list = items.filter((n) => {
@@ -107,6 +147,50 @@ export default function NotificationsPage() {
               Tout marquer lu
             </button>
           )}
+        </div>
+      </div>
+
+      <div className="card flex flex-wrap items-center justify-between gap-4 border border-white/10 p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-500/15 text-gold-400">
+            <BellRing className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-white">
+              Alertes sur cet appareil (PC &amp; Téléphone)
+            </p>
+            <p className="text-xs text-zinc-400">
+              {permission === 'granted' ? (
+                <span className="inline-flex items-center gap-1 text-emerald-400">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Activées — vous recevrez une notification et une sonnerie à chaque nouvelle commande.
+                </span>
+              ) : permission === 'denied' ? (
+                <span className="text-red-400">
+                  Bloquées dans le navigateur. Autorisez les notifications dans les réglages du site.
+                </span>
+              ) : permission === 'unsupported' ? (
+                'Notifications OS non supportées par ce navigateur (sonnerie & alerte in-app actives).'
+              ) : (
+                'Activez les notifications pour être alerté même quand l’onglet est en arrière-plan.'
+              )}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {permission === 'default' && (
+            <button type="button" onClick={handleEnableDeviceAlerts} className="btn-primary">
+              Activer sur cet appareil
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleTestDeviceAlert}
+            className="btn-ghost inline-flex items-center gap-1.5"
+          >
+            <Volume2 className="h-4 w-4 text-gold-400" />
+            Tester l&apos;alerte
+          </button>
         </div>
       </div>
 

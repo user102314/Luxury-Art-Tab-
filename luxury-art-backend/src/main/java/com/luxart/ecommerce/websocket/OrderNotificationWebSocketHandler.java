@@ -39,6 +39,22 @@ public class OrderNotificationWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) {
+        // Keep-alive heartbeat from admin clients (prevents nginx 60s idle timeout)
+        if ("ping".equalsIgnoreCase(message.getPayload())) {
+            try {
+                if (session.isOpen()) {
+                    synchronized (session) {
+                        session.sendMessage(new TextMessage("{\"type\":\"PONG\"}"));
+                    }
+                }
+            } catch (IOException ignored) {
+                // ignore
+            }
+        }
+    }
+
+    @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         sessions.remove(session);
         log.info("Admin WebSocket déconnecté ({}) — {} session(s)", session.getId(), sessions.size());
