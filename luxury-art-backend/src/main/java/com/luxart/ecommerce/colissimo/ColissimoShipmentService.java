@@ -156,9 +156,22 @@ public class ColissimoShipmentService {
         return order.getItems().stream()
                 .map(item -> {
                     String nom = item.getProduct().getRef();
-                    return item.getQuantite() > 1 ? nom + " x" + item.getQuantite() : nom;
+                    StringBuilder desc = new StringBuilder(nom);
+                    String variants = java.util.stream.Stream.of(
+                                    item.getTaille(),
+                                    item.getEncadrement(),
+                                    item.getCouleur())
+                            .filter(s -> s != null && !s.isBlank())
+                            .collect(Collectors.joining(", "));
+                    if (!variants.isEmpty()) {
+                        desc.append(" (").append(variants).append(")");
+                    }
+                    if (item.getQuantite() > 1) {
+                        desc.append(" x").append(item.getQuantite());
+                    }
+                    return desc.toString();
                 })
-                .collect(Collectors.joining(", "));
+                .collect(Collectors.joining("; "));
     }
 
     private String buildCommentaire(Order order) {

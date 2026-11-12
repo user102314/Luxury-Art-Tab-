@@ -114,7 +114,8 @@ export function generateInvoicePdf(order: Order): jsPDF {
   doc.text(statut, margin + 95, y)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(184, 135, 58)
-  doc.text(order.numeroColis || '—', margin + 135, y)
+  const colisNumero = order.colissimoCodeBarre || order.numeroColis || '—'
+  doc.text(colisNumero, margin + 135, y)
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(40, 40, 45)
 
@@ -187,8 +188,13 @@ export function generateInvoicePdf(order: Order): jsPDF {
         y = 20
       }
       const baseNom = item.productNom ?? `Produit #${item.productId}`
-      const variants = [item.taille, item.encadrement, item.couleur].filter(Boolean).join(' / ')
-      const nom = variants ? `${baseNom} (${variants})` : baseNom
+      const detailParts: string[] = []
+      if (item.taille) detailParts.push(`Dim: ${item.taille}`)
+      const borderParts = [item.encadrement, item.couleur].filter(Boolean).join(' • ')
+      if (borderParts) detailParts.push(`Bordure: ${borderParts}`)
+      const detailLine = detailParts.join('   |   ')
+      const rowHeight = detailLine ? 14 : 9
+
       const qte = item.quantite
       const unit = Number(item.prixUnitaire) || 0
       const line = unit * qte
@@ -196,18 +202,31 @@ export function generateInvoicePdf(order: Order): jsPDF {
 
       if (index % 2 === 0) {
         doc.setFillColor(248, 247, 244)
-        doc.rect(margin, y - 1, contentW, 9, 'F')
+        doc.rect(margin, y - 1, contentW, rowHeight, 'F')
       }
 
       doc.setTextColor(35, 35, 40)
-      const nameLines = doc.splitTextToSize(nom, contentW * 0.48)
-      doc.text(nameLines[0], colProduit + 3, y + 5)
-      doc.text(String(qte), colQte, y + 5, { align: 'right' })
-      doc.text(money(unit), colPrix, y + 5, { align: 'right' })
       doc.setFont('helvetica', 'bold')
-      doc.text(money(line), colTotal - 3, y + 5, { align: 'right' })
+      doc.setFontSize(9)
+      const nameLines = doc.splitTextToSize(baseNom, contentW * 0.48)
+      doc.text(nameLines[0], colProduit + 3, y + 4.8)
+
       doc.setFont('helvetica', 'normal')
-      y += 9
+      doc.text(String(qte), colQte, y + 4.8, { align: 'right' })
+      doc.text(money(unit), colPrix, y + 4.8, { align: 'right' })
+      doc.setFont('helvetica', 'bold')
+      doc.text(money(line), colTotal - 3, y + 4.8, { align: 'right' })
+      doc.setFont('helvetica', 'normal')
+
+      if (detailLine) {
+        doc.setFontSize(8)
+        doc.setTextColor(110, 110, 118)
+        const variantLines = doc.splitTextToSize(detailLine, contentW * 0.56)
+        doc.text(variantLines[0], colProduit + 3, y + 10)
+        doc.setFontSize(9)
+      }
+
+      y += rowHeight
     })
   }
 
