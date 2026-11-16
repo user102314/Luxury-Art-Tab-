@@ -15,6 +15,12 @@ public class ColissimoProperties {
 
     private String pass = "";
 
+    /** Token d'ajout fourni par Colissimo (espace client) */
+    private String tokenAjout = "";
+
+    /** Token de tracking fourni par Colissimo (espace client) */
+    private String tokenTracking = "";
+
     private String endpoint = "https://delivery.colissimo.com.tn/wsColissimoGo/wsColissimoGo.asmx";
 
     /** Intervalle entre deux synchronisations automatiques (ms). Défaut: 5 min. */
