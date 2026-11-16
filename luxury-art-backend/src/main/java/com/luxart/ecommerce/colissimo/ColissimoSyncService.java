@@ -17,8 +17,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 @RequiredArgsConstructor
-@Service
-@RequiredArgsConstructor
 @Slf4j
 public class ColissimoSyncService {
 
