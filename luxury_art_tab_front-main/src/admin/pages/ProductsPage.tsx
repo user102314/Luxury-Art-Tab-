@@ -29,6 +29,7 @@ import {
   LayoutGrid,
   List,
   Sparkles,
+  Check,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { api, formatCurrency, formatDate } from '../lib/api'
@@ -853,7 +854,11 @@ export default function ProductsPage() {
                         </span>
                       )}
                       {isHero && (
-                        <span className="rounded-full bg-brand-red px-2 py-0.5 text-[11px] font-bold text-white">
+                        <span
+                          title="Produit vedette affiché dans le Hero d'accueil pour sa catégorie"
+                          className="inline-flex items-center gap-1 rounded-full bg-gold-500 px-2 py-0.5 text-[11px] font-bold text-ink-950 shadow-md"
+                        >
+                          <Sparkles className="h-3 w-3" />
                           Hero
                         </span>
                       )}
@@ -864,23 +869,17 @@ export default function ProductsPage() {
                       onFirst={() => promoteProduct(p.id)}
                     />
                   </div>
-                  <div className="space-y-1 p-3">
+                  <div className="space-y-1.5 p-3">
                     <p className="font-mono text-xs text-gold-400">{p.ref}</p>
                     <p className="truncate text-sm text-zinc-300">
                       {categoryMap[p.categoryId] ?? `#${p.categoryId}`}
                     </p>
-                    <button
-                      type="button"
-                      disabled={promotingId === p.id || isHero}
+                    <HeroPresentButton
+                      active={isHero}
+                      disabled={promotingId === p.id}
                       onClick={() => setAsCategoryHero(p.id)}
-                      className={`mt-1 w-full rounded-lg px-2 py-1.5 text-[11px] font-semibold transition ${
-                        isHero
-                          ? 'bg-brand-red/20 text-brand-red'
-                          : 'bg-white/5 text-zinc-300 hover:bg-gold-500/20 hover:text-gold-300'
-                      } disabled:opacity-50`}
-                    >
-                      {isHero ? 'Présente la catégorie' : 'Présenter la catégorie'}
-                    </button>
+                      fullWidth
+                    />
                     <div className="flex gap-1 pt-1">
                       <ActionBtn icon={Eye} onClick={() => openDetail(p.id)} title="Voir détails" />
                       <ActionBtn icon={Pencil} onClick={() => openEdit(p)} title="Modifier" />
@@ -928,11 +927,6 @@ export default function ProductsPage() {
                           disabled={promotingId === p.id}
                           onClick={() => setAsCategoryHero(p.id)}
                         />
-                        {isHero && (
-                          <span className="rounded-full bg-brand-red px-2 py-0.5 text-[10px] font-bold text-white">
-                            Hero
-                          </span>
-                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -1289,11 +1283,13 @@ function HeroPresentButton({
   active,
   disabled,
   overlay,
+  fullWidth,
 }: {
   onClick: () => void
   active?: boolean
   disabled?: boolean
   overlay?: boolean
+  fullWidth?: boolean
 }) {
   return (
     <button
@@ -1301,8 +1297,8 @@ function HeroPresentButton({
       disabled={disabled || active}
       title={
         active
-          ? 'Ce produit présente déjà la catégorie dans le hero'
-          : 'Présenter ce produit pour la catégorie dans le hero'
+          ? 'Ce produit présente actuellement cette catégorie dans la section Hero (bannière d’accueil)'
+          : 'Afficher ce produit pour présenter sa catégorie dans la section Hero (bannière d’accueil)'
       }
       onClick={(e) => {
         e.stopPropagation()
@@ -1310,20 +1306,31 @@ function HeroPresentButton({
       }}
       className={
         overlay
-          ? `absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[10px] font-bold shadow-lg transition disabled:opacity-70 ${
+          ? `absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[10px] font-bold shadow-lg transition ${
               active
-                ? 'bg-brand-red text-white'
+                ? 'bg-gold-500 text-ink-950 ring-1 ring-gold-400'
                 : 'bg-black/75 text-sand hover:bg-gold-500 hover:text-ink-950'
             }`
-          : `inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[10px] font-semibold transition disabled:opacity-70 ${
+          : `${
+              fullWidth ? 'mt-1 w-full' : ''
+            } inline-flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition ${
               active
-                ? 'bg-brand-red/20 text-brand-red'
-                : 'bg-white/10 text-zinc-300 hover:bg-gold-500/20 hover:text-gold-300'
-            }`
+                ? 'border border-gold-500/50 bg-gold-500/15 text-gold-300 font-semibold cursor-default'
+                : 'border border-white/10 bg-white/5 text-zinc-300 hover:border-gold-500/40 hover:bg-gold-500/20 hover:text-gold-200'
+            } disabled:cursor-not-allowed`
       }
     >
-      <Sparkles className="h-3.5 w-3.5" />
-      {active ? 'Présente' : 'Présenter la catégorie'}
+      {active ? (
+        <>
+          <Check className="h-3.5 w-3.5 shrink-0 text-gold-400" />
+          <span>Présente la catégorie (Hero)</span>
+        </>
+      ) : (
+        <>
+          <Sparkles className="h-3.5 w-3.5 shrink-0 text-zinc-400" />
+          <span>Présenter la catégorie</span>
+        </>
+      )}
     </button>
   )
 }
