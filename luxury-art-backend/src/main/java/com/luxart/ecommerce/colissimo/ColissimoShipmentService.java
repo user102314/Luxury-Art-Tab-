@@ -30,15 +30,21 @@ public class ColissimoShipmentService {
             "Médenine", "Monastir", "Nabeul", "Sfax", "Sousse", "Siliana",
             "Sidi Bouzid", "Tataouine", "Tozeur", "Tunis", "Zaghouan");
 
+    private final ColissimodeliveryRestClient restClient;
     private final ColissimoSoapClient soapClient;
     private final ObjectMapper objectMapper;
+
+    public boolean isConfigured() {
+        return (restClient != null && restClient.isConfigured())
+                || (soapClient != null && soapClient.isConfigured());
+    }
 
     /**
      * Envoie la commande à Colissimo si elle est confirmée et n'a pas encore de code à barre.
      * @return true si un colis a été créé ou était déjà présent
      */
     public boolean pushOrderIfNeeded(Order order) {
-        if (!soapClient.isConfigured()) {
+        if (!isConfigured()) {
             return false;
         }
         if (order.getColissimoCodeBarre() != null && !order.getColissimoCodeBarre().isBlank()) {
@@ -50,20 +56,41 @@ public class ColissimoShipmentService {
 
         try {
             ColissimoAddParcelRequest request = buildParcelRequest(order);
-            String codeBarre = soapClient.addParcel(toPicJson(request));
-            order.setColissimoCodeBarre(codeBarre);
-            order.setNumeroColis(codeBarre);
-            order.setColissimoReference(request.getReference());
-            order.setColissimoEtat("En Attente");
-            order.setColissimoDesignation(request.getDesignation());
-            order.setColissimoImportedAt(LocalDateTime.now());
-            log.info("Colis Colissimo créé pour commande #{} — code {}", order.getId(), codeBarre);
-            return true;
+
+            if (restClient != null && restClient.isConfigured()) {
+                ColissimodeliveryRestClient.RestParcelCreationResult res = restClient.addParcel(request);
+                order.setColissimoCodeBarre(res.codeBarre());
+                order.setNumeroColis(res.codeBarre());
+                order.setColissimoReference(request.getReference());
+                order.setColissimoEtat("En attente");
+                order.setColissimoDesignation(request.getDesignation());
+                order.setColissimoImportedAt(LocalDateTime.now());
+                log.info("Colis Colissimo (REST) créé pour commande #{} — code {}", order.getId(), res.codeBarre());
+                return true;
+            } else {
+                String codeBarre = soapClient.addParcel(toPicJson(request));
+                order.setColissimoCodeBarre(codeBarre);
+                order.setNumeroColis(codeBarre);
+                order.setColissimoReference(request.getReference());
+                order.setColissimoEtat("En Attente");
+                order.setColissimoDesignation(request.getDesignation());
+                order.setColissimoImportedAt(LocalDateTime.now());
+                log.info("Colis Colissimo (SOAP) créé pour commande #{} — code {}", order.getId(), codeBarre);
+                return true;
+            }
         } catch (ColissimoApiException e) {
             log.warn("Impossible de créer le colis Colissimo pour commande #{}: {}",
                     order.getId(), e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Force le ré-envoi d'une commande vers la nouvelle plateforme Colissimo
+     */
+    public boolean repushOrder(Order order) {
+        order.setColissimoCodeBarre(null);
+        return pushOrderIfNeeded(order);
     }
 
     public byte[] getInvoicePdf(Order order) {

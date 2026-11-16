@@ -77,6 +77,29 @@ public class ColissimoController {
         ));
     }
 
+    @PostMapping("/orders/{orderId}/repush")
+    @Transactional
+    public ResponseEntity<?> repushOrder(@PathVariable Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Commande introuvable: " + orderId));
+
+        if (!shipmentService.isEligibleForColissimo(order)) {
+            throw new ColissimoApiException("La commande doit être confirmée, expédiée ou livrée");
+        }
+
+        boolean pushed = shipmentService.repushOrder(order);
+        if (!pushed) {
+            throw new ColissimoApiException("Impossible de ré-expédier vers Colissimo");
+        }
+
+        orderRepository.save(order);
+        return ResponseEntity.ok(java.util.Map.of(
+                "orderId", order.getId(),
+                "colissimoCodeBarre", order.getColissimoCodeBarre(),
+                "numeroColis", order.getNumeroColis()
+        ));
+    }
+
     @GetMapping("/orders/{orderId}/invoice")
     @Transactional
     public ResponseEntity<byte[]> downloadInvoice(@PathVariable Long orderId) {

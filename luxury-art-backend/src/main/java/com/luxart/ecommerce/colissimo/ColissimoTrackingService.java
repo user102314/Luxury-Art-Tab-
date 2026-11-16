@@ -25,6 +25,7 @@ public class ColissimoTrackingService {
 
     private static final String TRANSPORTEUR = "Colissimo Tunisie";
 
+    private final ColissimodeliveryRestClient restClient;
     private final ColissimoSoapClient soapClient;
     private final ColissimoShipmentService shipmentService;
     private final OrderRepository orderRepository;
@@ -50,21 +51,49 @@ public class ColissimoTrackingService {
 
         ColissimoParcel parcel = null;
         boolean live = false;
+        String code = shipmentService.resolveCodeBarre(order);
 
-        if (refresh && soapClient.isConfigured()) {
-            String code = shipmentService.resolveCodeBarre(order);
-            try {
-                parcel = soapClient.getParcel(code);
-                applyParcelToOrder(order, parcel);
-                orderRepository.save(order);
-                live = true;
-            } catch (ColissimoApiException e) {
-                log.warn("Impossible de rafraîchir le suivi Colissimo pour commande #{}: {}",
-                        orderId, e.getMessage());
+        if (refresh && code != null) {
+            if (restClient != null && restClient.isConfigured()) {
+                try {
+                    ColissimodeliveryRestClient.RestTrackingResult res = restClient.getEtat(code);
+                    if (res != null && res.etat() != null && !res.etat().isBlank()) {
+                        applyRestTrackingToOrder(order, res);
+                        orderRepository.save(order);
+                        live = true;
+                    }
+                } catch (Exception e) {
+                    log.warn("Erreur rafraîchissement REST Colissimo pour commande #{}: {}", orderId, e.getMessage());
+                }
+            }
+
+            if (!live && soapClient.isConfigured()) {
+                try {
+                    parcel = soapClient.getParcel(code);
+                    applyParcelToOrder(order, parcel);
+                    orderRepository.save(order);
+                    live = true;
+                } catch (ColissimoApiException e) {
+                    log.warn("Impossible de rafraîchir le suivi SOAP Colissimo pour commande #{}: {}",
+                            orderId, e.getMessage());
+                }
             }
         }
 
         return buildTrackingDto(order, parcel, live);
+    }
+
+    private void applyRestTrackingToOrder(Order order, ColissimodeliveryRestClient.RestTrackingResult res) {
+        if (res == null || res.etat() == null) return;
+        OrderStatut previous = order.getStatut();
+        OrderStatut newStatut = ColissimoSyncService.mapEtat(res.etat());
+        order.setColissimoEtat(res.etat());
+        if (newStatut != previous) {
+            order.setStatut(newStatut);
+            if (previous != OrderStatut.LIVREE && newStatut == OrderStatut.LIVREE) {
+                loyaltyService.onOrderDelivered(order);
+            }
+        }
     }
 
     private boolean hasTrackingCode(Order order) {

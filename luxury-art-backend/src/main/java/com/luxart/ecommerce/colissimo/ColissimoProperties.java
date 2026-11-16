@@ -16,10 +16,19 @@ public class ColissimoProperties {
     private String pass = "";
 
     /** Token d'ajout fourni par Colissimo (espace client) */
-    private String tokenAjout = "";
+    private String tokenAjout = "lat-UT20SYIJ5E3AORJRQ31RX35NIAWEYK55";
 
     /** Token de tracking fourni par Colissimo (espace client) */
-    private String tokenTracking = "";
+    private String tokenTracking = "lat-etat-UT20SYIJ5E3AORJRQ31RX35NIAWEYK55";
+
+    /** URL API d'ajout colissimodelivery.tn */
+    private String restPostUrl = "https://colissimodelivery.tn/api/v1/post.php";
+
+    /** URL API d'état colissimodelivery.tn */
+    private String restEtatUrl = "https://colissimodelivery.tn/api/v1/etat.php";
+
+    /** URL impression bordereau colissimodelivery.tn */
+    private String restPrintUrl = "https://colissimodelivery.tn/print/imprimer.php?code=";
 
     private String endpoint = "https://delivery.colissimo.com.tn/wsColissimoGo/wsColissimoGo.asmx";
 
