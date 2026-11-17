@@ -8,7 +8,7 @@ import com.luxart.ecommerce.colissimo.ColissimoProperties;
 
 @SpringBootApplication
 @EnableScheduling
-@EnableConfigurationProperties(ColissimoProperties.class)
+@EnableConfigurationProperties({ColissimoProperties.class, com.luxart.ecommerce.meta.MetaProperties.class})
 public class EcommerceApplication {
 
     public static void main(String[] args) {

@@ -5,6 +5,7 @@ import com.luxart.ecommerce.dto.StorefrontCheckoutResponse;
 import com.luxart.ecommerce.dto.VisitorRegisterRequest;
 import com.luxart.ecommerce.dto.VisitorResponse;
 import com.luxart.ecommerce.service.StorefrontService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,9 @@ public class StorefrontController {
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<StorefrontCheckoutResponse> checkout(@Valid @RequestBody StorefrontCheckoutRequest request) {
-        return ResponseEntity.ok(storefrontService.checkout(request));
+    public ResponseEntity<StorefrontCheckoutResponse> checkout(@Valid @RequestBody StorefrontCheckoutRequest request,
+                                                               HttpServletRequest http) {
+        return ResponseEntity.ok(storefrontService.checkout(request,
+                com.luxart.ecommerce.meta.MetaConversionsService.ClientContext.from(http)));
     }
 }

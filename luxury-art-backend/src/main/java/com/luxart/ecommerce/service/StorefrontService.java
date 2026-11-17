@@ -9,5 +9,6 @@ public interface StorefrontService {
 
     VisitorResponse registerVisitor(VisitorRegisterRequest request);
 
-    StorefrontCheckoutResponse checkout(StorefrontCheckoutRequest request);
+    StorefrontCheckoutResponse checkout(StorefrontCheckoutRequest request,
+            com.luxart.ecommerce.meta.MetaConversionsService.ClientContext clientContext);
 }

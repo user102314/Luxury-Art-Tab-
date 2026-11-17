@@ -40,6 +40,8 @@ public class StorefrontServiceImpl implements StorefrontService {
     private final ProductRepository productRepository;
     private final StockService stockService;
     private final ApplicationEventPublisher eventPublisher;
+    private final com.luxart.ecommerce.meta.MetaConversionsService metaService;
+    private final com.luxart.ecommerce.meta.MetaProperties metaProps;
 
     @Override
     public VisitorResponse registerVisitor(VisitorRegisterRequest request) {
@@ -48,7 +50,8 @@ public class StorefrontServiceImpl implements StorefrontService {
 
     @Override
     @Transactional
-    public StorefrontCheckoutResponse checkout(StorefrontCheckoutRequest request) {
+    public StorefrontCheckoutResponse checkout(StorefrontCheckoutRequest request,
+            com.luxart.ecommerce.meta.MetaConversionsService.ClientContext clientContext) {
         User user = resolveCheckoutUser(request);
 
         BigDecimal total = request.getItems().stream()
@@ -101,11 +104,41 @@ public class StorefrontServiceImpl implements StorefrontService {
                 .dateCommande(order.getDateCommande())
                 .build()));
 
+        sendMetaPurchase(request, order, total, clientContext);
+
         return StorefrontCheckoutResponse.builder()
                 .orderId(order.getId())
                 .userId(user.getId())
                 .total(total)
                 .build();
+    }
+
+    /** Purchase CAPI (même event_id que le Pixel navigateur). Asynchrone, après commit. */
+    private void sendMetaPurchase(StorefrontCheckoutRequest request, Order order, BigDecimal total,
+                                  com.luxart.ecommerce.meta.MetaConversionsService.ClientContext ctx) {
+        try {
+            com.luxart.ecommerce.meta.MetaEventRequest ev = new com.luxart.ecommerce.meta.MetaEventRequest();
+            ev.setEventName("Purchase");
+            ev.setEventId(blankToNull(request.getMetaEventId()) != null
+                    ? request.getMetaEventId().trim() : "order-" + order.getId());
+            ev.setEventSourceUrl(request.getEventSourceUrl());
+            ev.setFbp(request.getFbp());
+            ev.setFbc(request.getFbc());
+            ev.setVisitorKey(request.getVisitorKey());
+            ev.setEmail(request.getEmail());
+            ev.setPhone(request.getTelephone());
+            String[] names = com.luxart.ecommerce.meta.MetaConversionsService.splitName(request.getNom());
+            ev.setFirstName(names[0]);
+            ev.setLastName(names[1]);
+            ev.setValue(total);
+            ev.setCurrency(metaProps.getCurrency());
+            ev.setContentIds(request.getItems().stream()
+                    .map(i -> String.valueOf(i.getProductId())).distinct().toList());
+            ev.setNumItems(request.getItems().stream().mapToInt(StorefrontCheckoutRequest.CheckoutLineItem::getQuantite).sum());
+            metaService.send(ev, ctx);
+        } catch (Exception ignored) {
+            // Meta ne doit jamais faire échouer une commande
+        }
     }
 
     private static String blankToNull(String value) {

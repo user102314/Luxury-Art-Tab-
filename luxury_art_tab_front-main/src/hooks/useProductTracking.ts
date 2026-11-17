@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { api, getTrackingSessionId } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
+import { trackMeta } from '@/lib/metaPixel'
 
 export type TrackClickAction = 'CLICK' | 'ADD_TO_CART'
 
@@ -16,6 +17,7 @@ export function useProductTracking(productId: number | null | undefined) {
     if (viewedRef.current === productId) return
     viewedRef.current = productId
 
+    trackMeta('ViewContent', { contentIds: [String(productId)] })
     const sessionId = getTrackingSessionId()
     void api.trackProductView(productId, sessionId, client?.id).catch(() => {
       /* best-effort */

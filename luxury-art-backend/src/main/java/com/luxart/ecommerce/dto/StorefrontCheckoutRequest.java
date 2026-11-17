@@ -35,6 +35,13 @@ public class StorefrontCheckoutRequest {
     @Valid
     private List<CheckoutLineItem> items;
 
+    // Meta Pixel/CAPI : déduplication + correspondance
+    private String email;
+    private String metaEventId;
+    private String fbp;
+    private String fbc;
+    private String eventSourceUrl;
+
     @Getter
     @Setter
     @NoArgsConstructor

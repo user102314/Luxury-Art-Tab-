@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
@@ -15,6 +15,7 @@ import { api, getVisitorKey } from '@/lib/api'
 import { resolveImageSrc, IMAGE_WIDTH } from '@/lib/images'
 import { formatPrice } from '@/lib/pricing'
 import { buildSeoHead, SITE } from '@/lib/seo'
+import { getMetaIdentifiers, newMetaEventId, trackMeta } from '@/lib/metaPixel'
 
 export const Route = createFileRoute('/checkout')({
   head: () =>
@@ -38,6 +39,17 @@ function CheckoutPage() {
   const [adresse, setAdresse] = useState('')
   const [telephone, setTelephone] = useState('')
 
+  const checkoutTracked = useRef(false)
+  useEffect(() => {
+    if (checkoutTracked.current || items.length === 0) return
+    checkoutTracked.current = true
+    trackMeta('InitiateCheckout', {
+      value: total,
+      contentIds: items.map((i) => String(i.productId)),
+      numItems: items.reduce((s, i) => s + i.quantite, 0),
+    })
+  }, [items, total])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (items.length === 0) {
@@ -51,7 +63,13 @@ function CheckoutPage() {
 
     setLoading(true)
     try {
+      const purchaseEventId = newMetaEventId()
+      const purchaseItems = items
+      const purchaseTotal = total
       const result = await api.checkout({
+        ...getMetaIdentifiers(),
+        metaEventId: purchaseEventId,
+        email: email.trim() || client?.email || undefined,
         visitorKey: getVisitorKey(),
         nom: nom.trim() || client?.nom || undefined,
         clientUserId: client?.id,
@@ -67,6 +85,15 @@ function CheckoutPage() {
         })),
       })
 
+      trackMeta(
+        'Purchase',
+        {
+          value: purchaseTotal,
+          contentIds: purchaseItems.map((i) => String(i.productId)),
+          numItems: purchaseItems.reduce((s, i) => s + i.quantite, 0),
+        },
+        purchaseEventId,
+      )
       clearCart()
       toast.success('Commande confirmée !', {
         description: `Réf. commande #${result.orderId}`,

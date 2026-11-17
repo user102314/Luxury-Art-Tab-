@@ -23,6 +23,7 @@ import { queryKeys } from '@/lib/queryKeys'
 import { REFETCH_INTERVAL } from '@/lib/queryClient'
 import { useProduct, useProducts } from '@/hooks/useStorefrontQueries'
 import { useProductTracking } from '@/hooks/useProductTracking'
+import { trackMeta } from '@/lib/metaPixel'
 import { getProductImage, getProductImages, getSimulationImage, resolveImageSrc, IMAGE_WIDTH } from '@/lib/images'
 import {
   formatDimensionLabel,
@@ -312,6 +313,12 @@ function ProductDetailPage() {
       return
     }
     trackClick('ADD_TO_CART')
+    trackMeta('AddToCart', {
+      value: unitPrice * qty,
+      contentIds: [String(product.id)],
+      contentName: product.ref,
+      numItems: qty,
+    })
     addItem({
       productId: product.id,
       ref: product.ref,

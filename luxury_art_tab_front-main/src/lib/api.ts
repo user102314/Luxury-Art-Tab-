@@ -166,6 +166,11 @@ export const api = {
     clientUserId?: number
     adresseLivraison: string
     telephone?: string
+    email?: string
+    metaEventId?: string
+    fbp?: string
+    fbc?: string
+    eventSourceUrl?: string
     items: {
       productId: number
       quantite: number

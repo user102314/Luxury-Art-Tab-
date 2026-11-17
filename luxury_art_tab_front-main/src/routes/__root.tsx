@@ -1,6 +1,7 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } from "@tanstack/react-router";
 import { Analytics } from "@vercel/analytics/react";
 import { AppProviders } from "@/context/AppProviders";
+import { MetaPixelTracker } from "@/components/MetaPixelTracker";
 import { MaintenancePage } from "@/components/MaintenancePage";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -124,6 +125,7 @@ function RootComponent() {
   return (
     <AppProviders>
       <Analytics />
+      <MetaPixelTracker />
       <Outlet />
     </AppProviders>
   );
