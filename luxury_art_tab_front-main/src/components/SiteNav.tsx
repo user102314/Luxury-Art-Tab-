@@ -27,7 +27,7 @@ export function SiteNav() {
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [mobileGalleryOpen, setMobileGalleryOpen] = useState(false)
   const galleryRef = useRef<HTMLDivElement>(null)
-  const { items, count, total, removeItem, updateQuantity } = useCart()
+  const { items, count, subtotal, shippingFee, total, removeItem, updateQuantity } = useCart()
   const { favoriteIds } = useFavorites()
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
@@ -499,11 +499,21 @@ export function SiteNav() {
                       </li>
                     ))}
                   </ul>
-                  <div className="mt-4 flex items-center justify-between border-t pt-4">
-                    <span className="font-semibold">Total</span>
-                    <span className="font-display text-xl font-bold text-accent-green">
-                      {formatPrice(total)}
-                    </span>
+                  <div className="mt-4 space-y-2 border-t pt-4 text-sm">
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span>Sous-total articles</span>
+                      <span>{formatPrice(subtotal)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span>Livraison</span>
+                      <span className="font-medium text-foreground">{formatPrice(shippingFee)}</span>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-border/50 pt-2 text-base font-bold">
+                      <span>Total</span>
+                      <span className="font-display text-xl font-bold text-accent-green">
+                        {formatPrice(total)}
+                      </span>
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -513,7 +523,7 @@ export function SiteNav() {
                     }}
                     className="mt-4 w-full rounded-full bg-brand-red py-3 text-sm font-bold text-sand hover:opacity-90"
                   >
-                    Commander
+                    Commander · {formatPrice(total)}
                   </button>
                 </>
               )

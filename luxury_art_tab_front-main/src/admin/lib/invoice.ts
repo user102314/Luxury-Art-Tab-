@@ -238,6 +238,7 @@ export function generateInvoicePdf(order: Order): jsPDF {
 
   const totalOrder = Number(order.total)
   const total = Number.isFinite(totalOrder) && totalOrder > 0 ? totalOrder : computed
+  const shipping = total > computed && computed > 0 ? total - computed : 0
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(10)
@@ -245,7 +246,17 @@ export function generateInvoicePdf(order: Order): jsPDF {
   doc.text('Sous-total', pageW - margin - 45, y, { align: 'right' })
   doc.setTextColor(40, 40, 45)
   doc.text(money(computed || total), pageW - margin, y, { align: 'right' })
-  y += 8
+  y += 6
+
+  if (shipping > 0) {
+    doc.setTextColor(90, 90, 95)
+    doc.text('Frais de livraison', pageW - margin - 45, y, { align: 'right' })
+    doc.setTextColor(40, 40, 45)
+    doc.text(money(shipping), pageW - margin, y, { align: 'right' })
+    y += 7
+  } else {
+    y += 2
+  }
 
   doc.setFillColor(184, 135, 58)
   doc.roundedRect(pageW - margin - 70, y - 5, 70, 12, 2, 2, 'F')

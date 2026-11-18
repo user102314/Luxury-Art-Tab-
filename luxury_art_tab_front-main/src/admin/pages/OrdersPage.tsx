@@ -522,6 +522,35 @@ export default function OrdersPage() {
                       )
                     })}
                   </tbody>
+                  {detail.total != null && Number(detail.total) > 0 && (() => {
+                    const computedItems = detail.items?.reduce(
+                      (sum, item) => sum + (Number(item.prixUnitaire) || 0) * item.quantite,
+                      0,
+                    ) ?? 0
+                    const shipping = Number(detail.total) > computedItems && computedItems > 0
+                      ? Number(detail.total) - computedItems
+                      : 0
+                    return (
+                      <tfoot>
+                        {shipping > 0 && (
+                          <>
+                            <tr className="border-t border-white/10 text-xs text-zinc-400">
+                              <td colSpan={5} className="py-2 text-right">Sous-total articles :</td>
+                              <td className="py-2 text-right text-zinc-300">{formatCurrency(computedItems)}</td>
+                            </tr>
+                            <tr className="text-xs text-zinc-400">
+                              <td colSpan={5} className="py-1 text-right">Frais de livraison :</td>
+                              <td className="py-1 text-right text-gold-300">+{formatCurrency(shipping)}</td>
+                            </tr>
+                          </>
+                        )}
+                        <tr className="border-t border-white/20 text-sm font-bold text-white">
+                          <td colSpan={5} className="py-2.5 text-right">Total commande :</td>
+                          <td className="py-2.5 text-right text-gold-400">{formatCurrency(Number(detail.total))}</td>
+                        </tr>
+                      </tfoot>
+                    )
+                  })()}
                 </table>
               </div>
             )}

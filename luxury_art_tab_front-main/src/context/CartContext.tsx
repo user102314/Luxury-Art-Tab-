@@ -4,6 +4,8 @@ import { cartLineKey } from '@/lib/pricing'
 
 const STORAGE_KEY = 'luxart_cart_v2'
 
+export const SHIPPING_FEE = 8
+
 interface CartContextType {
   items: CartItem[]
   addItem: (item: CartItem) => void
@@ -13,6 +15,8 @@ interface CartContextType {
     quantite: number,
   ) => void
   clearCart: () => void
+  subtotal: number
+  shippingFee: number
   total: number
   count: number
 }
@@ -71,12 +75,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => setItems([])
 
-  const total = items.reduce((s, i) => s + i.prixUnitaire * i.quantite, 0)
+  const subtotal = items.reduce((s, i) => s + i.prixUnitaire * i.quantite, 0)
+  const shippingFee = items.length > 0 ? SHIPPING_FEE : 0
+  const total = subtotal + shippingFee
   const count = items.reduce((s, i) => s + i.quantite, 0)
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQuantity, clearCart, total, count }}
+      value={{
+        items,
+        addItem,
+        removeItem,
+        updateQuantity,
+        clearCart,
+        subtotal,
+        shippingFee,
+        total,
+        count,
+      }}
     >
       {children}
     </CartContext.Provider>

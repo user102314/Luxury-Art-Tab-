@@ -48,15 +48,22 @@ public class StorefrontServiceImpl implements StorefrontService {
         return toResponse(resolveOrCreateUser(request.getVisitorKey(), request.getNom()));
     }
 
+    public static final BigDecimal FRAIS_LIVRAISON = BigDecimal.valueOf(8);
+
     @Override
     @Transactional
     public StorefrontCheckoutResponse checkout(StorefrontCheckoutRequest request,
             com.luxart.ecommerce.meta.MetaConversionsService.ClientContext clientContext) {
         User user = resolveCheckoutUser(request);
 
-        BigDecimal total = request.getItems().stream()
+        BigDecimal itemsTotal = request.getItems().stream()
                 .map(i -> i.getPrixUnitaire().multiply(BigDecimal.valueOf(i.getQuantite())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal shippingFee = (request.getItems() == null || request.getItems().isEmpty())
+                ? BigDecimal.ZERO
+                : FRAIS_LIVRAISON;
+        BigDecimal total = itemsTotal.add(shippingFee);
 
         Order order = Order.builder()
                 .user(user)

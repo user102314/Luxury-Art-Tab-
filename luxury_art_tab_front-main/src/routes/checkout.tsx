@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
+import { Truck } from 'lucide-react'
 import { toast } from 'sonner'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
@@ -29,7 +30,7 @@ export const Route = createFileRoute('/checkout')({
 })
 
 function CheckoutPage() {
-  const { items, total, clearCart } = useCart()
+  const { items, subtotal, shippingFee, total, clearCart } = useCart()
   const { client } = useAuth()
   const { visitor } = useVisitor()
   const navigate = useNavigate()
@@ -182,12 +183,16 @@ function CheckoutPage() {
                 className="min-h-[100px] rounded-xl"
               />
             </div>
+            <div className="flex items-center gap-2 rounded-xl border border-accent-green/20 bg-accent-green/10 p-3 text-xs font-medium text-accent-green">
+              <Truck className="h-4 w-4 shrink-0" />
+              <span>Livraison express sur toute la Tunisie : 8 TND (Paiement à la livraison)</span>
+            </div>
             <Button
               type="submit"
               disabled={loading}
               className="w-full rounded-xl bg-accent-green py-6 text-base font-bold hover:bg-accent-green/90"
             >
-              {loading ? 'Traitement...' : `Confirmer · ${formatPrice(total)}`}
+              {loading ? 'Traitement...' : `Confirmer la commande · ${formatPrice(total)}`}
             </Button>
           </form>
 
@@ -219,9 +224,19 @@ function CheckoutPage() {
                 </li>
               ))}
             </ul>
-            <div className="mt-6 flex justify-between border-t border-sand/20 pt-6 text-lg font-bold">
-              <span>Total</span>
-              <span className="text-accent-green">{formatPrice(total)}</span>
+            <div className="mt-6 space-y-2 border-t border-sand/20 pt-4 text-sm">
+              <div className="flex justify-between text-sand/80">
+                <span>Sous-total articles</span>
+                <span>{formatPrice(subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-sand/80">
+                <span>Frais de livraison</span>
+                <span className="font-semibold text-gold">{formatPrice(shippingFee)}</span>
+              </div>
+              <div className="flex justify-between border-t border-sand/20 pt-3 text-lg font-bold">
+                <span>Total à payer</span>
+                <span className="text-accent-green">{formatPrice(total)}</span>
+              </div>
             </div>
           </div>
         </div>
