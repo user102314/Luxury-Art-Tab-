@@ -15,7 +15,7 @@ import StatCard, { Package, TrendingUp, formatCurrency } from '../components/Sta
 import { PageSkeleton, QueryStatusBar } from '../components/QueryStatusBar'
 import { useOrders, useProducts, useOrderChannelStats } from '../hooks/useAdminQueries'
 import { computeRevenue, formatDate, isRevenueOrder, ORDER_STATUS_LABELS, revenueByDay } from '../lib/api'
-import { Clock, CheckCircle, Facebook } from 'lucide-react'
+import { Clock, CheckCircle, Facebook, BarChart3, PieChart as PieIcon, ReceiptText } from 'lucide-react'
 
 const PIE_COLORS = ['#f59e0b', '#3b82f6', '#71717a']
 
@@ -113,7 +113,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="card p-6">
-          <h2 className="mb-4 font-semibold text-white">Revenus par jour (CA réel)</h2>
+          <h2 className="mb-4 flex items-center gap-2 font-semibold text-white"><BarChart3 className="h-4 w-4 text-gold-400" />Revenus par jour (CA réel)</h2>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
@@ -135,7 +135,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="card p-6">
-          <h2 className="mb-4 font-semibold text-white">Répartition livrées / confirmées</h2>
+          <h2 className="mb-4 flex items-center gap-2 font-semibold text-white"><PieIcon className="h-4 w-4 text-gold-400" />Répartition livrées / confirmées</h2>
           {statusPie.length === 0 ? (
             <p className="py-12 text-center text-sm text-zinc-500">Aucun revenu en cours</p>
           ) : (
@@ -163,7 +163,7 @@ export default function DashboardPage() {
 
       <div className="card p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-semibold text-white">Commandes récentes</h2>
+          <h2 className="flex items-center gap-2 font-semibold text-white"><ReceiptText className="h-4 w-4 text-gold-400" />Commandes récentes</h2>
           <Link to="/admin/orders" className="text-sm text-gold-400 hover:text-gold-300">
             Voir tout →
           </Link>

@@ -21,7 +21,7 @@ import {
 } from '../hooks/useAdminQueries'
 import type { SalesGranularity, TopProductCriteria } from '../types'
 import { formatDate, ORDER_STATUS_LABELS } from '../lib/api'
-import { Clock } from 'lucide-react'
+import { Clock, Eye, MousePointerClick, ShoppingCart, Trophy, LineChart, Crown, type LucideIcon } from 'lucide-react'
 
 type PeriodPreset = '7d' | '30d' | 'custom'
 type SortKey =
@@ -216,20 +216,22 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-4">
-        <MiniTopCard title="Plus visités (vues)" rows={topViewsQ.data ?? []} metric={(p) => p.totalViews} />
-        <MiniTopCard title="Plus touchés (clics)" rows={topClicksQ.data ?? []} metric={(p) => p.totalClicks} />
+        <MiniTopCard icon={Eye} tone="text-blue-400 bg-blue-500/15" title="Plus visités (vues)" rows={topViewsQ.data ?? []} metric={(p) => p.totalViews} />
+        <MiniTopCard icon={MousePointerClick} tone="text-purple-400 bg-purple-500/15" title="Plus touchés (clics)" rows={topClicksQ.data ?? []} metric={(p) => p.totalClicks} />
         <MiniTopCard
+          icon={ShoppingCart}
+          tone="text-emerald-400 bg-emerald-500/15"
           title="Ajouts panier"
           rows={topCartQ.data ?? []}
           metric={(p) => Number(p.totalAddToCart) || 0}
         />
-        <MiniTopCard title="Plus vendus" rows={topSalesQ.data ?? []} metric={(p) => p.totalSales} />
+        <MiniTopCard icon={Trophy} tone="text-gold-400 bg-gold-500/15" title="Plus vendus" rows={topSalesQ.data ?? []} metric={(p) => p.totalSales} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="card p-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h3 className="font-semibold text-white">CA dans le temps</h3>
+            <h3 className="flex items-center gap-2 font-semibold text-white"><LineChart className="h-4 w-4 text-gold-400" />CA dans le temps</h3>
             <div className="flex gap-1">
               {(
                 [
@@ -281,7 +283,7 @@ export default function AnalyticsPage() {
 
         <div className="card p-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h3 className="font-semibold text-white">Top produits</h3>
+            <h3 className="flex items-center gap-2 font-semibold text-white"><Crown className="h-4 w-4 text-gold-400" />Top produits</h3>
             <div className="flex gap-1">
               {(
                 [
@@ -425,14 +427,23 @@ function MiniTopCard({
   title,
   rows,
   metric,
+  icon: Icon,
+  tone,
 }: {
+  icon: LucideIcon
+  tone: string
   title: string
   rows: import('../types').ProductStats[]
   metric: (p: import('../types').ProductStats) => number
 }) {
   return (
     <div className="card p-4">
-      <h3 className="mb-3 text-sm font-semibold text-white">{title}</h3>
+      <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
+        <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${tone}`}>
+          <Icon className="h-4 w-4" />
+        </span>
+        {title}
+      </h3>
       {rows.length === 0 ? (
         <p className="text-xs text-zinc-500">Pas encore de données</p>
       ) : (
